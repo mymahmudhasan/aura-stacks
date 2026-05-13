@@ -164,6 +164,27 @@
     background-size: 200% 100%;
     animation: shine 3s linear infinite;
   }
+  .animate-rise {
+    animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .sheen {
+    position: relative;
+    overflow: hidden;
+  }
+  .sheen::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 35%, oklch(1 0 0 / 0.14) 50%, transparent 65%);
+    background-size: 250% 100%;
+    background-position: 200% 0;
+    transition: background-position 0.9s ease;
+    pointer-events: none;
+  }
+  .sheen:hover::after,
+  .group:hover .sheen::after {
+    background-position: -200% 0;
+  }
 }
 
 @keyframes float {
@@ -176,4 +197,8 @@
 }
 @keyframes shine {
   to { background-position: -200% 0; }
+}
+@keyframes rise {
+  0% { opacity: 0; transform: translateY(18px) scale(0.97); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }

@@ -98,6 +98,98 @@ export type Database = {
         }
         Relationships: []
       }
+      ticket_messages: {
+        Row: {
+          author_id: string | null
+          author_name: string
+          body: string
+          created_at: string
+          id: string
+          is_staff: boolean
+          ticket_id: string
+        }
+        Insert: {
+          author_id?: string | null
+          author_name: string
+          body: string
+          created_at?: string
+          id?: string
+          is_staff?: boolean
+          ticket_id: string
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string
+          body?: string
+          created_at?: string
+          id?: string
+          is_staff?: boolean
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tickets: {
+        Row: {
+          assigned_to: string | null
+          binance_uid: string | null
+          category: string
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          message: string
+          priority: Database["public"]["Enums"]["ticket_priority"]
+          resolved_at: string | null
+          status: Database["public"]["Enums"]["ticket_status"]
+          subject: string
+          ticket_number: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          binance_uid?: string | null
+          category?: string
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          message: string
+          priority?: Database["public"]["Enums"]["ticket_priority"]
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"]
+          subject: string
+          ticket_number?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          binance_uid?: string | null
+          category?: string
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          message?: string
+          priority?: Database["public"]["Enums"]["ticket_priority"]
+          resolved_at?: string | null
+          status?: Database["public"]["Enums"]["ticket_status"]
+          subject?: string
+          ticket_number?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -131,9 +223,29 @@ export type Database = {
         }
         Returns: boolean
       }
+      lookup_ticket: {
+        Args: { _email: string; _ticket_number: string }
+        Returns: {
+          category: string
+          created_at: string
+          priority: Database["public"]["Enums"]["ticket_priority"]
+          resolved_at: string
+          status: Database["public"]["Enums"]["ticket_status"]
+          subject: string
+          ticket_number: string
+          updated_at: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "user"
+      ticket_priority: "low" | "normal" | "high" | "urgent"
+      ticket_status:
+        | "open"
+        | "in_progress"
+        | "awaiting_customer"
+        | "resolved"
+        | "closed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -262,6 +374,14 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      ticket_priority: ["low", "normal", "high", "urgent"],
+      ticket_status: [
+        "open",
+        "in_progress",
+        "awaiting_customer",
+        "resolved",
+        "closed",
+      ],
     },
   },
 } as const

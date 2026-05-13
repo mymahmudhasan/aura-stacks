@@ -1,6 +1,6 @@
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
-import { Menu, X, Hexagon } from "lucide-react";
+import { Menu, X, Hexagon, ShieldCheck, BadgeCheck, Award, Lock, Globe2, Cpu } from "lucide-react";
 
 const nav = [
   { to: "/", label: "Home" },
@@ -96,8 +96,59 @@ export function Header() {
 }
 
 export function Footer() {
+  const badges = [
+    { icon: <ShieldCheck className="w-4 h-4" />, label: "ISO 27001" },
+    { icon: <BadgeCheck className="w-4 h-4" />, label: "SOC 2 Type II" },
+    { icon: <Lock className="w-4 h-4" />, label: "AES-256 Encrypted" },
+    { icon: <Award className="w-4 h-4" />, label: "PCI DSS Level 1" },
+    { icon: <Cpu className="w-4 h-4" />, label: "Binance Compatible" },
+    { icon: <Globe2 className="w-4 h-4" />, label: "GDPR Compliant" },
+  ];
+  const marquee = [
+    "AI Trading 24/7",
+    "Daily Rewards",
+    "Binance Verified Payouts",
+    "Bank-grade Security",
+    "Trusted by 240,000+ Investors",
+    "Neural Strategy Engine",
+  ];
+
   return (
     <footer className="mt-24 border-t border-border/40 bg-background/40">
+      {/* Animated marquee strip */}
+      <div className="border-b border-border/40 overflow-hidden bg-gradient-to-r from-primary/5 via-transparent to-primary/5">
+        <div className="flex w-max animate-marquee py-4">
+          {[...marquee, ...marquee].map((t, i) => (
+            <div key={i} className="flex items-center gap-3 px-8 shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+              <span className="text-sm md:text-base font-semibold tracking-wide text-shimmer whitespace-nowrap">
+                {t}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Certifications */}
+      <div className="border-b border-border/40">
+        <div className="mx-auto max-w-7xl px-5 py-8">
+          <p className="text-center text-xs uppercase tracking-[0.25em] text-muted-foreground mb-5">
+            Certifications & Compliance
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            {badges.map((b) => (
+              <div
+                key={b.label}
+                className="group flex items-center gap-2 px-4 py-2 rounded-full glass border border-border/60 hover:border-primary/40 hover:-translate-y-0.5 transition"
+              >
+                <span className="text-primary group-hover:scale-110 transition">{b.icon}</span>
+                <span className="text-xs md:text-sm font-medium">{b.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
       <div className="mx-auto max-w-7xl px-5 py-14 grid gap-10 md:grid-cols-4">
         <div className="md:col-span-1">
           <div className="flex items-center gap-2.5 mb-4">

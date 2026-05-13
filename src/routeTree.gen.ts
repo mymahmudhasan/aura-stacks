@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as SupportRouteImport } from './routes/support'
 import { Route as StakingRouteImport } from './routes/staking'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as RegisterRouteImport } from './routes/register'
@@ -29,6 +30,11 @@ import { Route as AdminLoginRouteImport } from './routes/admin.login'
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SupportRoute = SupportRouteImport.update({
+  id: '/support',
+  path: '/support',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StakingRoute = StakingRouteImport.update({
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staking': typeof StakingRoute
+  '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/admin/login': typeof AdminLoginRoute
 }
@@ -140,6 +147,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staking': typeof StakingRoute
+  '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/admin/login': typeof AdminLoginRoute
 }
@@ -159,6 +167,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staking': typeof StakingRoute
+  '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/admin/login': typeof AdminLoginRoute
 }
@@ -179,6 +188,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/sitemap.xml'
     | '/staking'
+    | '/support'
     | '/terms'
     | '/admin/login'
   fileRoutesByTo: FileRoutesByTo
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/sitemap.xml'
     | '/staking'
+    | '/support'
     | '/terms'
     | '/admin/login'
   id:
@@ -215,6 +226,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/sitemap.xml'
     | '/staking'
+    | '/support'
     | '/terms'
     | '/admin/login'
   fileRoutesById: FileRoutesById
@@ -234,6 +246,7 @@ export interface RootRouteChildren {
   RegisterRoute: typeof RegisterRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StakingRoute: typeof StakingRoute
+  SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
 }
 
@@ -244,6 +257,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/support': {
+      id: '/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof SupportRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/staking': {
@@ -379,8 +399,19 @@ const rootRouteChildren: RootRouteChildren = {
   RegisterRoute: RegisterRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StakingRoute: StakingRoute,
+  SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

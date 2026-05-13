@@ -1,5 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Hexagon, Cable } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useState } from "react";
+import { Hexagon, Cable, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/login")({
   component: Login,
@@ -12,6 +14,66 @@ function Login() {
 
 export function AuthCard({ mode }: { mode: "login" | "register" }) {
   const isLogin = mode === "login";
+  const navigate = useNavigate();
+  const [form, setForm] = useState({
+    fullName: "",
+    email: "",
+    password: "",
+    phone: "",
+    country: "",
+    binanceUid: "",
+    binanceWallet: "",
+    referredBy: "",
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const upd = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+    setLoading(true);
+    try {
+      if (isLogin) {
+        const { error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password });
+        if (error) throw error;
+        navigate({ to: "/dashboard" });
+      } else {
+        const { data, error } = await supabase.auth.signUp({
+          email: form.email,
+          password: form.password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/dashboard`,
+            data: { full_name: form.fullName },
+          },
+        });
+        if (error) throw error;
+        if (data.user) {
+          const { error: cErr } = await supabase.from("customers").insert({
+            user_id: data.user.id,
+            full_name: form.fullName,
+            email: form.email,
+            phone: form.phone || null,
+            country: form.country || null,
+            binance_uid: form.binanceUid,
+            binance_wallet_address: form.binanceWallet || null,
+            referred_by: form.referredBy || null,
+          });
+          if (cErr) throw cErr;
+        }
+        setSuccess("Account created. Check your email to confirm, then sign in.");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <section className="relative min-h-[80vh] flex items-center justify-center px-5 py-16">
       <div className="absolute inset-0 grid-bg opacity-50" />
@@ -33,13 +95,29 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
           </div>
         )}
 
-        <form className="mt-5 space-y-3" onSubmit={(e) => e.preventDefault()}>
-          {!isLogin && <input placeholder="Full name" className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none" />}
-          <input type="email" placeholder="Email" className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none" />
-          {!isLogin && <input placeholder="Binance UID (required)" className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none font-mono text-sm" />}
-          <input type="password" placeholder="Password" className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none" />
-          {!isLogin && <input placeholder="Referral code (optional)" className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none" />}
-          <button className="w-full px-4 py-3 rounded-xl bg-primary text-primary-foreground font-medium glow-primary">{isLogin ? "Sign in" : "Create account"}</button>
+        <form className="mt-5 space-y-3" onSubmit={onSubmit}>
+          {!isLogin && (
+            <input required value={form.fullName} onChange={upd("fullName")} placeholder="Full name" className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none" />
+          )}
+          <input required type="email" value={form.email} onChange={upd("email")} placeholder="Email" className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none" />
+          {!isLogin && (
+            <>
+              <input value={form.phone} onChange={upd("phone")} placeholder="Phone number" className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none" />
+              <input value={form.country} onChange={upd("country")} placeholder="Country" className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none" />
+              <input required value={form.binanceUid} onChange={upd("binanceUid")} placeholder="Binance UID (required)" className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none font-mono text-sm" />
+              <input value={form.binanceWallet} onChange={upd("binanceWallet")} placeholder="Binance wallet address (USDT/BTC)" className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none font-mono text-sm" />
+            </>
+          )}
+          <input required type="password" value={form.password} onChange={upd("password")} placeholder="Password (min 6 chars)" minLength={6} className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none" />
+          {!isLogin && (
+            <input value={form.referredBy} onChange={upd("referredBy")} placeholder="Referral code (optional)" className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none" />
+          )}
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          {success && <p className="text-sm text-success">{success}</p>}
+          <button disabled={loading} className="w-full px-4 py-3 rounded-xl bg-primary text-primary-foreground font-medium glow-primary inline-flex items-center justify-center gap-2 disabled:opacity-60">
+            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+            {isLogin ? "Sign in" : "Create account"}
+          </button>
         </form>
         {!isLogin && (
           <p className="text-[11px] text-center text-muted-foreground mt-3">
@@ -49,6 +127,11 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
         <p className="text-sm text-center text-muted-foreground mt-5">
           {isLogin ? <>New here? <Link to="/register" className="text-primary">Create an account</Link></> : <>Already a member? <Link to="/login" className="text-primary">Sign in</Link></>}
         </p>
+        {isLogin && (
+          <p className="text-[11px] text-center text-muted-foreground mt-3">
+            <Link to="/admin/login" className="text-primary/80 hover:text-primary">Admin sign in →</Link>
+          </p>
+        )}
       </div>
     </section>
   );

@@ -1,6 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Mail, MessageSquare, Send } from "lucide-react";
+import { Mail, MessageSquare, Send, MapPin, Phone, Building2 } from "lucide-react";
 import { CTA, GlassCard, PageHero, Section } from "@/components/ui-bits";
+
+const offices = [
+  { country: "Bangladesh", flag: "🇧🇩", city: "Dhaka", tag: "Regional HQ — South Asia", address: "Level 14, Bay's Galleria, 57 Gulshan Avenue, Dhaka 1212", phone: "+880 1700 112233" },
+  { country: "Singapore", flag: "🇸🇬", city: "Singapore", tag: "Global Headquarters", address: "Marina Bay Financial Centre, Tower 3, #28-01, 12 Marina Boulevard, 018982", phone: "+65 6812 4400" },
+  { country: "United Arab Emirates", flag: "🇦🇪", city: "Dubai", tag: "Middle East Hub", address: "Office 3204, Burj Daman Tower, DIFC, Dubai", phone: "+971 4 555 8800" },
+  { country: "United Kingdom", flag: "🇬🇧", city: "London", tag: "Europe Hub", address: "Floor 22, The Leadenhall Building, 122 Leadenhall St, London EC3V 4AB", phone: "+44 20 7946 1100" },
+  { country: "United States", flag: "🇺🇸", city: "New York", tag: "Americas Hub", address: "Suite 4500, One World Trade Center, 285 Fulton St, New York, NY 10007", phone: "+1 212 555 0144" },
+  { country: "Switzerland", flag: "🇨🇭", city: "Zug", tag: "Crypto Valley", address: "Dammstrasse 16, 6300 Zug", phone: "+41 41 511 2200" },
+  { country: "Japan", flag: "🇯🇵", city: "Tokyo", tag: "APAC Operations", address: "Roppongi Hills Mori Tower 31F, 6-10-1 Roppongi, Minato-ku, Tokyo 106-6131", phone: "+81 3 6406 5500" },
+  { country: "Australia", flag: "🇦🇺", city: "Sydney", tag: "Oceania Office", address: "Level 38, International Tower One, 100 Barangaroo Avenue, Sydney NSW 2000", phone: "+61 2 8001 6600" },
+];
 
 export const Route = createFileRoute("/contact")({
   component: Contact,
@@ -50,6 +61,34 @@ function Contact() {
             </GlassCard>
             <CTA to="/faq" variant="ghost" className="w-full justify-center">Browse FAQ</CTA>
           </div>
+        </div>
+      </Section>
+
+      <Section eyebrow="Global Presence" title={<>Offices across <span className="gradient-text">8 countries</span></>} subtitle="Local teams, global reach. Visit us or reach our regional desks during business hours.">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {offices.map((o) => (
+            <GlassCard key={o.country} className="hover:border-primary/30 transition">
+              <div className="flex items-start justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-2xl leading-none" aria-hidden>{o.flag}</span>
+                  <div>
+                    <p className="font-semibold leading-tight">{o.city}</p>
+                    <p className="text-xs text-muted-foreground">{o.country}</p>
+                  </div>
+                </div>
+                <span className="text-[10px] uppercase tracking-widest px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 whitespace-nowrap">
+                  <Building2 className="w-2.5 h-2.5 inline -mt-0.5 mr-1" />{o.tag.split("—")[0].trim()}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3 leading-relaxed flex items-start gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                <span>{o.address}</span>
+              </p>
+              <p className="text-xs font-mono flex items-center gap-1.5">
+                <Phone className="w-3 h-3 text-primary" />{o.phone}
+              </p>
+            </GlassCard>
+          ))}
         </div>
       </Section>
     </>

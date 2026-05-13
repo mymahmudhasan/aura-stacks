@@ -1,6 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Mail, MessageSquare, Send } from "lucide-react";
+import { Mail, MessageSquare, Send, MapPin, Phone, Building2 } from "lucide-react";
 import { CTA, GlassCard, PageHero, Section } from "@/components/ui-bits";
+
+const offices = [
+  { country: "Bangladesh", flag: "🇧🇩", city: "Dhaka", tag: "Regional HQ — South Asia", address: "Level 14, Bay's Galleria, 57 Gulshan Avenue, Dhaka 1212", phone: "+880 1700 112233" },
+  { country: "Singapore", flag: "🇸🇬", city: "Singapore", tag: "Global Headquarters", address: "Marina Bay Financial Centre, Tower 3, #28-01, 12 Marina Boulevard, 018982", phone: "+65 6812 4400" },
+  { country: "United Arab Emirates", flag: "🇦🇪", city: "Dubai", tag: "Middle East Hub", address: "Office 3204, Burj Daman Tower, DIFC, Dubai", phone: "+971 4 555 8800" },
+  { country: "United Kingdom", flag: "🇬🇧", city: "London", tag: "Europe Hub", address: "Floor 22, The Leadenhall Building, 122 Leadenhall St, London EC3V 4AB", phone: "+44 20 7946 1100" },
+  { country: "United States", flag: "🇺🇸", city: "New York", tag: "Americas Hub", address: "Suite 4500, One World Trade Center, 285 Fulton St, New York, NY 10007", phone: "+1 212 555 0144" },
+  { country: "Switzerland", flag: "🇨🇭", city: "Zug", tag: "Crypto Valley", address: "Dammstrasse 16, 6300 Zug", phone: "+41 41 511 2200" },
+  { country: "Japan", flag: "🇯🇵", city: "Tokyo", tag: "APAC Operations", address: "Roppongi Hills Mori Tower 31F, 6-10-1 Roppongi, Minato-ku, Tokyo 106-6131", phone: "+81 3 6406 5500" },
+  { country: "Australia", flag: "🇦🇺", city: "Sydney", tag: "Oceania Office", address: "Level 38, International Tower One, 100 Barangaroo Avenue, Sydney NSW 2000", phone: "+61 2 8001 6600" },
+];
 
 export const Route = createFileRoute("/contact")({
   component: Contact,

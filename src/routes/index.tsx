@@ -23,22 +23,22 @@ function Home() {
       <section className="relative border-b border-border/40 bg-background/60">
         <div className="mx-auto max-w-7xl py-6 md:py-8">
           <div className="flex sm:grid sm:grid-cols-3 gap-3 overflow-x-auto sm:overflow-visible snap-x snap-mandatory scroll-px-5 px-5 pb-2 sm:pb-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <Link to="/mining" className="group glass rounded-2xl p-4 flex items-center gap-3 hover:border-primary/40 transition shrink-0 w-[80%] sm:w-auto snap-start">
-              <div className="w-11 h-11 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0"><Cpu className="w-5 h-5" /></div>
+            <Link to="/mining" style={{ animationDelay: "0ms" }} className="sheen group glass animate-rise rounded-2xl p-4 flex items-center gap-3 hover:border-primary/40 hover:-translate-y-1 hover:glow-primary transition-all duration-300 shrink-0 w-[80%] sm:w-auto snap-start">
+              <div className="w-11 h-11 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 animate-pulse-glow"><Cpu className="w-5 h-5" /></div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold flex items-center gap-1.5">Smart Mining <ArrowRight className="w-3.5 h-3.5 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition" /></p>
                 <p className="text-xs text-muted-foreground truncate">Up to 2.4% daily rewards</p>
               </div>
             </Link>
-            <Link to="/staking" className="group glass rounded-2xl p-4 flex items-center gap-3 hover:border-primary/40 transition shrink-0 w-[80%] sm:w-auto snap-start">
-              <div className="w-11 h-11 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0"><Lock className="w-5 h-5" /></div>
+            <Link to="/staking" style={{ animationDelay: "120ms" }} className="sheen group glass animate-rise rounded-2xl p-4 flex items-center gap-3 hover:border-primary/40 hover:-translate-y-1 hover:glow-primary transition-all duration-300 shrink-0 w-[80%] sm:w-auto snap-start">
+              <div className="w-11 h-11 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 animate-pulse-glow"><Lock className="w-5 h-5" /></div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold flex items-center gap-1.5">Binance Staking <ArrowRight className="w-3.5 h-3.5 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition" /></p>
                 <p className="text-xs text-muted-foreground truncate">Up to 38% APY locked</p>
               </div>
             </Link>
-            <Link to="/ai-trading" className="group glass rounded-2xl p-4 flex items-center gap-3 hover:border-primary/40 transition shrink-0 w-[80%] sm:w-auto snap-start">
-              <div className="w-11 h-11 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0"><Brain className="w-5 h-5" /></div>
+            <Link to="/ai-trading" style={{ animationDelay: "240ms" }} className="sheen group glass animate-rise rounded-2xl p-4 flex items-center gap-3 hover:border-primary/40 hover:-translate-y-1 hover:glow-primary transition-all duration-300 shrink-0 w-[80%] sm:w-auto snap-start">
+              <div className="w-11 h-11 rounded-xl bg-primary/15 text-primary flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 animate-pulse-glow"><Brain className="w-5 h-5" /></div>
               <div className="min-w-0">
                 <p className="text-sm font-semibold flex items-center gap-1.5">AI Trading <ArrowRight className="w-3.5 h-3.5 opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition" /></p>
                 <p className="text-xs text-muted-foreground truncate">24/7 automated bots</p>

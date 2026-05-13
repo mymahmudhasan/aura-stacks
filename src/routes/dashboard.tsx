@@ -22,6 +22,19 @@ function Dashboard() {
         </div>
       </div>
 
+      <div className="mb-6 rounded-2xl border border-primary/30 bg-primary/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-lg bg-[image:var(--gradient-gold)] text-gold-foreground flex items-center justify-center shrink-0">
+            <ArrowUpRight className="w-4 h-4" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold">Withdrawals are sent manually to your Binance wallet.</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Make sure your Binance UID on file is correct. Payouts are processed within 24 hours.</p>
+          </div>
+        </div>
+        <p className="text-xs font-mono text-primary">UID · 284910321</p>
+      </div>
+
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Stat icon={<Wallet />} label="Total Balance" value="$48,920.30" trend="+12.4%" />
         <Stat icon={<TrendingUp />} label="Total Profit" value="$11,284.50" trend="+8.7%" />

@@ -10,6 +10,7 @@ const nav = [
   { to: "/affiliate", label: "Affiliate" },
   { to: "/about", label: "About" },
   { to: "/faq", label: "FAQ" },
+  { to: "/admin", label: "Admin" },
 ];
 
 export function Header() {

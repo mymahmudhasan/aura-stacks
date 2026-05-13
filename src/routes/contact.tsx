@@ -63,6 +63,34 @@ function Contact() {
           </div>
         </div>
       </Section>
+
+      <Section eyebrow="Global Presence" title={<>Offices across <span className="gradient-text">8 countries</span></>} subtitle="Local teams, global reach. Visit us or reach our regional desks during business hours.">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {offices.map((o) => (
+            <GlassCard key={o.country} className="hover:border-primary/30 transition">
+              <div className="flex items-start justify-between gap-2 mb-3">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-2xl leading-none" aria-hidden>{o.flag}</span>
+                  <div>
+                    <p className="font-semibold leading-tight">{o.city}</p>
+                    <p className="text-xs text-muted-foreground">{o.country}</p>
+                  </div>
+                </div>
+                <span className="text-[10px] uppercase tracking-widest px-2 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 whitespace-nowrap">
+                  <Building2 className="w-2.5 h-2.5 inline -mt-0.5 mr-1" />{o.tag.split("—")[0].trim()}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3 leading-relaxed flex items-start gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                <span>{o.address}</span>
+              </p>
+              <p className="text-xs font-mono flex items-center gap-1.5">
+                <Phone className="w-3 h-3 text-primary" />{o.phone}
+              </p>
+            </GlassCard>
+          ))}
+        </div>
+      </Section>
     </>
   );
 }

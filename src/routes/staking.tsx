@@ -160,6 +160,14 @@ function Staking() {
         </div>
       </Section>
 
+      <Section
+        eyebrow="Interactive simulator"
+        title={<>Watch your stake <span className="gradient-text">unlock & grow</span></>}
+        subtitle="Pick a plan, set your amount and see a live countdown, locked-balance progress and daily reward preview update in real time."
+      >
+        <StakingTimeline />
+      </Section>
+
       <Section>
         <div className="grid lg:grid-cols-2 gap-10 items-center">
           <div>

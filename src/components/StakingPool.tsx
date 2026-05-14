@@ -14,7 +14,7 @@ import {
 import { Link } from "@tanstack/react-router";
 import poolImg from "@/assets/staking-prize-pool.jpg";
 
-const POOL_TOTAL = 65000; // USDT
+const POOL_TOTAL = 820000; // USDT
 const WINNERS = 100;
 const PER_WINNER = POOL_TOTAL / WINNERS; // 650
 
@@ -99,11 +99,11 @@ export function StakingPool() {
 
             <div>
               <h3 className="text-3xl md:text-4xl font-bold tracking-tight">
-                <span className="gradient-text">$65,000 USDT</span> shared by{" "}
+                <span className="gradient-text">$820,000 USDT</span> shared by{" "}
                 <span className="text-gold">100 winners</span> — every 24 hours
               </h3>
               <p className="mt-3 text-sm md:text-base text-muted-foreground">
-                Join the daily reward pool from any active staking plan. When the timer hits zero, 100 connected members are randomly selected and split the entire pool — that's <span className="text-foreground font-semibold">$650 USDT</span> per winner, paid instantly to your wallet.
+                Join the daily reward pool from any active staking plan. When the timer hits zero, 100 connected members are randomly selected and split the entire pool — that's <span className="text-foreground font-semibold">$8,200 USDT</span> per winner, paid instantly to your wallet.
               </p>
             </div>
 
@@ -206,7 +206,7 @@ export function StakingPool() {
           },
           {
             i: <Gift className="w-5 h-5" />,
-            t: "Get $650 USDT",
+            t: "Get $8,200 USDT",
             d: "Winners receive instant payout to Binance/Trust Wallet. Auto-credited.",
           },
         ].map((step, i) => (
@@ -228,22 +228,22 @@ export function StakingPool() {
         <div className="glass-strong rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-4">
             <Users className="w-5 h-5 text-primary" />
-            <h4 className="text-lg font-bold">How $65,000 is divided</h4>
+            <h4 className="text-lg font-bold">How $820,000 is divided</h4>
           </div>
 
           {/* Visual breakdown bar */}
           <div className="space-y-3">
             <div>
               <div className="flex justify-between text-xs mb-1">
-                <span className="text-muted-foreground">100 winners × $650</span>
-                <span className="font-mono text-gold">$65,000</span>
+                <span className="text-muted-foreground">100 winners × $8,200</span>
+                <span className="font-mono text-gold">$820,000</span>
               </div>
               <div className="grid grid-cols-10 gap-1">
                 {Array.from({ length: 100 }).map((_, i) => (
                   <div
                     key={i}
                     className="aspect-square rounded-sm bg-gold/30 hover:bg-gold transition"
-                    title={`Winner #${i + 1} · $650 USDT`}
+                    title={`Winner #${i + 1} · $8,200 USDT`}
                   />
                 ))}
               </div>
@@ -255,7 +255,7 @@ export function StakingPool() {
                 <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Winners / day</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-gold">$650</p>
+                <p className="text-2xl font-bold text-gold">$8,200</p>
                 <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Per winner</p>
               </div>
               <div className="text-center">

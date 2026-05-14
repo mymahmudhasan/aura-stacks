@@ -270,14 +270,38 @@ function Referrals() {
 
         <GlassCard>
           <h3 className="font-semibold mb-4">Payouts</h3>
+          {payout && (() => {
+            void nowTick;
+            const next = new Date(payout.next_payout_at);
+            const eligible = payout.pending_amount >= payout.min_amount;
+            return (
+              <div className="rounded-xl bg-background/40 border border-border/40 p-3 mb-4">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Next payout</p>
+                <p className="text-xl font-bold font-mono gradient-text mt-0.5">{countdown(next)}</p>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  {next.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
+                </p>
+                <div className="mt-2 flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Pending</span>
+                  <span className={`font-mono font-medium ${eligible ? "text-success" : "text-muted-foreground"}`}>
+                    ${payout.pending_amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+                {!eligible && (
+                  <p className="text-[11px] text-gold mt-1">Min ${payout.min_amount.toFixed(2)} required to release.</p>
+                )}
+              </div>
+            );
+          })()}
           <div className="space-y-3 text-sm">
             <Row k="This month" v={`$${monthEarned.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} tone="text-success" />
             <Row k="Last month" v={`$${lastMonthEarned.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} />
             <Row k="Lifetime" v={`$${totals.earned.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} tone="text-success" />
-            <Row k="Method" v="Binance · USDT" />
+            <Row k="Last paid" v={payout?.last_paid_at ? timeAgo(payout.last_paid_at) : "—"} />
+            <Row k="Method" v={payout?.method ?? "Binance · USDT"} />
           </div>
           <div className="mt-5 inline-flex items-center gap-2 text-xs text-muted-foreground">
-            <ArrowUpRight className="w-3.5 h-3.5 text-gold" /> Payouts settle automatically every 24h.
+            <ArrowUpRight className="w-3.5 h-3.5 text-gold" /> Payouts settle automatically every {payout?.cadence_hours ?? 24}h.
           </div>
         </GlassCard>
       </div>

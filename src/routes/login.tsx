@@ -29,6 +29,7 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
     referredBy: "",
   });
   const [step, setStep] = useState<Step>("form");
+  const [verifyMethod, setVerifyMethod] = useState<VerifyMethod>("phone");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

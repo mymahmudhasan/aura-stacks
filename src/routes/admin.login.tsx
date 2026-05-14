@@ -14,6 +14,27 @@ function AdminLogin() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resetOpen, setResetOpen] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetMsg, setResetMsg] = useState<string | null>(null);
+
+  const onForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetMsg(null);
+    setResetLoading(true);
+    // Always show the same neutral message regardless of whether the email
+    // exists or has admin role — prevents account enumeration. Server-side,
+    // the reset page will refuse to set a new password unless the recovered
+    // user actually has the admin role.
+    await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: `${window.location.origin}/admin/reset-password`,
+    });
+    setResetLoading(false);
+    setResetMsg("If an admin account exists for that email, a secure reset link has been sent.");
+    setResetEmail("");
+  };
+
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
@@ -96,6 +117,42 @@ function AdminLogin() {
             {loading ? "Signing in…" : "Sign in to console"}
           </button>
         </form>
+
+        <div className="mt-4 text-center">
+          <button
+            type="button"
+            onClick={() => { setResetOpen((v) => !v); setResetMsg(null); }}
+            className="text-xs text-primary hover:underline"
+          >
+            {resetOpen ? "Hide password reset" : "Forgot password?"}
+          </button>
+        </div>
+
+        {resetOpen && (
+          <form onSubmit={onForgot} className="mt-4 space-y-3 glass rounded-xl p-4 border border-primary/20">
+            <p className="text-xs text-muted-foreground">
+              Enter the admin email. We'll send a one-time secure link to set a new password.
+            </p>
+            <input
+              type="email"
+              required
+              value={resetEmail}
+              onChange={(e) => setResetEmail(e.target.value)}
+              placeholder="admin@yourdomain.com"
+              className="w-full px-4 py-2.5 rounded-xl bg-input/50 border border-border focus:border-primary outline-none text-sm"
+            />
+            <button
+              type="submit"
+              disabled={resetLoading}
+              className="w-full px-4 py-2.5 rounded-xl glass hover:bg-white/10 text-foreground text-sm font-medium inline-flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              {resetLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+              {resetLoading ? "Sending…" : "Send reset link"}
+            </button>
+            {resetMsg && <p className="text-xs text-success text-center">{resetMsg}</p>}
+          </form>
+        )}
+
 
         <p className="text-[11px] text-center text-muted-foreground mt-5">
           Need an admin account? Create a regular user, then ask an existing admin to grant the role from the database.

@@ -1,6 +1,6 @@
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
-import { Menu, X, ShieldCheck, BadgeCheck, Award, Lock, Globe2, Cpu } from "lucide-react";
+import { Menu, X, ShieldCheck, BadgeCheck, Award, Lock, Globe2, Cpu, Phone } from "lucide-react";
 import logo from "@/assets/novatrad-logo.png";
 import { WhatsAppWidget } from "@/components/WhatsAppWidget";
 
@@ -98,6 +98,17 @@ export function Header() {
   );
 }
 
+const offices = [
+  { country: "United States", city: "HQ", flag: "🇺🇸", address: "350 5th Avenue, 21st Floor, New York, NY 10118", phone: "+1 212 555 0142" },
+  { country: "Singapore", city: "APAC", flag: "🇸🇬", address: "1 Raffles Place, Tower 2, #20-61, Singapore 048616", phone: "+65 6232 0188" },
+  { country: "Saudi Arabia", city: "MENA", flag: "🇸🇦", address: "Kingdom Tower, Olaya District, Riyadh 12214", phone: "+966 11 211 7400" },
+  { country: "Bangladesh", city: "South Asia", flag: "🇧🇩", address: "Bay's Galleria, Plot 2, Gulshan-1, Dhaka 1212", phone: "+880 1700 998877" },
+  { country: "Canada", city: "Americas", flag: "🇨🇦", address: "181 Bay Street, Suite 4400, Toronto, ON M5J 2T3", phone: "+1 416 555 0177" },
+  { country: "India", city: "Operations", flag: "🇮🇳", address: "One BKC, Tower A, Bandra Kurla Complex, Mumbai 400051", phone: "+91 22 6155 0900" },
+  { country: "United Kingdom", city: "Europe", flag: "🇬🇧", address: "30 St Mary Axe, Level 28, London EC3A 8BF", phone: "+44 20 7946 0123" },
+  { country: "Norway", city: "Nordics", flag: "🇳🇴", address: "Aker Brygge, Bryggegata 6, 0250 Oslo", phone: "+47 21 04 88 00" },
+];
+
 export function Footer() {
   const badges = [
     { icon: <ShieldCheck className="w-4 h-4" />, label: "ISO 27001" },
@@ -146,6 +157,32 @@ export function Footer() {
               >
                 <span className="text-primary group-hover:scale-110 transition">{b.icon}</span>
                 <span className="text-xs md:text-sm font-medium">{b.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Global offices */}
+      <div className="border-b border-border/40 bg-background/40">
+        <div className="mx-auto max-w-7xl px-5 py-12">
+          <div className="text-center mb-8">
+            <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground mb-2">Global Presence</p>
+            <h3 className="text-2xl md:text-3xl font-bold">Our offices around the <span className="gradient-text">world</span></h3>
+            <p className="text-sm text-muted-foreground mt-2">Local teams. 24/7 multilingual support.</p>
+          </div>
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {offices.map((o) => (
+              <div key={o.country} className="glass rounded-xl p-4 hover:border-primary/40 transition">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xl leading-none">{o.flag}</span>
+                  <p className="text-sm font-semibold">{o.country}</p>
+                  <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded-md bg-primary/10 text-primary uppercase tracking-wider">{o.city}</span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">{o.address}</p>
+                <a href={`tel:${o.phone.replace(/\s/g, "")}`} className="mt-2 inline-flex items-center gap-1.5 text-xs text-success hover:underline font-mono">
+                  <Phone className="w-3 h-3" /> {o.phone}
+                </a>
               </div>
             ))}
           </div>

@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Cpu, Lock, Brain, Shield, Zap, Globe, TrendingUp, Users, Sparkles, Bot, BadgeCheck, Headphones, Activity, LineChart, Cable, AlertTriangle } from "lucide-react";
+import { ArrowRight, Cpu, Lock, Brain, Shield, Zap, Globe, TrendingUp, Users, Sparkles, Bot, BadgeCheck, Headphones, Activity, LineChart, Cable, AlertTriangle, ShieldCheck, CircleDollarSign, Eye, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import heroImg from "@/assets/ai-trader-bot.png";
 import miningImg from "@/assets/mining-visual.jpg";
 import stakingImg from "@/assets/staking-visual.jpg";
@@ -22,24 +22,43 @@ function Home() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 grid-bg opacity-60" />
         <div className="absolute inset-0 bg-[image:var(--gradient-aurora)]" />
-        <div className="relative mx-auto max-w-7xl px-5 pt-14 md:pt-20 pb-16 grid lg:grid-cols-2 gap-12 items-center">
+
+        {/* Live ticker tape */}
+        <TickerTape />
+
+        <div className="relative mx-auto max-w-7xl px-5 pt-10 md:pt-14 pb-16 grid lg:grid-cols-2 gap-12 items-center">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-xs uppercase tracking-widest text-primary mb-6">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" /> Flagship product · AI Trading
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" /> Live · AI trading desk open
             </div>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.05]">
-              <span className="gradient-text">AI-powered</span> crypto trading that never sleeps.
+              Trade smarter with <span className="gradient-text">AI that protects</span> your capital.
             </h1>
             <p className="mt-6 text-base md:text-lg text-muted-foreground max-w-xl">
-              NovaVault's neural trading engine scans hundreds of pairs across Binance markets and executes optimized strategies 24/7 — so your capital keeps working while you don't.
+              NovaVault's neural trading engine scans 300+ Binance pairs every second and only takes high-probability setups — with hard stop-loss, drawdown caps and capital-protection rules baked in. Your funds stay yours.
             </p>
+
+            {/* Trust badges */}
+            <div className="mt-6 flex flex-wrap gap-2">
+              {[
+                { i: <ShieldCheck className="w-3.5 h-3.5" />, t: "Capital protection on" },
+                { i: <Lock className="w-3.5 h-3.5" />, t: "Funds in your Binance wallet" },
+                { i: <Eye className="w-3.5 h-3.5" />, t: "100% transparent trades" },
+                { i: <CircleDollarSign className="w-3.5 h-3.5" />, t: "No hidden fees" },
+              ].map((b) => (
+                <span key={b.t} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full glass text-[11px] font-medium text-foreground/90 border border-success/20">
+                  <span className="text-success">{b.i}</span>{b.t}
+                </span>
+              ))}
+            </div>
+
             <div className="mt-8 flex flex-wrap gap-3">
               <CTA to="/register">Activate AI Bot <ArrowRight className="w-4 h-4" /></CTA>
-              <CTA to="/ai-trading" variant="ghost">Explore AI Trading</CTA>
+              <CTA to="/ai-trading" variant="ghost">See live performance</CTA>
             </div>
             <div className="mt-10 grid grid-cols-3 gap-3 max-w-lg">
               <StatPill label="Avg Win Rate" value="74%" />
-              <StatPill label="Live Bots" value="12+" />
+              <StatPill label="Max Drawdown" value="2.1%" />
               <StatPill label="Uptime" value="99.99%" />
             </div>
           </div>
@@ -49,21 +68,55 @@ function Home() {
             <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full -z-10" />
             <div className="relative">
               <img src={heroImg} alt="NovaVault AI trading bot avatar" width={1024} height={1024} className="w-full h-auto drop-shadow-[0_30px_60px_rgba(56,189,248,0.35)]" />
-              {/* Live overlay */}
+              {/* Trading terminal overlay */}
               <div className="absolute inset-x-4 bottom-4 glass-strong rounded-2xl p-4 border border-primary/30">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
-                    <span className="text-xs uppercase tracking-widest text-muted-foreground">AI Bot · Live</span>
+                    <span className="text-xs uppercase tracking-widest text-muted-foreground">BTC/USDT · AI Live</span>
                   </div>
                   <span className="text-xs text-success font-mono">+1.84% / 24h</span>
                 </div>
                 <AILiveChart />
+                <div className="mt-3 grid grid-cols-3 gap-2 text-[10px] font-mono">
+                  <div className="rounded-md bg-success/10 border border-success/20 px-2 py-1.5">
+                    <p className="text-muted-foreground uppercase tracking-wider">Entry</p>
+                    <p className="text-success">68,420.50</p>
+                  </div>
+                  <div className="rounded-md bg-destructive/10 border border-destructive/20 px-2 py-1.5">
+                    <p className="text-muted-foreground uppercase tracking-wider">Stop-loss</p>
+                    <p className="text-destructive">67,950.00</p>
+                  </div>
+                  <div className="rounded-md bg-primary/10 border border-primary/20 px-2 py-1.5">
+                    <p className="text-muted-foreground uppercase tracking-wider">Target</p>
+                    <p className="text-primary">69,810.00</p>
+                  </div>
+                </div>
               </div>
             </div>
             <FloatingCard className="absolute -left-4 -top-6 hidden md:flex" icon={<Bot className="text-primary" />} label="DeepGrid AI" value="Executing" />
-            <FloatingCard className="absolute -right-4 -bottom-2 hidden md:flex" icon={<Activity className="text-success" />} label="Trades / hr" value="38" />
+            <FloatingCard className="absolute -right-4 -bottom-2 hidden md:flex" icon={<ShieldCheck className="text-success" />} label="Risk guard" value="Active" />
           </div>
+        </div>
+      </section>
+
+      {/* SAFETY STRIP — capital protection */}
+      <section className="border-y border-success/30 bg-success/5">
+        <div className="mx-auto max-w-7xl px-5 py-5 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { i: <ShieldCheck className="w-4 h-4" />, t: "Auto stop-loss on every trade", d: "Losses are capped, never catastrophic." },
+            { i: <Lock className="w-4 h-4" />, t: "Non-custodial flow", d: "Your capital stays in your own Binance wallet." },
+            { i: <Eye className="w-4 h-4" />, t: "Full audit log", d: "Every AI trade is visible in your dashboard." },
+            { i: <BadgeCheck className="w-4 h-4" />, t: "No harmful strategies", d: "No martingale, no over-leverage, no rugs." },
+          ].map((x) => (
+            <div key={x.t} className="flex items-start gap-3">
+              <div className="w-9 h-9 rounded-lg bg-success/15 text-success flex items-center justify-center shrink-0">{x.i}</div>
+              <div>
+                <p className="text-sm font-semibold leading-tight">{x.t}</p>
+                <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{x.d}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -332,6 +385,40 @@ function AILiveChart() {
           <animate attributeName="r" values="3;6;3" dur="1.4s" repeatCount="indefinite" />
         </circle>
       </svg>
+    </div>
+  );
+}
+
+function TickerTape() {
+  const tickers = [
+    { s: "BTC/USDT", p: "68,420.50", d: "+1.84%", up: true },
+    { s: "ETH/USDT", p: "3,842.10", d: "+2.41%", up: true },
+    { s: "SOL/USDT", p: "182.34", d: "+5.12%", up: true },
+    { s: "BNB/USDT", p: "612.80", d: "+0.92%", up: true },
+    { s: "XRP/USDT", p: "0.6240", d: "-0.31%", up: false },
+    { s: "DOGE/USDT", p: "0.1582", d: "+3.74%", up: true },
+    { s: "ADA/USDT", p: "0.4612", d: "-0.84%", up: false },
+    { s: "AVAX/USDT", p: "38.42", d: "+2.18%", up: true },
+    { s: "MATIC/USDT", p: "0.7184", d: "+1.05%", up: true },
+    { s: "LINK/USDT", p: "16.92", d: "+4.22%", up: true },
+  ];
+  const row = [...tickers, ...tickers];
+  return (
+    <div className="relative border-y border-border/40 bg-background/60 backdrop-blur-sm overflow-hidden">
+      <div className="flex animate-[ticker_45s_linear_infinite] whitespace-nowrap py-2.5">
+        {row.map((t, i) => (
+          <div key={i} className="flex items-center gap-2 px-5 text-xs font-mono shrink-0">
+            <span className="font-semibold text-foreground/90">{t.s}</span>
+            <span className="text-muted-foreground">{t.p}</span>
+            <span className={`inline-flex items-center gap-0.5 ${t.up ? "text-success" : "text-destructive"}`}>
+              {t.up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+              {t.d}
+            </span>
+            <span className="text-border">·</span>
+          </div>
+        ))}
+      </div>
+      <style>{`@keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }`}</style>
     </div>
   );
 }

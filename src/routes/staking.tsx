@@ -142,6 +142,14 @@ function Staking() {
         </div>
       </Section>
 
+      <Section
+        eyebrow="Daily reward pool"
+        title={<>Win <span className="gradient-text">$650 USDT</span> from the daily $65,000 pool</>}
+        subtitle="Every 24 hours, 100 connected stakers are randomly drawn to share a $65,000 USDT prize pool. Stake any plan to enter automatically."
+      >
+        <StakingPool />
+      </Section>
+
       <Section eyebrow="Lock periods" title={<>Choose your <span className="gradient-text">staking duration</span></>}>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {tiers.map((t) => (

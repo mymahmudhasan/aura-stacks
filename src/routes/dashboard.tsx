@@ -15,9 +15,10 @@ function Dashboard() {
           <p className="text-sm text-muted-foreground">Welcome back,</p>
           <h1 className="text-2xl md:text-3xl font-bold">Investor <span className="gradient-text">#A2891</span></h1>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button className="glass rounded-xl px-4 py-2 text-sm flex items-center gap-2"><ArrowDownLeft className="w-4 h-4 text-success" /> Deposit</button>
           <button className="glass rounded-xl px-4 py-2 text-sm flex items-center gap-2"><ArrowUpRight className="w-4 h-4 text-gold" /> Withdraw</button>
+          <Link to="/referrals" className="rounded-xl px-4 py-2 text-sm flex items-center gap-2 bg-primary text-primary-foreground glow-primary"><Share2 className="w-4 h-4" /> Referrals</Link>
           <button className="glass rounded-xl p-2"><Bell className="w-4 h-4" /></button>
         </div>
       </div>
@@ -94,6 +95,19 @@ function Dashboard() {
           </ul>
         </GlassCard>
       </div>
+
+      <Link to="/referrals" className="mt-8 block rounded-2xl glass-strong p-5 hover:border-primary/40 transition group">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-[image:var(--gradient-gold)] text-gold-foreground flex items-center justify-center"><Users className="w-5 h-5" /></div>
+            <div>
+              <p className="font-semibold">Referral Dashboard</p>
+              <p className="text-xs text-muted-foreground">45 direct · 133 network · $4,031.40 earned · live commissions ticking now</p>
+            </div>
+          </div>
+          <span className="text-sm text-primary group-hover:translate-x-1 transition">Open →</span>
+        </div>
+      </Link>
 
       <div className="mt-8">
         <CTA to="/mining" variant="gold">Discover new plans</CTA>

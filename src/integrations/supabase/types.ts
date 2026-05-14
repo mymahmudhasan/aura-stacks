@@ -17,7 +17,7 @@ export type Database = {
       customers: {
         Row: {
           balance: number
-          binance_uid: string
+          binance_uid: string | null
           binance_wallet_address: string | null
           country: string | null
           created_at: string
@@ -36,7 +36,7 @@ export type Database = {
         }
         Insert: {
           balance?: number
-          binance_uid: string
+          binance_uid?: string | null
           binance_wallet_address?: string | null
           country?: string | null
           created_at?: string
@@ -55,7 +55,7 @@ export type Database = {
         }
         Update: {
           balance?: number
-          binance_uid?: string
+          binance_uid?: string | null
           binance_wallet_address?: string | null
           country?: string | null
           created_at?: string

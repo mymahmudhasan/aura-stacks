@@ -28,6 +28,7 @@ export type Database = {
           id: string
           notes: string | null
           phone: string | null
+          phone_verified_at: string | null
           preferred_coin: string | null
           referred_by: string | null
           status: string
@@ -49,6 +50,7 @@ export type Database = {
           id?: string
           notes?: string | null
           phone?: string | null
+          phone_verified_at?: string | null
           preferred_coin?: string | null
           referred_by?: string | null
           status?: string
@@ -70,6 +72,7 @@ export type Database = {
           id?: string
           notes?: string | null
           phone?: string | null
+          phone_verified_at?: string | null
           preferred_coin?: string | null
           referred_by?: string | null
           status?: string

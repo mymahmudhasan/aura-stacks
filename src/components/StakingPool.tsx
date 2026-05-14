@@ -13,10 +13,9 @@ import {
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import poolImg from "@/assets/staking-prize-pool.jpg";
+import { usePoolSettings } from "@/hooks/use-pool-settings";
 
-const POOL_TOTAL = 820000; // USDT
-const WINNERS = 100;
-const PER_WINNER = POOL_TOTAL / WINNERS; // 8200
+const fmt = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 0 });
 
 function nextPoolClose() {
   // Closes at next 00:00 UTC
@@ -50,6 +49,10 @@ function useCountdown(targetMs: number) {
 }
 
 export function StakingPool() {
+  const { settings, perWinner } = usePoolSettings();
+  const POOL_TOTAL = settings.poolTotal;
+  const WINNERS = settings.winners;
+  const PER_WINNER = perWinner;
   const target = useMemo(() => nextPoolClose(), []);
   const { h, m, s, diff } = useCountdown(target);
 
@@ -99,11 +102,11 @@ export function StakingPool() {
 
             <div>
               <h3 className="text-3xl md:text-4xl font-bold tracking-tight">
-                <span className="gradient-text">$820,000 USDT</span> shared by{" "}
-                <span className="text-gold">100 winners</span> — every 24 hours
+                <span className="gradient-text">${fmt(POOL_TOTAL)} USDT</span> shared by{" "}
+                <span className="text-gold">{WINNERS} winners</span> — every 24 hours
               </h3>
               <p className="mt-3 text-sm md:text-base text-muted-foreground">
-                Join the daily reward pool from any active staking plan. When the timer hits zero, 100 connected members are randomly selected and split the entire pool — that's <span className="text-foreground font-semibold">$8,200 USDT</span> per winner, paid instantly to your wallet.
+                Join the daily reward pool from any active staking plan. When the timer hits zero, {WINNERS} connected members are randomly selected and split the entire pool — that's <span className="text-foreground font-semibold">${fmt(PER_WINNER)} USDT</span> per winner, paid instantly to your wallet.
               </p>
             </div>
 
@@ -206,7 +209,7 @@ export function StakingPool() {
           },
           {
             i: <Gift className="w-5 h-5" />,
-            t: "Get $8,200 USDT",
+            t: `Get $${fmt(PER_WINNER)} USDT`,
             d: "Winners receive instant payout to Binance/Trust Wallet. Auto-credited.",
           },
         ].map((step, i) => (
@@ -228,22 +231,22 @@ export function StakingPool() {
         <div className="glass-strong rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-4">
             <Users className="w-5 h-5 text-primary" />
-            <h4 className="text-lg font-bold">How $820,000 is divided</h4>
+            <h4 className="text-lg font-bold">How ${fmt(POOL_TOTAL)} is divided</h4>
           </div>
 
           {/* Visual breakdown bar */}
           <div className="space-y-3">
             <div>
               <div className="flex justify-between text-xs mb-1">
-                <span className="text-muted-foreground">100 winners × $8,200</span>
-                <span className="font-mono text-gold">$820,000</span>
+                <span className="text-muted-foreground">{WINNERS} winners × ${fmt(PER_WINNER)}</span>
+                <span className="font-mono text-gold">${fmt(POOL_TOTAL)}</span>
               </div>
               <div className="grid grid-cols-10 gap-1">
-                {Array.from({ length: 100 }).map((_, i) => (
+                {Array.from({ length: WINNERS }).map((_, i) => (
                   <div
                     key={i}
                     className="aspect-square rounded-sm bg-gold/30 hover:bg-gold transition"
-                    title={`Winner #${i + 1} · $8,200 USDT`}
+                    title={`Winner #${i + 1} · $${fmt(PER_WINNER)} USDT`}
                   />
                 ))}
               </div>
@@ -251,11 +254,11 @@ export function StakingPool() {
 
             <div className="grid grid-cols-3 gap-3 pt-2">
               <div className="text-center">
-                <p className="text-2xl font-bold gradient-text">100</p>
+                <p className="text-2xl font-bold gradient-text">{WINNERS}</p>
                 <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Winners / day</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-gold">$8,200</p>
+                <p className="text-2xl font-bold text-gold">${fmt(PER_WINNER)}</p>
                 <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Per winner</p>
               </div>
               <div className="text-center">

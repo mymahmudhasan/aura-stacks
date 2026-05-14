@@ -4,11 +4,12 @@ import {
   Users, Wallet, Search, ShieldCheck, BadgeCheck, Clock, LogOut, Loader2,
   Phone, Globe2, LayoutDashboard, MessageSquare, BanknoteArrowUp, Copy, Check,
   Download, RefreshCw, Save, X, Filter, TrendingUp, AlertCircle,
-  ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ArrowUpDown,
+  ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ArrowUpDown, Settings, Trophy,
 } from "lucide-react";
 import { GlassCard } from "@/components/ui-bits";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { usePoolSettings, DEFAULT_POOL_SETTINGS } from "@/hooks/use-pool-settings";
 
 export const Route = createFileRoute("/admin")({
   component: Admin,
@@ -19,7 +20,7 @@ type Customer = Tables<"customers">;
 type Ticket = Tables<"tickets">;
 type Payout = Tables<"payout_runs">;
 
-type Tab = "overview" | "customers" | "tickets" | "payouts";
+type Tab = "overview" | "customers" | "tickets" | "payouts" | "settings";
 type SortDir = "asc" | "desc";
 type Overview = {
   customers_total: number; customers_active: number; customers_pending: number; customers_suspended: number;
@@ -85,6 +86,7 @@ function Admin() {
     { id: "customers", label: "Customers", icon: <Users className="w-4 h-4" />, badge: overview?.customers_pending || undefined },
     { id: "tickets", label: "Tickets", icon: <MessageSquare className="w-4 h-4" />, badge: overview?.open_tickets || undefined },
     { id: "payouts", label: "Payouts", icon: <BanknoteArrowUp className="w-4 h-4" /> },
+    { id: "settings", label: "Settings", icon: <Settings className="w-4 h-4" /> },
   ];
 
   const signOut = async () => { await supabase.auth.signOut(); navigate({ to: "/admin/login" }); };
@@ -131,6 +133,7 @@ function Admin() {
       {tab === "customers" && <CustomersTab onToast={showToast} onMutated={loadOverview} />}
       {tab === "tickets" && <TicketsTab onToast={showToast} onMutated={loadOverview} />}
       {tab === "payouts" && <PayoutsTab />}
+      {tab === "settings" && <SettingsTab onToast={showToast} />}
 
       {toast && (
         <div className={`fixed bottom-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl text-sm font-medium shadow-2xl border backdrop-blur ${
@@ -834,5 +837,113 @@ function CopyChip({ label, truncate }: { label: string; truncate?: boolean }) {
       <span className={truncate ? "truncate" : ""}>{label}</span>
       {copied ? <Check className="w-3 h-3 text-success shrink-0" /> : <Copy className="w-3 h-3 text-muted-foreground shrink-0" />}
     </button>
+  );
+}
+
+function SettingsTab({ onToast }: { onToast: (kind: "ok" | "err", msg: string) => void }) {
+  const { settings, update, perWinner } = usePoolSettings();
+  const [poolTotal, setPoolTotal] = useState<string>(String(settings.poolTotal));
+  const [winners, setWinners] = useState<string>(String(settings.winners));
+
+  useEffect(() => {
+    setPoolTotal(String(settings.poolTotal));
+    setWinners(String(settings.winners));
+  }, [settings.poolTotal, settings.winners]);
+
+  const parsedPool = Number(poolTotal);
+  const parsedWinners = Number(winners);
+  const valid =
+    Number.isFinite(parsedPool) && parsedPool > 0 &&
+    Number.isFinite(parsedWinners) && parsedWinners > 0;
+  const previewPerWinner = valid ? parsedPool / parsedWinners : 0;
+  const dirty = parsedPool !== settings.poolTotal || parsedWinners !== settings.winners;
+
+  const save = () => {
+    if (!valid) {
+      onToast("err", "Enter valid positive numbers.");
+      return;
+    }
+    update({ poolTotal: parsedPool, winners: Math.floor(parsedWinners) });
+    onToast("ok", "Pool settings saved. Site updated.");
+  };
+
+  const reset = () => {
+    update(DEFAULT_POOL_SETTINGS);
+    onToast("ok", "Restored default pool settings.");
+  };
+
+  const fmt = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 2 });
+
+  return (
+    <div className="grid lg:grid-cols-3 gap-5">
+      <GlassCard className="lg:col-span-2 p-6">
+        <div className="flex items-center gap-2 mb-1">
+          <Trophy className="w-5 h-5 text-gold" />
+          <h2 className="text-lg font-bold">Daily Reward Pool</h2>
+        </div>
+        <p className="text-sm text-muted-foreground mb-5">
+          Update the daily pool. All payout and winner figures across the site recalculate automatically.
+        </p>
+
+        <div className="grid sm:grid-cols-2 gap-4">
+          <label className="block">
+            <span className="text-xs uppercase tracking-widest text-muted-foreground">Daily pool total (USDT)</span>
+            <input
+              type="number" min={1} step={1} value={poolTotal}
+              onChange={(e) => setPoolTotal(e.target.value)}
+              className="mt-1.5 w-full px-3 py-2.5 rounded-xl glass border border-border focus:border-primary outline-none font-mono"
+            />
+          </label>
+          <label className="block">
+            <span className="text-xs uppercase tracking-widest text-muted-foreground">Number of winners</span>
+            <input
+              type="number" min={1} step={1} value={winners}
+              onChange={(e) => setWinners(e.target.value)}
+              className="mt-1.5 w-full px-3 py-2.5 rounded-xl glass border border-border focus:border-primary outline-none font-mono"
+            />
+          </label>
+        </div>
+
+        <div className="flex flex-wrap gap-2 mt-5">
+          <button
+            onClick={save} disabled={!valid || !dirty}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium glow-primary disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Save className="w-4 h-4" /> Save changes
+          </button>
+          <button
+            onClick={reset}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl glass text-sm font-medium hover:border-destructive/30"
+          >
+            <RefreshCw className="w-4 h-4" /> Reset to default
+          </button>
+        </div>
+      </GlassCard>
+
+      <GlassCard className="p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <TrendingUp className="w-5 h-5 text-primary" />
+          <h2 className="text-lg font-bold">Live preview</h2>
+        </div>
+        <div className="space-y-3">
+          <Stat label="Daily pool" value={valid ? `$${fmt(parsedPool)}` : "—"} />
+          <Stat label="Winners / day" value={valid ? fmt(parsedWinners) : "—"} />
+          <Stat label="Per winner" value={valid ? `$${fmt(previewPerWinner)}` : "—"} accent />
+        </div>
+        <p className="text-[11px] text-muted-foreground mt-4">
+          Currently saved: <span className="font-mono text-foreground">${settings.poolTotal.toLocaleString()}</span> ÷{" "}
+          <span className="font-mono text-foreground">{settings.winners}</span> = <span className="font-mono text-gold">${perWinner.toLocaleString()}</span> per winner.
+        </p>
+      </GlassCard>
+    </div>
+  );
+}
+
+function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl glass">
+      <span className="text-xs uppercase tracking-widest text-muted-foreground">{label}</span>
+      <span className={`font-mono text-sm font-bold ${accent ? "gradient-text" : "text-foreground"}`}>{value}</span>
+    </div>
   );
 }

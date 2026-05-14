@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Cpu, Lock, Brain, Shield, Zap, Globe, TrendingUp, Users, Sparkles, Bot, BadgeCheck, Headphones, Activity, LineChart, Cable, AlertTriangle } from "lucide-react";
-import heroImg from "@/assets/ai-trading.jpg";
+import heroImg from "@/assets/ai-trader-bot.png";
 import miningImg from "@/assets/mining-visual.jpg";
 import stakingImg from "@/assets/staking-visual.jpg";
 import { CTA, GlassCard, Section, StatPill } from "@/components/ui-bits";

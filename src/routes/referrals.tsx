@@ -1,66 +1,142 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Cpu, Lock, Brain, Copy, Check, Users, TrendingUp, Wallet, Share2, ArrowUpRight, ExternalLink } from "lucide-react";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { Cpu, Lock, Brain, Copy, Check, Users, TrendingUp, Share2, ArrowUpRight, ExternalLink, Loader2 } from "lucide-react";
 import { CTA, GlassCard, Section } from "@/components/ui-bits";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/referrals")({
+  beforeLoad: async () => {
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) throw redirect({ to: "/login" });
+    return { userId: data.user.id };
+  },
   component: Referrals,
   head: () => ({ meta: [{ title: "Referral Dashboard — NovaVault" }] }),
 });
 
-const REFERRAL_ID = "a2891x";
+const SERVICE_META = {
+  "ai-trading": { name: "AI Trading", icon: <Brain className="w-5 h-5" />, accent: "primary" as const, href: "/ai-trading", rates: { l1: "12%", l2: "5%", profit: "2%" } },
+  "mining":     { name: "Mining",     icon: <Cpu className="w-5 h-5" />,   accent: "primary" as const, href: "/mining",     rates: { l1: "8%",  l2: "3%", profit: "1%" } },
+  "staking":    { name: "Staking",    icon: <Lock className="w-5 h-5" />,  accent: "gold"    as const, href: "/staking",    rates: { l1: "6%",  l2: "2%", profit: "0.5%" } },
+} as const;
 
-const services = [
-  {
-    key: "ai-trading",
-    name: "AI Trading",
-    icon: <Brain className="w-5 h-5" />,
-    accent: "primary" as const,
-    href: "/ai-trading",
-    direct: 14,
-    network: 38,
-    earned: 1284.42,
-    perDay: 6.18,
-    rates: { l1: "12%", l2: "5%", profit: "2%" },
-  },
-  {
-    key: "mining",
-    name: "Mining",
-    icon: <Cpu className="w-5 h-5" />,
-    accent: "primary" as const,
-    href: "/mining",
-    direct: 22,
-    network: 71,
-    earned: 2104.88,
-    perDay: 9.74,
-    rates: { l1: "8%", l2: "3%", profit: "1%" },
-  },
-  {
-    key: "staking",
-    name: "Staking",
-    icon: <Lock className="w-5 h-5" />,
-    accent: "gold" as const,
-    href: "/staking",
-    direct: 9,
-    network: 24,
-    earned: 642.10,
-    perDay: 2.41,
-    rates: { l1: "6%", l2: "2%", profit: "0.5%" },
-  },
-];
+type ServiceKey = keyof typeof SERVICE_META;
+const SERVICE_KEYS: ServiceKey[] = ["ai-trading", "mining", "staking"];
 
-const totals = {
-  direct: services.reduce((s, x) => s + x.direct, 0),
-  network: services.reduce((s, x) => s + x.network, 0),
-  earned: services.reduce((s, x) => s + x.earned, 0),
-  perDay: services.reduce((s, x) => s + x.perDay, 0),
+type SummaryRow = {
+  service: ServiceKey;
+  direct_count: number;
+  network_count: number;
+  lifetime_earned: number;
+  earned_last_24h: number;
 };
 
+type EarningRow = {
+  id: string;
+  service: ServiceKey;
+  level: number;
+  amount: number;
+  description: string | null;
+  source_handle: string | null;
+  created_at: string;
+};
+
+function shortId(uuid: string) {
+  return uuid.replace(/-/g, "").slice(0, 6);
+}
+
+function timeAgo(iso: string) {
+  const s = Math.max(1, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
+  if (s < 60) return `${s}s ago`;
+  const m = Math.floor(s / 60); if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60); if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24); return `${d}d ago`;
+}
+
 function Referrals() {
-  // Live counter — accrues per-second based on combined daily rate.
-  const perSecond = totals.perDay / 86400;
-  const [live, setLive] = useState(totals.earned);
+  const { userId } = Route.useRouteContext();
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [summary, setSummary] = useState<SummaryRow[]>([]);
+  const [activity, setActivity] = useState<EarningRow[]>([]);
+  const [monthEarned, setMonthEarned] = useState(0);
+  const [lastMonthEarned, setLastMonthEarned] = useState(0);
+
+  const referralId = useMemo(() => shortId(userId), [userId]);
+
   useEffect(() => {
+    let cancel = false;
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+        const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+
+        const [summaryRes, activityRes, monthRes, lastMonthRes] = await Promise.all([
+          supabase.rpc("get_referral_summary", { _user_id: userId }),
+          supabase
+            .from("referral_earnings")
+            .select("id, service, level, amount, description, source_handle, created_at")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false })
+            .limit(8),
+          supabase
+            .from("referral_earnings")
+            .select("amount")
+            .eq("user_id", userId)
+            .gte("created_at", monthStart),
+          supabase
+            .from("referral_earnings")
+            .select("amount")
+            .eq("user_id", userId)
+            .gte("created_at", lastMonthStart)
+            .lt("created_at", monthStart),
+        ]);
+
+        if (cancel) return;
+        if (summaryRes.error) throw summaryRes.error;
+        if (activityRes.error) throw activityRes.error;
+
+        const rows = (summaryRes.data ?? []) as Array<{ service: string; direct_count: number | string; network_count: number | string; lifetime_earned: number | string; earned_last_24h: number | string }>;
+        const normalized: SummaryRow[] = SERVICE_KEYS.map((key) => {
+          const r = rows.find((x) => x.service === key);
+          return {
+            service: key,
+            direct_count: Number(r?.direct_count ?? 0),
+            network_count: Number(r?.network_count ?? 0),
+            lifetime_earned: Number(r?.lifetime_earned ?? 0),
+            earned_last_24h: Number(r?.earned_last_24h ?? 0),
+          };
+        });
+
+        setSummary(normalized);
+        setActivity((activityRes.data ?? []) as EarningRow[]);
+        setMonthEarned((monthRes.data ?? []).reduce((s, r: { amount: number | string }) => s + Number(r.amount), 0));
+        setLastMonthEarned((lastMonthRes.data ?? []).reduce((s, r: { amount: number | string }) => s + Number(r.amount), 0));
+      } catch (e) {
+        if (!cancel) setError(e instanceof Error ? e.message : "Failed to load referral data");
+      } finally {
+        if (!cancel) setLoading(false);
+      }
+    })();
+    return () => { cancel = true; };
+  }, [userId]);
+
+  const totals = useMemo(() => ({
+    direct:  summary.reduce((s, x) => s + x.direct_count, 0),
+    network: summary.reduce((s, x) => s + x.network_count, 0),
+    earned:  summary.reduce((s, x) => s + x.lifetime_earned, 0),
+    perDay:  summary.reduce((s, x) => s + x.earned_last_24h, 0),
+  }), [summary]);
+
+  // Live counter — accrues per-second based on last-24h earning rate.
+  const perSecond = totals.perDay / 86400;
+  const [live, setLive] = useState(0);
+  useEffect(() => { setLive(totals.earned); }, [totals.earned]);
+  useEffect(() => {
+    if (perSecond <= 0) return;
     const id = setInterval(() => setLive((v) => v + perSecond), 1000);
     return () => clearInterval(id);
   }, [perSecond]);
@@ -78,6 +154,12 @@ function Referrals() {
         </div>
       </div>
 
+      {error && (
+        <div className="rounded-xl border border-destructive/40 bg-destructive/10 text-destructive text-sm p-4 mb-6">
+          {error}
+        </div>
+      )}
+
       {/* LIVE EARNINGS HERO */}
       <div className="relative rounded-3xl glass-strong p-6 md:p-8 overflow-hidden mb-6">
         <div className="absolute inset-0 bg-[image:var(--gradient-aurora)] opacity-50 pointer-events-none" />
@@ -88,61 +170,67 @@ function Referrals() {
               <span className="text-xs uppercase tracking-widest">Live commission earnings</span>
             </div>
             <p className="text-4xl md:text-5xl font-bold gradient-text font-mono tracking-tight">
-              ${live.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}
+              {loading ? <Loader2 className="w-8 h-8 animate-spin" /> : `$${live.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`}
             </p>
-            <p className="text-xs text-muted-foreground mt-2">Accruing at ${totals.perDay.toFixed(2)} / day · auto-paid daily to your Binance wallet.</p>
+            <p className="text-xs text-muted-foreground mt-2">Last 24h: ${totals.perDay.toFixed(2)} · auto-paid daily to your Binance wallet.</p>
           </div>
-          <SmallStat icon={<Users />} label="Direct (L1)" value={String(totals.direct)} sub="active referrals" />
-          <SmallStat icon={<Users />} label="Network (L2)" value={String(totals.network)} sub="extended network" />
+          <SmallStat icon={<Users />} label="Direct (L1)" value={loading ? "—" : String(totals.direct)} sub="active referrals" />
+          <SmallStat icon={<Users />} label="Network (L2)" value={loading ? "—" : String(totals.network)} sub="extended network" />
         </div>
       </div>
 
       {/* MASTER LINK */}
       <CopyLinkCard
         label="Master referral link"
-        url={`https://novavault.io/r/${REFERRAL_ID}`}
+        url={`https://novavault.io/r/${referralId}`}
         note="Shares all services. Use service-specific links below for higher conversion."
       />
 
       {/* PER-SERVICE GRID */}
       <h2 className="mt-10 mb-4 text-lg font-semibold">Per-service performance</h2>
       <div className="grid lg:grid-cols-3 gap-5">
-        {services.map((s) => (
-          <ServiceCard key={s.key} service={s} />
-        ))}
+        {SERVICE_KEYS.map((key) => {
+          const row = summary.find((s) => s.service === key) ?? { service: key, direct_count: 0, network_count: 0, lifetime_earned: 0, earned_last_24h: 0 };
+          return <ServiceCard key={key} svcKey={key} row={row} referralId={referralId} loading={loading} />;
+        })}
       </div>
 
       {/* RECENT EVENTS */}
       <div className="mt-8 grid lg:grid-cols-3 gap-5">
         <GlassCard className="lg:col-span-2">
           <h3 className="font-semibold mb-4">Recent referral activity</h3>
-          <ul className="space-y-3 text-sm">
-            {[
-              { who: "@cryptojay", act: "deposited into AI Trading — Premium", a: "+$28.80", time: "12m ago", svc: "AI Trading" },
-              { who: "@nadia.k", act: "joined via your Mining link", a: "—", time: "1h ago", svc: "Mining" },
-              { who: "L2 · @ahsan99", act: "staked 3-month tier", a: "+$4.20", time: "3h ago", svc: "Staking" },
-              { who: "@miguel", act: "AI bot profit share", a: "+$11.62", time: "6h ago", svc: "AI Trading" },
-              { who: "@rina.eth", act: "mining daily reward share", a: "+$2.04", time: "9h ago", svc: "Mining" },
-              { who: "L2 · @tarek", act: "deposited into Mining — Advanced", a: "+$15.00", time: "1d ago", svc: "Mining" },
-            ].map((e, i) => (
-              <li key={i} className="flex items-center justify-between gap-3 py-2 border-b border-border/30 last:border-0">
-                <div className="min-w-0">
-                  <p className="font-medium truncate">{e.who} <span className="text-muted-foreground font-normal">{e.act}</span></p>
-                  <p className="text-xs text-muted-foreground">{e.time} · {e.svc}</p>
-                </div>
-                <span className={e.a === "—" ? "text-muted-foreground text-xs" : "text-success font-medium font-mono whitespace-nowrap"}>{e.a}</span>
-              </li>
-            ))}
-          </ul>
+          {loading ? (
+            <div className="py-8 flex justify-center text-muted-foreground"><Loader2 className="w-5 h-5 animate-spin" /></div>
+          ) : activity.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-6">No activity yet — share your link to start earning.</p>
+          ) : (
+            <ul className="space-y-3 text-sm">
+              {activity.map((e) => {
+                const who = `${e.level === 2 ? "L2 · " : ""}${e.source_handle ?? "anon"}`;
+                const svc = SERVICE_META[e.service]?.name ?? e.service;
+                const amt = Number(e.amount);
+                return (
+                  <li key={e.id} className="flex items-center justify-between gap-3 py-2 border-b border-border/30 last:border-0">
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{who} <span className="text-muted-foreground font-normal">{e.description ?? "commission credited"}</span></p>
+                      <p className="text-xs text-muted-foreground">{timeAgo(e.created_at)} · {svc}</p>
+                    </div>
+                    <span className={amt === 0 ? "text-muted-foreground text-xs" : "text-success font-medium font-mono whitespace-nowrap"}>
+                      {amt === 0 ? "—" : `+$${amt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </GlassCard>
 
         <GlassCard>
           <h3 className="font-semibold mb-4">Payouts</h3>
           <div className="space-y-3 text-sm">
-            <Row k="This month" v="$842.16" tone="text-success" />
-            <Row k="Last month" v="$1,108.40" />
+            <Row k="This month" v={`$${monthEarned.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} tone="text-success" />
+            <Row k="Last month" v={`$${lastMonthEarned.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} />
             <Row k="Lifetime" v={`$${totals.earned.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} tone="text-success" />
-            <Row k="Next payout" v="in 14h 22m" />
             <Row k="Method" v="Binance · USDT" />
           </div>
           <div className="mt-5 inline-flex items-center gap-2 text-xs text-muted-foreground">
@@ -159,33 +247,34 @@ function Referrals() {
   );
 }
 
-function ServiceCard({ service: s }: { service: typeof services[number] }) {
-  const url = `https://novavault.io/r/${REFERRAL_ID}?p=${s.key}`;
+function ServiceCard({ svcKey, row, referralId, loading }: { svcKey: ServiceKey; row: SummaryRow; referralId: string; loading: boolean }) {
+  const meta = SERVICE_META[svcKey];
+  const url = `https://novavault.io/r/${referralId}?p=${svcKey}`;
   return (
-    <div className={`relative rounded-2xl p-6 ${s.accent === "gold" ? "glass-strong border-primary/40 glow-gold" : "glass"}`}>
+    <div className={`relative rounded-2xl p-6 ${meta.accent === "gold" ? "glass-strong border-primary/40 glow-gold" : "glass"}`}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2.5">
-          <div className={`w-10 h-10 rounded-xl ${s.accent === "gold" ? "bg-[image:var(--gradient-gold)] text-gold-foreground" : "bg-primary/15 text-primary"} flex items-center justify-center`}>{s.icon}</div>
+          <div className={`w-10 h-10 rounded-xl ${meta.accent === "gold" ? "bg-[image:var(--gradient-gold)] text-gold-foreground" : "bg-primary/15 text-primary"} flex items-center justify-center`}>{meta.icon}</div>
           <div>
-            <p className="font-semibold">{s.name}</p>
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">L1 {s.rates.l1} · L2 {s.rates.l2} · Share {s.rates.profit}</p>
+            <p className="font-semibold">{meta.name}</p>
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">L1 {meta.rates.l1} · L2 {meta.rates.l2} · Share {meta.rates.profit}</p>
           </div>
         </div>
-        <Link to={s.href} className="text-xs text-primary hover:underline inline-flex items-center gap-1">View <ExternalLink className="w-3 h-3" /></Link>
+        <Link to={meta.href} className="text-xs text-primary hover:underline inline-flex items-center gap-1">View <ExternalLink className="w-3 h-3" /></Link>
       </div>
 
       <div className="grid grid-cols-3 gap-2 mb-4">
-        <Mini label="Direct" value={String(s.direct)} icon={<Users className="w-3.5 h-3.5" />} />
-        <Mini label="Network" value={String(s.network)} icon={<Share2 className="w-3.5 h-3.5" />} />
-        <Mini label="Per day" value={`$${s.perDay.toFixed(2)}`} icon={<TrendingUp className="w-3.5 h-3.5" />} />
+        <Mini label="Direct"  value={loading ? "—" : String(row.direct_count)} icon={<Users className="w-3.5 h-3.5" />} />
+        <Mini label="Network" value={loading ? "—" : String(row.network_count)} icon={<Share2 className="w-3.5 h-3.5" />} />
+        <Mini label="Last 24h" value={loading ? "—" : `$${row.earned_last_24h.toFixed(2)}`} icon={<TrendingUp className="w-3.5 h-3.5" />} />
       </div>
 
       <div className="rounded-xl bg-background/40 border border-border/40 p-3 mb-4">
         <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">Lifetime earned</p>
-        <p className="text-2xl font-bold font-mono gradient-text">${s.earned.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+        <p className="text-2xl font-bold font-mono gradient-text">${row.lifetime_earned.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
       </div>
 
-      <CopyLinkCard label={`${s.name} link`} url={url} compact />
+      <CopyLinkCard label={`${meta.name} link`} url={url} compact />
     </div>
   );
 }
@@ -197,9 +286,7 @@ function CopyLinkCard({ label, url, note, compact }: { label: string; url: strin
       await navigator.clipboard.writeText(url);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-    } catch {
-      /* ignore */
-    }
+    } catch { /* ignore */ }
   };
   return (
     <div className={`rounded-xl glass ${compact ? "p-3" : "p-4"} flex items-center gap-3`}>

@@ -3,6 +3,7 @@ import { Lock, TrendingUp, Timer, Layers, Gift, Zap, Sparkles, Flame, BadgePerce
 import { CTA, GlassCard, PageHero, Section } from "@/components/ui-bits";
 import { ServiceReferral } from "@/components/ServiceReferral";
 import { StakingTimeline } from "@/components/StakingTimeline";
+import { StakingPool } from "@/components/StakingPool";
 import stakingImg from "@/assets/staking-visual.jpg";
 import vaultImg from "@/assets/staking-vault.jpg";
 import poolImg from "@/assets/staking-pool.jpg";
@@ -139,6 +140,14 @@ function Staking() {
             </div>
           ))}
         </div>
+      </Section>
+
+      <Section
+        eyebrow="Daily reward pool"
+        title={<>Win <span className="gradient-text">$650 USDT</span> from the daily $65,000 pool</>}
+        subtitle="Every 24 hours, 100 connected stakers are randomly drawn to share a $65,000 USDT prize pool. Stake any plan to enter automatically."
+      >
+        <StakingPool />
       </Section>
 
       <Section eyebrow="Lock periods" title={<>Choose your <span className="gradient-text">staking duration</span></>}>

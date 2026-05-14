@@ -209,7 +209,7 @@ export function StakingPool() {
           },
           {
             i: <Gift className="w-5 h-5" />,
-            t: "Get $8,200 USDT",
+            t: `Get $${fmt(PER_WINNER)} USDT`,
             d: "Winners receive instant payout to Binance/Trust Wallet. Auto-credited.",
           },
         ].map((step, i) => (

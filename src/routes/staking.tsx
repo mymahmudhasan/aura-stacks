@@ -144,8 +144,8 @@ function Staking() {
 
       <Section
         eyebrow="Daily reward pool"
-        title={<>Win <span className="gradient-text">$650 USDT</span> from the daily $65,000 pool</>}
-        subtitle="Every 24 hours, 100 connected stakers are randomly drawn to share a $65,000 USDT prize pool. Stake any plan to enter automatically."
+        title={<>Win <span className="gradient-text">$8,200 USDT</span> from the daily $820,000 pool</>}
+        subtitle="Every 24 hours, 100 connected stakers are randomly drawn to share a $820,000 USDT prize pool. Stake any plan to enter automatically."
       >
         <StakingPool />
       </Section>

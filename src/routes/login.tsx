@@ -285,11 +285,11 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
               {!isLogin && (
                 <>
                   <input
-                    required
+                    required={verifyMethod === "phone"}
                     type="tel"
                     value={form.phone}
                     onChange={upd("phone")}
-                    placeholder="Phone number (e.g. +14155552671)"
+                    placeholder={verifyMethod === "phone" ? "Phone number (e.g. +14155552671)" : "Phone number (optional)"}
                     className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none"
                   />
                   <input value={form.country} onChange={upd("country")} placeholder="Country" className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none" />

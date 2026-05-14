@@ -24,6 +24,7 @@ export type Database = {
           created_at: string
           demo_balance: number
           email: string
+          email_verified_at: string | null
           full_name: string
           id: string
           notes: string | null
@@ -46,6 +47,7 @@ export type Database = {
           created_at?: string
           demo_balance?: number
           email: string
+          email_verified_at?: string | null
           full_name: string
           id?: string
           notes?: string | null
@@ -68,6 +70,7 @@ export type Database = {
           created_at?: string
           demo_balance?: number
           email?: string
+          email_verified_at?: string | null
           full_name?: string
           id?: string
           notes?: string | null

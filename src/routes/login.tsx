@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Hexagon, Cable, Loader2, ShieldCheck, ArrowLeft } from "lucide-react";
+import { Hexagon, Cable, Loader2, ShieldCheck, ArrowLeft, Phone, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/login")({
@@ -13,6 +13,7 @@ function Login() {
 }
 
 type Step = "form" | "verify";
+type VerifyMethod = "phone" | "email";
 
 export function AuthCard({ mode }: { mode: "login" | "register" }) {
   const isLogin = mode === "login";
@@ -28,6 +29,7 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
     referredBy: "",
   });
   const [step, setStep] = useState<Step>("form");
+  const [verifyMethod, setVerifyMethod] = useState<VerifyMethod>("phone");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,8 +57,8 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
       }
 
       // Register flow
-      const phone = normalizedPhone();
-      if (!/^\+[1-9]\d{6,14}$/.test(phone)) {
+      const phone = form.phone ? normalizedPhone() : "";
+      if (verifyMethod === "phone" && !/^\+[1-9]\d{6,14}$/.test(phone)) {
         throw new Error("Enter a valid phone number in international format, e.g. +14155552671");
       }
 
@@ -75,7 +77,7 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
           user_id: data.user.id,
           full_name: form.fullName,
           email: form.email,
-          phone,
+          phone: phone || null,
           country: form.country || null,
           binance_uid: form.binanceUid,
           binance_wallet_address: form.binanceWallet || null,
@@ -84,17 +86,22 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
         if (cErr) throw cErr;
       }
 
-      // Trigger SMS OTP via phone change on the just-created session
-      if (data.session) {
+      if (verifyMethod === "phone") {
+        if (!data.session) {
+          setSuccess("Account created. Check your email to confirm, then sign in to verify your phone.");
+          return;
+        }
         const { error: pErr } = await supabase.auth.updateUser({ phone });
         if (pErr) throw new Error(`Couldn't send SMS code: ${pErr.message}`);
+        setSuccess(`We sent a 6-digit code to ${phone}.`);
       } else {
-        // Email confirmation is on; user has no session yet — fall back
-        setSuccess("Account created. Check your email to confirm, then sign in to verify your phone.");
-        return;
+        const { error: eErr } = await supabase.auth.signInWithOtp({
+          email: form.email,
+          options: { shouldCreateUser: false },
+        });
+        if (eErr) throw new Error(`Couldn't send email code: ${eErr.message}`);
+        setSuccess(`We sent a 6-digit code to ${form.email}.`);
       }
-
-      setSuccess(`We sent a 6-digit code to ${phone}.`);
       setStep("verify");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -109,20 +116,35 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
     setSuccess(null);
     setLoading(true);
     try {
-      const phone = normalizedPhone();
-      const { error } = await supabase.auth.verifyOtp({
-        phone,
-        token: otp.trim(),
-        type: "phone_change",
-      });
-      if (error) throw error;
-
-      const { data: u } = await supabase.auth.getUser();
-      if (u.user) {
-        await supabase
-          .from("customers")
-          .update({ phone_verified_at: new Date().toISOString() })
-          .eq("user_id", u.user.id);
+      if (verifyMethod === "phone") {
+        const phone = normalizedPhone();
+        const { error } = await supabase.auth.verifyOtp({
+          phone,
+          token: otp.trim(),
+          type: "phone_change",
+        });
+        if (error) throw error;
+        const { data: u } = await supabase.auth.getUser();
+        if (u.user) {
+          await supabase
+            .from("customers")
+            .update({ phone_verified_at: new Date().toISOString() })
+            .eq("user_id", u.user.id);
+        }
+      } else {
+        const { error } = await supabase.auth.verifyOtp({
+          email: form.email,
+          token: otp.trim(),
+          type: "email",
+        });
+        if (error) throw error;
+        const { data: u } = await supabase.auth.getUser();
+        if (u.user) {
+          await supabase
+            .from("customers")
+            .update({ email_verified_at: new Date().toISOString() })
+            .eq("user_id", u.user.id);
+        }
       }
       navigate({ to: "/dashboard" });
     } catch (err) {
@@ -137,8 +159,16 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
     setSuccess(null);
     setLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({ phone: normalizedPhone() });
-      if (error) throw error;
+      if (verifyMethod === "phone") {
+        const { error } = await supabase.auth.updateUser({ phone: normalizedPhone() });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.auth.signInWithOtp({
+          email: form.email,
+          options: { shouldCreateUser: false },
+        });
+        if (error) throw error;
+      }
       setSuccess("A new code has been sent.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't resend code");
@@ -168,9 +198,12 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
             <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/15 mx-auto mb-3">
               <ShieldCheck className="w-6 h-6 text-primary" />
             </div>
-            <h1 className="text-2xl font-bold text-center">Verify your phone</h1>
+            <h1 className="text-2xl font-bold text-center">{verifyMethod === "phone" ? "Verify your phone" : "Verify your email"}</h1>
             <p className="text-sm text-muted-foreground text-center mt-1.5">
-              Enter the 6-digit code we sent to <span className="text-foreground font-medium">{normalizedPhone()}</span>.
+              Enter the 6-digit code we sent to{" "}
+              <span className="text-foreground font-medium">
+                {verifyMethod === "phone" ? normalizedPhone() : form.email}
+              </span>.
             </p>
 
             <form className="mt-6 space-y-3" onSubmit={onVerify}>
@@ -207,16 +240,41 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
             <p className="text-sm text-muted-foreground text-center mt-1.5">
               {isLogin
                 ? "Sign in to your investor dashboard."
-                : "Step 1 of 2 — we'll send a 6-digit SMS code to verify your phone."}
+                : "Step 1 of 2 — choose how you'd like to verify your account."}
             </p>
 
             {!isLogin && (
-              <div className="mt-5 rounded-xl border border-primary/30 bg-primary/5 p-3 flex items-start gap-2.5">
-                <Cable className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  <span className="text-foreground font-medium">Phone verification required.</span> A 6-digit code will be sent by SMS to confirm it's really you.
-                </p>
-              </div>
+              <>
+                <div className="mt-5 grid grid-cols-2 gap-2 p-1 rounded-xl bg-input/40 border border-border">
+                  <button
+                    type="button"
+                    onClick={() => setVerifyMethod("phone")}
+                    className={`px-3 py-2 rounded-lg text-xs font-medium inline-flex items-center justify-center gap-2 transition ${
+                      verifyMethod === "phone" ? "bg-primary text-primary-foreground glow-primary" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Phone className="w-3.5 h-3.5" /> Phone (SMS)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setVerifyMethod("email")}
+                    className={`px-3 py-2 rounded-lg text-xs font-medium inline-flex items-center justify-center gap-2 transition ${
+                      verifyMethod === "email" ? "bg-primary text-primary-foreground glow-primary" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Mail className="w-3.5 h-3.5" /> Email code
+                  </button>
+                </div>
+                <div className="mt-3 rounded-xl border border-primary/30 bg-primary/5 p-3 flex items-start gap-2.5">
+                  <Cable className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    <span className="text-foreground font-medium">
+                      {verifyMethod === "phone" ? "Phone verification" : "Email verification"} required.
+                    </span>{" "}
+                    A 6-digit code will be sent by {verifyMethod === "phone" ? "SMS to your phone" : "email to your inbox"} to confirm it's really you.
+                  </p>
+                </div>
+              </>
             )}
 
             <form className="mt-5 space-y-3" onSubmit={onSubmit}>
@@ -227,11 +285,11 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
               {!isLogin && (
                 <>
                   <input
-                    required
+                    required={verifyMethod === "phone"}
                     type="tel"
                     value={form.phone}
                     onChange={upd("phone")}
-                    placeholder="Phone number (e.g. +14155552671)"
+                    placeholder={verifyMethod === "phone" ? "Phone number (e.g. +14155552671)" : "Phone number (optional)"}
                     className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none"
                   />
                   <input value={form.country} onChange={upd("country")} placeholder="Country" className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none" />

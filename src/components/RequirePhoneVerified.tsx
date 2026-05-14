@@ -1,12 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ShieldAlert, Loader2, ArrowLeft, Loader, ShieldCheck } from "lucide-react";
+import { ShieldAlert, Loader2, ArrowLeft, ShieldCheck, Phone, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
+type Method = "phone" | "email";
 type Status =
   | { state: "loading" }
   | { state: "ok" }
-  | { state: "needs_verify"; phone: string | null };
+  | { state: "needs_verify"; phone: string | null; email: string | null };
 
 export function RequirePhoneVerified({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<Status>({ state: "loading" });
@@ -15,20 +16,24 @@ export function RequirePhoneVerified({ children }: { children: React.ReactNode }
     setStatus({ state: "loading" });
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      setStatus({ state: "ok" }); // let downstream auth gates handle sign-in
+      setStatus({ state: "ok" });
       return;
     }
     const { data } = await supabase
       .from("customers")
-      .select("account_type, phone, phone_verified_at")
+      .select("account_type, phone, email, phone_verified_at, email_verified_at")
       .eq("user_id", user.id)
       .maybeSingle();
 
-    // Demo accounts are allowed through. Real accounts must have a verified phone.
-    if (!data || data.account_type !== "real" || data.phone_verified_at) {
+    const verified = !!(data?.phone_verified_at || data?.email_verified_at);
+    if (!data || data.account_type !== "real" || verified) {
       setStatus({ state: "ok" });
     } else {
-      setStatus({ state: "needs_verify", phone: data.phone ?? user.phone ?? null });
+      setStatus({
+        state: "needs_verify",
+        phone: data.phone ?? user.phone ?? null,
+        email: data.email ?? user.email ?? null,
+      });
     }
   };
 
@@ -47,15 +52,25 @@ export function RequirePhoneVerified({ children }: { children: React.ReactNode }
   }
 
   if (status.state === "needs_verify") {
-    return <VerifyRequired phone={status.phone} onVerified={load} />;
+    return <VerifyRequired defaultPhone={status.phone} defaultEmail={status.email} onVerified={load} />;
   }
 
   return <>{children}</>;
 }
 
-function VerifyRequired({ phone, onVerified }: { phone: string | null; onVerified: () => void }) {
+function VerifyRequired({
+  defaultPhone,
+  defaultEmail,
+  onVerified,
+}: {
+  defaultPhone: string | null;
+  defaultEmail: string | null;
+  onVerified: () => void;
+}) {
+  const [method, setMethod] = useState<Method>(defaultEmail ? "email" : "phone");
   const [code, setCode] = useState("");
-  const [number, setNumber] = useState(phone ?? "");
+  const [phone, setPhone] = useState(defaultPhone ?? "");
+  const [email, setEmail] = useState(defaultEmail ?? "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
@@ -66,17 +81,35 @@ function VerifyRequired({ phone, onVerified }: { phone: string | null; onVerifie
     return t.startsWith("+") ? t : `+${t}`;
   };
 
+  const switchMethod = (m: Method) => {
+    setMethod(m);
+    setSent(false);
+    setCode("");
+    setError(null);
+    setInfo(null);
+  };
+
   const sendCode = async () => {
     setError(null);
     setInfo(null);
     setLoading(true);
     try {
-      const p = e164(number);
-      if (!/^\+[1-9]\d{6,14}$/.test(p)) throw new Error("Enter a valid international phone number, e.g. +14155552671");
-      const { error } = await supabase.auth.updateUser({ phone: p });
-      if (error) throw error;
+      if (method === "phone") {
+        const p = e164(phone);
+        if (!/^\+[1-9]\d{6,14}$/.test(p)) throw new Error("Enter a valid international phone, e.g. +14155552671");
+        const { error } = await supabase.auth.updateUser({ phone: p });
+        if (error) throw error;
+        setInfo(`SMS code sent to ${p}.`);
+      } else {
+        if (!/^\S+@\S+\.\S+$/.test(email)) throw new Error("Enter a valid email address");
+        const { error } = await supabase.auth.signInWithOtp({
+          email,
+          options: { shouldCreateUser: false },
+        });
+        if (error) throw error;
+        setInfo(`Email code sent to ${email}.`);
+      }
       setSent(true);
-      setInfo(`Code sent to ${p}.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't send code");
     } finally {
@@ -90,15 +123,35 @@ function VerifyRequired({ phone, onVerified }: { phone: string | null; onVerifie
     setInfo(null);
     setLoading(true);
     try {
-      const p = e164(number);
-      const { error } = await supabase.auth.verifyOtp({ phone: p, token: code.trim(), type: "phone_change" });
-      if (error) throw error;
-      const { data: u } = await supabase.auth.getUser();
-      if (u.user) {
-        await supabase
-          .from("customers")
-          .update({ phone_verified_at: new Date().toISOString() })
-          .eq("user_id", u.user.id);
+      if (method === "phone") {
+        const p = e164(phone);
+        const { error } = await supabase.auth.verifyOtp({
+          phone: p,
+          token: code.trim(),
+          type: "phone_change",
+        });
+        if (error) throw error;
+        const { data: u } = await supabase.auth.getUser();
+        if (u.user) {
+          await supabase
+            .from("customers")
+            .update({ phone_verified_at: new Date().toISOString() })
+            .eq("user_id", u.user.id);
+        }
+      } else {
+        const { error } = await supabase.auth.verifyOtp({
+          email,
+          token: code.trim(),
+          type: "email",
+        });
+        if (error) throw error;
+        const { data: u } = await supabase.auth.getUser();
+        if (u.user) {
+          await supabase
+            .from("customers")
+            .update({ email_verified_at: new Date().toISOString() })
+            .eq("user_id", u.user.id);
+        }
       }
       onVerified();
     } catch (err) {
@@ -116,25 +169,55 @@ function VerifyRequired({ phone, onVerified }: { phone: string | null; onVerifie
         <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-warning/15 mx-auto mb-3">
           <ShieldAlert className="w-6 h-6 text-warning" />
         </div>
-        <h1 className="text-2xl font-bold text-center">Phone verification required</h1>
+        <h1 className="text-2xl font-bold text-center">Verification required</h1>
         <p className="text-sm text-muted-foreground text-center mt-1.5">
-          For your account's security, you must verify your phone number before accessing your real-account dashboard.
+          For your account's security, verify your identity to access your real-account dashboard.
         </p>
 
+        {/* Method tabs */}
+        <div className="mt-5 grid grid-cols-2 gap-2 p-1 rounded-xl bg-input/40 border border-border">
+          <button
+            onClick={() => switchMethod("phone")}
+            className={`px-3 py-2 rounded-lg text-xs font-medium inline-flex items-center justify-center gap-2 transition ${
+              method === "phone" ? "bg-primary text-primary-foreground glow-primary" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Phone className="w-3.5 h-3.5" /> Phone (SMS)
+          </button>
+          <button
+            onClick={() => switchMethod("email")}
+            className={`px-3 py-2 rounded-lg text-xs font-medium inline-flex items-center justify-center gap-2 transition ${
+              method === "email" ? "bg-primary text-primary-foreground glow-primary" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Mail className="w-3.5 h-3.5" /> Email code
+          </button>
+        </div>
+
         {!sent ? (
-          <div className="mt-6 space-y-3">
-            <input
-              type="tel"
-              value={number}
-              onChange={(e) => setNumber(e.target.value)}
-              placeholder="Phone number (e.g. +14155552671)"
-              className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none"
-            />
+          <div className="mt-5 space-y-3">
+            {method === "phone" ? (
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="Phone number (e.g. +14155552671)"
+                className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none"
+              />
+            ) : (
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none"
+              />
+            )}
             {error && <p className="text-sm text-destructive">{error}</p>}
             {info && <p className="text-sm text-success">{info}</p>}
             <button
               onClick={sendCode}
-              disabled={loading || !number}
+              disabled={loading || (method === "phone" ? !phone : !email)}
               className="w-full px-4 py-3 rounded-xl bg-primary text-primary-foreground font-medium glow-primary inline-flex items-center justify-center gap-2 disabled:opacity-60"
             >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -142,7 +225,13 @@ function VerifyRequired({ phone, onVerified }: { phone: string | null; onVerifie
             </button>
           </div>
         ) : (
-          <form onSubmit={verify} className="mt-6 space-y-3">
+          <form onSubmit={verify} className="mt-5 space-y-3">
+            <p className="text-xs text-center text-muted-foreground">
+              Code sent to{" "}
+              <span className="text-foreground font-medium">
+                {method === "phone" ? e164(phone) : email}
+              </span>
+            </p>
             <input
               required
               inputMode="numeric"
@@ -167,7 +256,7 @@ function VerifyRequired({ phone, onVerified }: { phone: string | null; onVerifie
               onClick={() => { setSent(false); setCode(""); }}
               className="w-full text-xs text-muted-foreground hover:text-foreground inline-flex items-center justify-center gap-1"
             >
-              <ArrowLeft className="w-3 h-3" /> Use a different number
+              <ArrowLeft className="w-3 h-3" /> Use a different {method === "phone" ? "number" : "email"}
             </button>
           </form>
         )}

@@ -935,7 +935,108 @@ function SettingsTab({ onToast }: { onToast: (kind: "ok" | "err", msg: string) =
           <span className="font-mono text-foreground">{settings.winners}</span> = <span className="font-mono text-gold">${perWinner.toLocaleString()}</span> per winner.
         </p>
       </GlassCard>
+
+      <GlassCard className="lg:col-span-3 p-6">
+        <WhatsAppSettings onToast={onToast} />
+      </GlassCard>
     </div>
+  );
+}
+
+function WhatsAppSettings({ onToast }: { onToast: (kind: "ok" | "err", msg: string) => void }) {
+  const [number, setNumber] = useState("");
+  const [saved, setSaved] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from("site_settings")
+      .select("whatsapp_number")
+      .eq("id", 1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        const v = data?.whatsapp_number ?? "";
+        setNumber(v);
+        setSaved(v);
+        setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  const cleaned = number.replace(/[^\d]/g, "");
+  const valid = cleaned.length >= 7 && cleaned.length <= 15;
+  const dirty = cleaned !== saved;
+
+  const save = async () => {
+    if (!valid) { onToast("err", "Enter a valid number (7–15 digits, no +)."); return; }
+    setSaving(true);
+    const { error } = await supabase
+      .from("site_settings")
+      .update({ whatsapp_number: cleaned })
+      .eq("id", 1);
+    setSaving(false);
+    if (error) { onToast("err", error.message); return; }
+    setSaved(cleaned);
+    setNumber(cleaned);
+    window.dispatchEvent(new CustomEvent("novatrad:whatsapp-number-changed", { detail: cleaned }));
+    onToast("ok", "WhatsApp support number updated.");
+  };
+
+  return (
+    <>
+      <div className="flex items-center gap-2 mb-1">
+        <MessageSquare className="w-5 h-5 text-success" />
+        <h2 className="text-lg font-bold">WhatsApp Support Number</h2>
+      </div>
+      <p className="text-sm text-muted-foreground mb-5">
+        The number used by the floating WhatsApp chat button on every page. International format, digits only (no +, no spaces).
+      </p>
+
+      <div className="grid sm:grid-cols-[1fr_auto_auto] gap-3 items-end">
+        <label className="block">
+          <span className="text-xs uppercase tracking-widest text-muted-foreground">WhatsApp number</span>
+          <div className="mt-1.5 flex items-center gap-2 px-3 py-2.5 rounded-xl glass border border-border focus-within:border-primary">
+            <span className="text-muted-foreground font-mono text-sm">+</span>
+            <input
+              type="tel"
+              inputMode="numeric"
+              placeholder="14155551234"
+              value={number}
+              onChange={(e) => setNumber(e.target.value)}
+              disabled={loading}
+              className="flex-1 bg-transparent outline-none font-mono"
+            />
+          </div>
+        </label>
+        <button
+          onClick={save}
+          disabled={!valid || !dirty || saving || loading}
+          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium glow-primary disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          {saving ? "Saving…" : "Save"}
+        </button>
+        {saved && (
+          <a
+            href={`https://wa.me/${saved}?text=${encodeURIComponent("Test from NovaTrad.Ai admin")}`}
+            target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl glass text-sm font-medium hover:border-success/40"
+          >
+            Test chat
+          </a>
+        )}
+      </div>
+
+      {!loading && (
+        <p className="text-[11px] text-muted-foreground mt-3">
+          Currently live on the site:{" "}
+          <span className="font-mono text-foreground">{saved ? `+${saved}` : "— not set —"}</span>
+        </p>
+      )}
+    </>
   );
 }
 

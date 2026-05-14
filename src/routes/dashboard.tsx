@@ -1,15 +1,51 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Wallet, TrendingUp, Activity, Clock, ArrowDownLeft, ArrowUpRight, Cpu, Lock, Brain, Bell, Users, Share2 } from "lucide-react";
+import { Wallet, TrendingUp, Activity, Clock, ArrowDownLeft, ArrowUpRight, Cpu, Lock, Brain, Bell, Users, Share2, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
 import { CTA, GlassCard, Section } from "@/components/ui-bits";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/dashboard")({
   component: Dashboard,
   head: () => ({ meta: [{ title: "Dashboard — NovaTrad.Ai" }] }),
 });
 
+function DemoBanner() {
+  const [info, setInfo] = useState<{ type: string; demo: number } | null>(null);
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("customers")
+        .select("account_type, demo_balance")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (data) setInfo({ type: data.account_type, demo: Number(data.demo_balance) });
+    })();
+  }, []);
+  if (!info || info.type !== "demo") return null;
+  return (
+    <div className="mb-6 rounded-2xl border border-success/30 bg-success/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <div className="flex items-start gap-3">
+        <div className="w-9 h-9 rounded-lg bg-success/20 text-success flex items-center justify-center shrink-0">
+          <Sparkles className="w-4 h-4" />
+        </div>
+        <div>
+          <p className="text-sm font-semibold">You're on a free demo account · ${info.demo.toLocaleString()} virtual balance</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Make your first deposit from your Binance wallet to unlock real trading, mining and staking — your account upgrades automatically.</p>
+        </div>
+      </div>
+      <button className="rounded-xl px-4 py-2 text-sm bg-primary text-primary-foreground glow-primary inline-flex items-center gap-2 shrink-0">
+        <ArrowDownLeft className="w-4 h-4" /> Deposit & go live
+      </button>
+    </div>
+  );
+}
+
 function Dashboard() {
   return (
     <Section className="!py-10">
+      <DemoBanner />
       <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div>
           <p className="text-sm text-muted-foreground">Welcome back,</p>

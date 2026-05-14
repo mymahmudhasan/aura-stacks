@@ -41,6 +41,29 @@ type EarningRow = {
   created_at: string;
 };
 
+type PayoutInfo = {
+  next_payout_at: string;
+  pending_amount: number;
+  last_paid_at: string | null;
+  min_amount: number;
+  method: string;
+  cadence_hours: number;
+};
+
+function countdown(target: Date) {
+  const ms = target.getTime() - Date.now();
+  if (ms <= 0) return "any moment";
+  const s = Math.floor(ms / 1000);
+  const d = Math.floor(s / 86400);
+  const h = Math.floor((s % 86400) / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (d > 0) return `in ${d}d ${h}h ${m}m`;
+  if (h > 0) return `in ${h}h ${m}m`;
+  if (m > 0) return `in ${m}m ${sec}s`;
+  return `in ${sec}s`;
+}
+
 function shortId(uuid: string) {
   return uuid.replace(/-/g, "").slice(0, 6);
 }

@@ -26,10 +26,9 @@ function AITrading() {
       <Section>
         <div className="grid lg:grid-cols-2 gap-10 items-center">
           <div className="relative">
-            <div className="absolute -inset-10 bg-primary/20 blur-3xl -z-10 rounded-full" />
-            <div className="rounded-3xl overflow-hidden border border-border/60 glow-primary">
-              <img src={aiImg} alt="AI neural network" loading="lazy" className="w-full h-auto" />
-            </div>
+            <div className="absolute -inset-10 bg-[image:var(--gradient-aurora)] opacity-50 blur-3xl -z-10 rounded-full" />
+            <div className="absolute -inset-6 bg-primary/25 blur-3xl -z-10 rounded-full" />
+            <img src={aiImg} alt="NovaVault AI trader bot avatar" loading="lazy" width={1024} height={1024} className="w-full h-auto drop-shadow-[0_30px_60px_rgba(56,189,248,0.4)]" />
           </div>
           <div>
             <h2 className="text-3xl md:text-4xl font-bold">Smart. Automated. <span className="gradient-text">Always on.</span></h2>

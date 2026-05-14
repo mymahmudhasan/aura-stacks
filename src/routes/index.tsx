@@ -272,6 +272,31 @@ function Home() {
         </div>
       </Section>
 
+      {/* BUSINESS PARTNERS */}
+      <Section
+        eyebrow="Business Partners"
+        title={<>Trusted by <span className="gradient-text">industry leaders</span></>}
+        subtitle="We collaborate with global technology and infrastructure partners to power our AI trading, mining and security stack."
+      >
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          {[
+            { name: "Google", tag: "Cloud & AI" },
+            { name: "Nvidia", tag: "GPU Compute" },
+            { name: "Amazon", tag: "AWS Infra" },
+            { name: "Innovixus Labs", tag: "Research" },
+            { name: "ZenTech", tag: "Security" },
+          ].map((p) => (
+            <div
+              key={p.name}
+              className="group glass rounded-2xl p-5 flex flex-col items-center justify-center text-center hover:border-primary/40 hover:-translate-y-0.5 transition"
+            >
+              <p className="text-lg md:text-xl font-bold tracking-tight gradient-text">{p.name}</p>
+              <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{p.tag}</p>
+            </div>
+          ))}
+        </div>
+      </Section>
+
       {/* CTA */}
       <section className="mx-auto max-w-7xl px-5 py-20">
         <div className="relative overflow-hidden rounded-3xl glass-strong p-10 md:p-16 text-center glow-primary">

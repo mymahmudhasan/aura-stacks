@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Lock, TrendingUp, Timer, Layers, Gift, Zap, Sparkles, Flame, BadgePercent, Crown } from "lucide-react";
 import { CTA, GlassCard, PageHero, Section } from "@/components/ui-bits";
 import { ServiceReferral } from "@/components/ServiceReferral";
+import { StakingTimeline } from "@/components/StakingTimeline";
 import stakingImg from "@/assets/staking-visual.jpg";
 import vaultImg from "@/assets/staking-vault.jpg";
 import poolImg from "@/assets/staking-pool.jpg";
@@ -157,6 +158,14 @@ function Staking() {
             </div>
           ))}
         </div>
+      </Section>
+
+      <Section
+        eyebrow="Interactive simulator"
+        title={<>Watch your stake <span className="gradient-text">unlock & grow</span></>}
+        subtitle="Pick a plan, set your amount and see a live countdown, locked-balance progress and daily reward preview update in real time."
+      >
+        <StakingTimeline />
       </Section>
 
       <Section>

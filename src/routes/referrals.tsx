@@ -147,6 +147,17 @@ function Referrals() {
         setActivity((activityRes.data ?? []) as EarningRow[]);
         setMonthEarned((monthRes.data ?? []).reduce((s, r: { amount: number | string }) => s + Number(r.amount), 0));
         setLastMonthEarned((lastMonthRes.data ?? []).reduce((s, r: { amount: number | string }) => s + Number(r.amount), 0));
+        const p = (payoutRes.data ?? [])[0] as { next_payout_at: string; pending_amount: number | string; last_paid_at: string | null; min_amount: number | string; method: string; cadence_hours: number } | undefined;
+        if (p) {
+          setPayout({
+            next_payout_at: p.next_payout_at,
+            pending_amount: Number(p.pending_amount),
+            last_paid_at: p.last_paid_at,
+            min_amount: Number(p.min_amount),
+            method: p.method,
+            cadence_hours: p.cadence_hours,
+          });
+        }
       } catch (e) {
         if (!cancel) setError(e instanceof Error ? e.message : "Failed to load referral data");
       } finally {

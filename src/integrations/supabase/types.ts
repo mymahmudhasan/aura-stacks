@@ -226,6 +226,24 @@ export type Database = {
         }
         Relationships: []
       }
+      site_settings: {
+        Row: {
+          id: number
+          updated_at: string
+          whatsapp_number: string
+        }
+        Insert: {
+          id?: number
+          updated_at?: string
+          whatsapp_number?: string
+        }
+        Update: {
+          id?: number
+          updated_at?: string
+          whatsapp_number?: string
+        }
+        Relationships: []
+      }
       ticket_messages: {
         Row: {
           author_id: string | null

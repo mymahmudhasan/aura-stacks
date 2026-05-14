@@ -16,7 +16,7 @@ import poolImg from "@/assets/staking-prize-pool.jpg";
 
 const POOL_TOTAL = 820000; // USDT
 const WINNERS = 100;
-const PER_WINNER = POOL_TOTAL / WINNERS; // 650
+const PER_WINNER = POOL_TOTAL / WINNERS; // 8200
 
 function nextPoolClose() {
   // Closes at next 00:00 UTC
@@ -156,7 +156,7 @@ export function StakingPool() {
             <div className="grid grid-cols-3 gap-3">
               <div className="glass rounded-xl p-3">
                 <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Per winner</p>
-                <p className="text-lg font-bold gradient-text mt-1">${PER_WINNER}</p>
+                <p className="text-lg font-bold gradient-text mt-1">${PER_WINNER.toLocaleString()}</p>
               </div>
               <div className="glass rounded-xl p-3">
                 <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Joined today</p>

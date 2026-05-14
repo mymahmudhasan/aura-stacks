@@ -3,5 +3,5 @@ import { AuthCard } from "./login";
 
 export const Route = createFileRoute("/register")({
   component: () => <AuthCard mode="register" />,
-  head: () => ({ meta: [{ title: "Create account — NovaVault" }] }),
+  head: () => ({ meta: [{ title: "Create account — NovaTrad.Ai" }] }),
 });

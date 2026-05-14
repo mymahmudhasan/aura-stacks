@@ -191,7 +191,7 @@ export function Footer() {
       </div>
       <div className="border-t border-border/40">
         <div className="mx-auto max-w-7xl px-5 py-5 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
-          <p>© {new Date().getFullYear()} NovaVault. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} NovaTrad.Ai. All rights reserved.</p>
           <p>Crypto investments carry risk. Always invest responsibly.</p>
         </div>
       </div>

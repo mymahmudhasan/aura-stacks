@@ -6,8 +6,8 @@ export const Route = createFileRoute("/about")({
   component: About,
   head: () => ({
     meta: [
-      { title: "About — NovaVault" },
-      { name: "description", content: "NovaVault is a premium crypto investment platform building secure mining, staking and AI trading for global investors." },
+      { title: "About — NovaTrad.Ai" },
+      { name: "description", content: "NovaTrad.Ai is a premium crypto investment platform building secure mining, staking and AI trading for global investors." },
     ],
   }),
 });
@@ -18,13 +18,13 @@ function About() {
       <PageHero
         eyebrow="About"
         title={<>Building the future of <span className="gradient-text">crypto investing</span></>}
-        subtitle="NovaVault unifies mining, staking and AI trading into one premium platform — engineered for trust, speed and global reach."
+        subtitle="NovaTrad.Ai unifies mining, staking and AI trading into one premium platform — engineered for trust, speed and global reach."
       />
       <Section>
         <div className="grid md:grid-cols-2 gap-10">
           <div>
             <h2 className="text-2xl font-bold">Our mission</h2>
-            <p className="mt-4 text-muted-foreground leading-relaxed">We believe everyone deserves access to professional-grade crypto investment tools. NovaVault simplifies complex financial infrastructure into a single, beautiful dashboard — so you can focus on growing your portfolio.</p>
+            <p className="mt-4 text-muted-foreground leading-relaxed">We believe everyone deserves access to professional-grade crypto investment tools. NovaTrad.Ai simplifies complex financial infrastructure into a single, beautiful dashboard — so you can focus on growing your portfolio.</p>
           </div>
           <div>
             <h2 className="text-2xl font-bold">Our values</h2>

@@ -7,16 +7,16 @@ export const Route = createFileRoute("/faq")({
   component: FAQ,
   head: () => ({
     meta: [
-      { title: "FAQ — NovaVault" },
-      { name: "description", content: "Common questions about NovaVault mining, staking, AI trading, deposits and withdrawals." },
+      { title: "FAQ — NovaTrad.Ai" },
+      { name: "description", content: "Common questions about NovaTrad.Ai mining, staking, AI trading, deposits and withdrawals." },
     ],
   }),
 });
 
 const faqs = [
-  { q: "How fast are deposits processed?", a: "Crypto deposits are confirmed on-chain within minutes and credited automatically to your NovaVault wallet." },
+  { q: "How fast are deposits processed?", a: "Crypto deposits are confirmed on-chain within minutes and credited automatically to your NovaTrad.Ai wallet." },
   { q: "How do withdrawals work?", a: "Withdrawal requests stay pending for up to 7 days for security review. Small amounts ($10–$25) are typically processed within 24 hours. Larger withdrawals are reviewed by our admin team and returned to your original deposit wallet." },
-  { q: "Is my crypto safe with NovaVault?", a: "Yes — we use multi-sig cold-storage architecture, AES-256 encryption and 24/7 monitoring with SOC 2 compliance." },
+  { q: "Is my crypto safe with NovaTrad.Ai?", a: "Yes — we use multi-sig cold-storage architecture, AES-256 encryption and 24/7 monitoring with SOC 2 compliance." },
   { q: "What's the minimum to start mining?", a: "Our Starter Mining Plan begins at $100. Higher tiers unlock better daily reward rates." },
   { q: "Can I unstake early?", a: "Flexible staking allows withdrawal anytime. Fixed-term plans require completion of the lock period for full rewards." },
   { q: "Does AI trading guarantee profit?", a: "No system can guarantee profit. Our AI executes optimized strategies with active risk controls — past performance does not guarantee future returns." },
@@ -28,7 +28,7 @@ function FAQ() {
   const [open, setOpen] = useState<number | null>(0);
   return (
     <>
-      <PageHero eyebrow="Help" title={<>Frequently asked <span className="gradient-text">questions</span></>} subtitle="Everything you need to know about investing on NovaVault." />
+      <PageHero eyebrow="Help" title={<>Frequently asked <span className="gradient-text">questions</span></>} subtitle="Everything you need to know about investing on NovaTrad.Ai." />
       <Section>
         <div className="max-w-3xl mx-auto space-y-3">
           {faqs.map((f, i) => (

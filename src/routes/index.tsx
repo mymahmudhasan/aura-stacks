@@ -9,7 +9,7 @@ export const Route = createFileRoute("/")({
   component: Home,
   head: () => ({
     meta: [
-      { title: "NovaVault — AI Crypto Trading, Mining & Staking Platform" },
+      { title: "NovaTrad.Ai — AI Crypto Trading, Mining & Staking Platform" },
       { name: "description", content: "AI-powered crypto trading bots running 24/7. Plus mining and staking. Built for Binance users worldwide." },
     ],
   }),
@@ -35,7 +35,7 @@ function Home() {
               Trade smarter with <span className="gradient-text">AI that protects</span> your capital.
             </h1>
             <p className="mt-6 text-base md:text-lg text-muted-foreground max-w-xl">
-              NovaVault's neural trading engine scans 300+ Binance pairs every second and only takes high-probability setups — with hard stop-loss, drawdown caps and capital-protection rules baked in. Your funds stay yours.
+              NovaTrad.Ai's neural trading engine scans 300+ Binance pairs every second and only takes high-probability setups — with hard stop-loss, drawdown caps and capital-protection rules baked in. Your funds stay yours.
             </p>
 
             {/* Trust badges */}
@@ -67,7 +67,7 @@ function Home() {
             <div className="absolute -inset-10 bg-[image:var(--gradient-aurora)] opacity-60 blur-3xl rounded-full -z-10" />
             <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full -z-10" />
             <div className="relative">
-              <img src={heroImg} alt="NovaVault AI trading bot avatar" width={1024} height={1024} className="w-full h-auto drop-shadow-[0_30px_60px_rgba(56,189,248,0.35)]" />
+              <img src={heroImg} alt="NovaTrad.Ai AI trading bot avatar" width={1024} height={1024} className="w-full h-auto drop-shadow-[0_30px_60px_rgba(56,189,248,0.35)]" />
               {/* Trading terminal overlay */}
               <div className="absolute inset-x-4 bottom-4 glass-strong rounded-2xl p-4 border border-primary/30">
                 <div className="flex items-center justify-between mb-3">
@@ -128,7 +128,7 @@ function Home() {
               <Cable className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-sm font-semibold">A Binance account is required to join NovaVault.</p>
+              <p className="text-sm font-semibold">A Binance account is required to join NovaTrad.Ai.</p>
               <p className="text-xs text-muted-foreground mt-0.5">All deposits, withdrawals and reward payouts are processed through your verified Binance wallet.</p>
             </div>
           </div>
@@ -176,7 +176,7 @@ function Home() {
       <Section
         eyebrow="Also available"
         title={<>Other ways to <span className="gradient-text">grow your crypto</span></>}
-        subtitle="Beyond AI trading, NovaVault offers two additional passive-income streams."
+        subtitle="Beyond AI trading, NovaTrad.Ai offers two additional passive-income streams."
       >
         <div className="grid md:grid-cols-2 gap-5">
           <NumberedService
@@ -250,7 +250,7 @@ function Home() {
 
       {/* FEATURES */}
       <Section
-        eyebrow="Why NovaVault"
+        eyebrow="Why NovaTrad.Ai"
         title={<>Built like a fintech. <span className="gradient-text">Secured like a bank.</span></>}
         subtitle="Engineered with institutional-grade security, fast Binance-linked deposits & withdrawals, and a premium dashboard experience."
       >
@@ -274,7 +274,7 @@ function Home() {
               Activate your <span className="gradient-text">AI bot today</span>
             </h2>
             <p className="mt-4 text-muted-foreground max-w-xl mx-auto">
-              Join 240,000+ Binance users earning passive income with NovaVault's neural trading engine.
+              Join 240,000+ Binance users earning passive income with NovaTrad.Ai's neural trading engine.
             </p>
             <div className="mt-7 flex flex-wrap justify-center gap-3">
               <CTA to="/register" variant="gold">Create free account</CTA>
@@ -295,7 +295,7 @@ const features = [
   { icon: <Zap />, title: "Lightning Deposits", desc: "Crypto deposits confirm in minutes via direct Binance-compatible wallet integration." },
   { icon: <Globe />, title: "Global Coverage", desc: "Trusted by investors across 140+ countries with English-first, mobile-friendly UX." },
   { icon: <TrendingUp />, title: "Live Earnings", desc: "Watch profits accrue with a real-time counter synced to your dashboard." },
-  { icon: <Users />, title: "Referral Rewards", desc: "Earn lifetime commissions across 3 levels by inviting friends to NovaVault." },
+  { icon: <Users />, title: "Referral Rewards", desc: "Earn lifetime commissions across 3 levels by inviting friends to NovaTrad.Ai." },
   { icon: <Headphones />, title: "24/7 Support", desc: "Dedicated support team and Telegram & Discord communities ready to help." },
 ];
 

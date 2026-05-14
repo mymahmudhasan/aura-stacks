@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin/login")({
   component: AdminLogin,
-  head: () => ({ meta: [{ title: "Admin Sign In — NovaVault" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Admin Sign In — NovaTrad.Ai" }, { name: "robots", content: "noindex" }] }),
 });
 
 function AdminLogin() {

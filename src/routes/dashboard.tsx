@@ -4,7 +4,7 @@ import { CTA, GlassCard, Section } from "@/components/ui-bits";
 
 export const Route = createFileRoute("/dashboard")({
   component: Dashboard,
-  head: () => ({ meta: [{ title: "Dashboard — NovaVault" }] }),
+  head: () => ({ meta: [{ title: "Dashboard — NovaTrad.Ai" }] }),
 });
 
 function Dashboard() {

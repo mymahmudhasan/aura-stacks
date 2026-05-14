@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Hexagon, Cable, Loader2, ShieldCheck, ArrowLeft } from "lucide-react";
+import { Hexagon, Cable, Loader2, ShieldCheck, ArrowLeft, Phone, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/login")({
@@ -13,6 +13,7 @@ function Login() {
 }
 
 type Step = "form" | "verify";
+type VerifyMethod = "phone" | "email";
 
 export function AuthCard({ mode }: { mode: "login" | "register" }) {
   const isLogin = mode === "login";

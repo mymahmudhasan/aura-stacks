@@ -57,8 +57,8 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
       }
 
       // Register flow
-      const phone = normalizedPhone();
-      if (!/^\+[1-9]\d{6,14}$/.test(phone)) {
+      const phone = form.phone ? normalizedPhone() : "";
+      if (verifyMethod === "phone" && !/^\+[1-9]\d{6,14}$/.test(phone)) {
         throw new Error("Enter a valid phone number in international format, e.g. +14155552671");
       }
 
@@ -77,7 +77,7 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
           user_id: data.user.id,
           full_name: form.fullName,
           email: form.email,
-          phone,
+          phone: phone || null,
           country: form.country || null,
           binance_uid: form.binanceUid,
           binance_wallet_address: form.binanceWallet || null,
@@ -86,17 +86,22 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
         if (cErr) throw cErr;
       }
 
-      // Trigger SMS OTP via phone change on the just-created session
-      if (data.session) {
+      if (verifyMethod === "phone") {
+        if (!data.session) {
+          setSuccess("Account created. Check your email to confirm, then sign in to verify your phone.");
+          return;
+        }
         const { error: pErr } = await supabase.auth.updateUser({ phone });
         if (pErr) throw new Error(`Couldn't send SMS code: ${pErr.message}`);
+        setSuccess(`We sent a 6-digit code to ${phone}.`);
       } else {
-        // Email confirmation is on; user has no session yet — fall back
-        setSuccess("Account created. Check your email to confirm, then sign in to verify your phone.");
-        return;
+        const { error: eErr } = await supabase.auth.signInWithOtp({
+          email: form.email,
+          options: { shouldCreateUser: false },
+        });
+        if (eErr) throw new Error(`Couldn't send email code: ${eErr.message}`);
+        setSuccess(`We sent a 6-digit code to ${form.email}.`);
       }
-
-      setSuccess(`We sent a 6-digit code to ${phone}.`);
       setStep("verify");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");

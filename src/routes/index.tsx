@@ -4,6 +4,7 @@ import heroImg from "@/assets/ai-trader-bot.png";
 import miningImg from "@/assets/mining-visual.jpg";
 import stakingImg from "@/assets/staking-visual.jpg";
 import { CTA, GlassCard, Section, StatPill } from "@/components/ui-bits";
+import { LiveDeposits } from "@/components/LiveDeposits";
 
 export const Route = createFileRoute("/")({
   component: Home,
@@ -144,6 +145,9 @@ function Home() {
           ))}
         </div>
       </section>
+
+      {/* LIVE DEPOSITS — investor proof */}
+      <LiveDeposits />
 
       {/* AI TRADING DEEP-DIVE */}
       <Section

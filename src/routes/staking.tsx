@@ -3,6 +3,7 @@ import { Lock, TrendingUp, Timer, Layers, Gift, Zap, Sparkles, Flame, BadgePerce
 import { CTA, GlassCard, PageHero, Section } from "@/components/ui-bits";
 import { ServiceReferral } from "@/components/ServiceReferral";
 import { StakingTimeline } from "@/components/StakingTimeline";
+import { StakingPool } from "@/components/StakingPool";
 import stakingImg from "@/assets/staking-visual.jpg";
 import vaultImg from "@/assets/staking-vault.jpg";
 import poolImg from "@/assets/staking-pool.jpg";

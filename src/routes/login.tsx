@@ -114,7 +114,7 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
           {success && <p className="text-sm text-success">{success}</p>}
           <button disabled={loading} className="w-full px-4 py-3 rounded-xl bg-primary text-primary-foreground font-medium glow-primary inline-flex items-center justify-center gap-2 disabled:opacity-60">
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-            {isLogin ? "Sign in" : "Create account"}
+            {isLogin ? "Sign in" : "Start free demo"}
           </button>
         </form>
         {!isLogin && (

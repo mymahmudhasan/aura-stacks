@@ -96,9 +96,15 @@ export function Header() {
               {n.label}
             </Link>
           ))}
-          <div className="pt-3 mt-3 border-t border-border/40 flex gap-2">
-            <Link to="/login" onClick={() => setOpen(false)} className="flex-1 px-4 py-2.5 text-sm text-center rounded-lg border border-border">Sign in</Link>
-            <Link to="/register" onClick={() => setOpen(false)} className="flex-1 px-4 py-2.5 text-sm text-center rounded-lg bg-primary text-primary-foreground">Get started</Link>
+          <div className="pt-3 mt-3 border-t border-border/40 flex gap-2 items-center">
+            {signedIn ? (
+              <AccountBadge compact />
+            ) : (
+              <>
+                <Link to="/login" onClick={() => setOpen(false)} className="flex-1 px-4 py-2.5 text-sm text-center rounded-lg border border-border">Sign in</Link>
+                <Link to="/register" onClick={() => setOpen(false)} className="flex-1 px-4 py-2.5 text-sm text-center rounded-lg bg-primary text-primary-foreground">Get started</Link>
+              </>
+            )}
           </div>
         </div>
       )}

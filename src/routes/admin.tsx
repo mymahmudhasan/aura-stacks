@@ -4,11 +4,12 @@ import {
   Users, Wallet, Search, ShieldCheck, BadgeCheck, Clock, LogOut, Loader2,
   Phone, Globe2, LayoutDashboard, MessageSquare, BanknoteArrowUp, Copy, Check,
   Download, RefreshCw, Save, X, Filter, TrendingUp, AlertCircle,
-  ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ArrowUpDown,
+  ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ArrowUpDown, Settings, Trophy,
 } from "lucide-react";
 import { GlassCard } from "@/components/ui-bits";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { usePoolSettings, DEFAULT_POOL_SETTINGS } from "@/hooks/use-pool-settings";
 
 export const Route = createFileRoute("/admin")({
   component: Admin,

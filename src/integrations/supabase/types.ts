@@ -74,6 +74,57 @@ export type Database = {
         }
         Relationships: []
       }
+      payout_config: {
+        Row: {
+          cadence_hours: number
+          id: number
+          method: string
+          min_amount: number
+          payout_hour_utc: number
+          updated_at: string
+        }
+        Insert: {
+          cadence_hours?: number
+          id?: number
+          method?: string
+          min_amount?: number
+          payout_hour_utc?: number
+          updated_at?: string
+        }
+        Update: {
+          cadence_hours?: number
+          id?: number
+          method?: string
+          min_amount?: number
+          payout_hour_utc?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payout_runs: {
+        Row: {
+          amount: number
+          id: string
+          method: string
+          ran_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          id?: string
+          method?: string
+          ran_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          id?: string
+          method?: string
+          ran_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -293,6 +344,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_next_payout: {
+        Args: { _user_id: string }
+        Returns: {
+          cadence_hours: number
+          last_paid_at: string
+          method: string
+          min_amount: number
+          next_payout_at: string
+          pending_amount: number
+        }[]
+      }
       get_referral_summary: {
         Args: { _user_id: string }
         Returns: {

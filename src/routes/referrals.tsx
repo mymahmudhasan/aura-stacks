@@ -41,6 +41,29 @@ type EarningRow = {
   created_at: string;
 };
 
+type PayoutInfo = {
+  next_payout_at: string;
+  pending_amount: number;
+  last_paid_at: string | null;
+  min_amount: number;
+  method: string;
+  cadence_hours: number;
+};
+
+function countdown(target: Date) {
+  const ms = target.getTime() - Date.now();
+  if (ms <= 0) return "any moment";
+  const s = Math.floor(ms / 1000);
+  const d = Math.floor(s / 86400);
+  const h = Math.floor((s % 86400) / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (d > 0) return `in ${d}d ${h}h ${m}m`;
+  if (h > 0) return `in ${h}h ${m}m`;
+  if (m > 0) return `in ${m}m ${sec}s`;
+  return `in ${sec}s`;
+}
+
 function shortId(uuid: string) {
   return uuid.replace(/-/g, "").slice(0, 6);
 }
@@ -61,6 +84,13 @@ function Referrals() {
   const [activity, setActivity] = useState<EarningRow[]>([]);
   const [monthEarned, setMonthEarned] = useState(0);
   const [lastMonthEarned, setLastMonthEarned] = useState(0);
+  const [payout, setPayout] = useState<PayoutInfo | null>(null);
+  const [nowTick, setNowTick] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => setNowTick((n) => n + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   const referralId = useMemo(() => shortId(userId), [userId]);
 
@@ -74,7 +104,7 @@ function Referrals() {
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
         const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
 
-        const [summaryRes, activityRes, monthRes, lastMonthRes] = await Promise.all([
+        const [summaryRes, activityRes, monthRes, lastMonthRes, payoutRes] = await Promise.all([
           supabase.rpc("get_referral_summary", { _user_id: userId }),
           supabase
             .from("referral_earnings")
@@ -93,11 +123,13 @@ function Referrals() {
             .eq("user_id", userId)
             .gte("created_at", lastMonthStart)
             .lt("created_at", monthStart),
+          supabase.rpc("get_next_payout", { _user_id: userId }),
         ]);
 
         if (cancel) return;
         if (summaryRes.error) throw summaryRes.error;
         if (activityRes.error) throw activityRes.error;
+        if (payoutRes.error) throw payoutRes.error;
 
         const rows = (summaryRes.data ?? []) as Array<{ service: string; direct_count: number | string; network_count: number | string; lifetime_earned: number | string; earned_last_24h: number | string }>;
         const normalized: SummaryRow[] = SERVICE_KEYS.map((key) => {
@@ -115,6 +147,17 @@ function Referrals() {
         setActivity((activityRes.data ?? []) as EarningRow[]);
         setMonthEarned((monthRes.data ?? []).reduce((s, r: { amount: number | string }) => s + Number(r.amount), 0));
         setLastMonthEarned((lastMonthRes.data ?? []).reduce((s, r: { amount: number | string }) => s + Number(r.amount), 0));
+        const p = (payoutRes.data ?? [])[0] as { next_payout_at: string; pending_amount: number | string; last_paid_at: string | null; min_amount: number | string; method: string; cadence_hours: number } | undefined;
+        if (p) {
+          setPayout({
+            next_payout_at: p.next_payout_at,
+            pending_amount: Number(p.pending_amount),
+            last_paid_at: p.last_paid_at,
+            min_amount: Number(p.min_amount),
+            method: p.method,
+            cadence_hours: p.cadence_hours,
+          });
+        }
       } catch (e) {
         if (!cancel) setError(e instanceof Error ? e.message : "Failed to load referral data");
       } finally {
@@ -227,14 +270,38 @@ function Referrals() {
 
         <GlassCard>
           <h3 className="font-semibold mb-4">Payouts</h3>
+          {payout && (() => {
+            void nowTick;
+            const next = new Date(payout.next_payout_at);
+            const eligible = payout.pending_amount >= payout.min_amount;
+            return (
+              <div className="rounded-xl bg-background/40 border border-border/40 p-3 mb-4">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Next payout</p>
+                <p className="text-xl font-bold font-mono gradient-text mt-0.5">{countdown(next)}</p>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  {next.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
+                </p>
+                <div className="mt-2 flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Pending</span>
+                  <span className={`font-mono font-medium ${eligible ? "text-success" : "text-muted-foreground"}`}>
+                    ${payout.pending_amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+                {!eligible && (
+                  <p className="text-[11px] text-gold mt-1">Min ${payout.min_amount.toFixed(2)} required to release.</p>
+                )}
+              </div>
+            );
+          })()}
           <div className="space-y-3 text-sm">
             <Row k="This month" v={`$${monthEarned.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} tone="text-success" />
             <Row k="Last month" v={`$${lastMonthEarned.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} />
             <Row k="Lifetime" v={`$${totals.earned.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} tone="text-success" />
-            <Row k="Method" v="Binance · USDT" />
+            <Row k="Last paid" v={payout?.last_paid_at ? timeAgo(payout.last_paid_at) : "—"} />
+            <Row k="Method" v={payout?.method ?? "Binance · USDT"} />
           </div>
           <div className="mt-5 inline-flex items-center gap-2 text-xs text-muted-foreground">
-            <ArrowUpRight className="w-3.5 h-3.5 text-gold" /> Payouts settle automatically every 24h.
+            <ArrowUpRight className="w-3.5 h-3.5 text-gold" /> Payouts settle automatically every {payout?.cadence_hours ?? 24}h.
           </div>
         </GlassCard>
       </div>

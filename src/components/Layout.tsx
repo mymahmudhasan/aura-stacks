@@ -1,6 +1,7 @@
 import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
-import { Menu, X, Hexagon, ShieldCheck, BadgeCheck, Award, Lock, Globe2, Cpu } from "lucide-react";
+import { Menu, X, ShieldCheck, BadgeCheck, Award, Lock, Globe2, Cpu } from "lucide-react";
+import logo from "@/assets/novatrad-logo.png";
 
 const nav = [
   { to: "/", label: "Home" },
@@ -23,11 +24,11 @@ export function Header() {
       <div className="mx-auto max-w-7xl px-5 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5 group">
           <div className="relative">
-            <Hexagon className="w-8 h-8 text-primary fill-primary/20" strokeWidth={1.5} />
+            <img src={logo} alt="NovaTrad.Ai logo" width={36} height={36} className="w-9 h-9 object-contain" />
             <div className="absolute inset-0 blur-md bg-primary/40 -z-10 group-hover:bg-primary/60 transition" />
           </div>
           <span className="text-lg font-bold tracking-tight">
-            Nova<span className="gradient-text">Vault</span>
+            NovaTrad<span className="gradient-text">.Ai</span>
           </span>
         </Link>
 
@@ -153,8 +154,8 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-5 py-14 grid gap-10 md:grid-cols-4">
         <div className="md:col-span-1">
           <div className="flex items-center gap-2.5 mb-4">
-            <Hexagon className="w-7 h-7 text-primary fill-primary/20" strokeWidth={1.5} />
-            <span className="text-lg font-bold">Nova<span className="gradient-text">Vault</span></span>
+            <img src={logo} alt="NovaTrad.Ai logo" width={32} height={32} className="w-8 h-8 object-contain" loading="lazy" />
+            <span className="text-lg font-bold">NovaTrad<span className="gradient-text">.Ai</span></span>
           </div>
           <p className="text-sm text-muted-foreground leading-relaxed">
             Next-generation crypto investment platform for mining, staking and AI-assisted trading.

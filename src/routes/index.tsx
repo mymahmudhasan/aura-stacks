@@ -104,6 +104,26 @@ function Home() {
         </div>
       </section>
 
+      {/* DEPOSIT BONUS AD */}
+      <section className="relative overflow-hidden border-y border-gold/40">
+        <div className="absolute inset-0 bg-[image:var(--gradient-gold)] opacity-15" />
+        <div className="absolute inset-0 animate-shine" />
+        <div className="relative mx-auto max-w-7xl px-5 py-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex w-12 h-12 rounded-xl bg-[image:var(--gradient-gold)] text-gold-foreground items-center justify-center font-extrabold text-lg shadow-[var(--shadow-gold)]">
+              10%
+            </div>
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.25em] text-gold font-semibold">Limited offer</p>
+              <p className="text-base md:text-xl font-bold">
+                Get a <span className="gradient-text">10% bonus</span> on your first deposit — instantly credited to your trading account.
+              </p>
+            </div>
+          </div>
+          <CTA to="/register" variant="gold" className="whitespace-nowrap">Claim 10% Bonus <ArrowRight className="w-4 h-4" /></CTA>
+        </div>
+      </section>
+
       {/* SAFETY STRIP — capital protection */}
       <section className="border-y border-success/30 bg-success/5">
         <div className="mx-auto max-w-7xl px-5 py-5 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">

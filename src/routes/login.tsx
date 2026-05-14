@@ -83,14 +83,14 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
           <Hexagon className="w-8 h-8 text-primary fill-primary/20" strokeWidth={1.5} />
           <span className="text-lg font-bold">Nova<span className="gradient-text">Vault</span></span>
         </Link>
-        <h1 className="text-2xl font-bold text-center">{isLogin ? "Welcome back" : "Create your account"}</h1>
-        <p className="text-sm text-muted-foreground text-center mt-1.5">{isLogin ? "Sign in to your investor dashboard." : "Start earning crypto in minutes."}</p>
+        <h1 className="text-2xl font-bold text-center">{isLogin ? "Welcome back" : "Start your free demo"}</h1>
+        <p className="text-sm text-muted-foreground text-center mt-1.5">{isLogin ? "Sign in to your investor dashboard." : "Try NovaTrad.Ai with a $10,000 demo balance — upgrade automatically when you deposit."}</p>
 
         {!isLogin && (
-          <div className="mt-5 rounded-xl border border-primary/30 bg-primary/5 p-3 flex items-start gap-2.5">
-            <Cable className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+          <div className="mt-5 rounded-xl border border-success/30 bg-success/5 p-3 flex items-start gap-2.5">
+            <Cable className="w-4 h-4 text-success mt-0.5 shrink-0" />
             <p className="text-xs text-muted-foreground leading-relaxed">
-              <span className="text-foreground font-medium">Binance account required.</span> All withdrawals and rewards are sent manually to your verified Binance wallet.
+              <span className="text-foreground font-medium">Free demo account.</span> Practice AI trading, mining and staking with a virtual $10,000 balance. Your account becomes a real account automatically once you fund it from your Binance wallet.
             </p>
           </div>
         )}

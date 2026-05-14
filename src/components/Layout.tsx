@@ -2,6 +2,7 @@ import { Link, Outlet, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
 import { Menu, X, ShieldCheck, BadgeCheck, Award, Lock, Globe2, Cpu } from "lucide-react";
 import logo from "@/assets/novatrad-logo.png";
+import { WhatsAppWidget } from "@/components/WhatsAppWidget";
 
 const nav = [
   { to: "/", label: "Home" },
@@ -208,6 +209,7 @@ export function Layout() {
         <Outlet />
       </main>
       <Footer />
+      <WhatsAppWidget />
     </div>
   );
 }

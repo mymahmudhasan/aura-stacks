@@ -49,6 +49,10 @@ function useCountdown(targetMs: number) {
 }
 
 export function StakingPool() {
+  const { settings, perWinner } = usePoolSettings();
+  const POOL_TOTAL = settings.poolTotal;
+  const WINNERS = settings.winners;
+  const PER_WINNER = perWinner;
   const target = useMemo(() => nextPoolClose(), []);
   const { h, m, s, diff } = useCountdown(target);
 

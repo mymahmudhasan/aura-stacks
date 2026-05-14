@@ -1,9 +1,10 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Users, Wallet, Search, ShieldCheck, BadgeCheck, Clock, Cable, LogOut, Loader2,
+  Users, Wallet, Search, ShieldCheck, BadgeCheck, Clock, LogOut, Loader2,
   Phone, Globe2, LayoutDashboard, MessageSquare, BanknoteArrowUp, Copy, Check,
   Download, RefreshCw, Save, X, Filter, TrendingUp, AlertCircle,
+  ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ArrowUpDown,
 } from "lucide-react";
 import { GlassCard } from "@/components/ui-bits";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,17 +20,23 @@ type Ticket = Tables<"tickets">;
 type Payout = Tables<"payout_runs">;
 
 type Tab = "overview" | "customers" | "tickets" | "payouts";
+type SortDir = "asc" | "desc";
+type Overview = {
+  customers_total: number; customers_active: number; customers_pending: number; customers_suspended: number;
+  total_deposited: number; total_withdrawn: number; total_balances: number;
+  open_tickets: number; payouts_total: number; paid_last_24h: number;
+};
+
+const PAGE_SIZE = 25;
 
 function Admin() {
   const navigate = useNavigate();
   const [checking, setChecking] = useState(true);
   const [authorized, setAuthorized] = useState(false);
   const [tab, setTab] = useState<Tab>("overview");
-
-  const [customers, setCustomers] = useState<Customer[]>([]);
-  const [tickets, setTickets] = useState<Ticket[]>([]);
-  const [payouts, setPayouts] = useState<Payout[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [overview, setOverview] = useState<Overview | null>(null);
+  const [recentCustomers, setRecentCustomers] = useState<Customer[]>([]);
+  const [recentTickets, setRecentTickets] = useState<Ticket[]>([]);
   const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
 
   useEffect(() => {
@@ -45,7 +52,7 @@ function Admin() {
       }
       setAuthorized(true);
       setChecking(false);
-      void loadAll();
+      void loadOverview();
     })();
   }, [navigate]);
 
@@ -55,52 +62,18 @@ function Admin() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  const loadAll = async () => {
-    setLoading(true);
-    const [c, t, p] = await Promise.all([
-      supabase.from("customers").select("*").order("created_at", { ascending: false }),
-      supabase.from("tickets").select("*").order("created_at", { ascending: false }).limit(100),
-      supabase.from("payout_runs").select("*").order("ran_at", { ascending: false }).limit(100),
+  const loadOverview = useCallback(async () => {
+    const [{ data: ov }, recC, recT] = await Promise.all([
+      supabase.rpc("get_admin_overview").maybeSingle(),
+      supabase.from("customers").select("*").order("created_at", { ascending: false }).limit(5),
+      supabase.from("tickets").select("*").order("created_at", { ascending: false }).limit(5),
     ]);
-    setLoading(false);
-    if (c.data) setCustomers(c.data);
-    if (t.data) setTickets(t.data);
-    if (p.data) setPayouts(p.data);
-  };
+    if (ov) setOverview(ov as unknown as Overview);
+    if (recC.data) setRecentCustomers(recC.data);
+    if (recT.data) setRecentTickets(recT.data);
+  }, []);
 
-  const totals = useMemo(() => ({
-    customers: customers.length,
-    deposits: customers.reduce((s, c) => s + Number(c.total_deposited ?? 0), 0),
-    withdrawn: customers.reduce((s, c) => s + Number(c.total_withdrawn ?? 0), 0),
-    balances: customers.reduce((s, c) => s + Number(c.balance ?? 0), 0),
-    pending: customers.filter((c) => c.status === "pending").length,
-    active: customers.filter((c) => c.status === "active").length,
-    openTickets: tickets.filter((t) => t.status === "open" || t.status === "in_progress").length,
-    paidLast24: payouts.filter((p) => Date.now() - new Date(p.ran_at).getTime() < 86400000).reduce((s, p) => s + Number(p.amount ?? 0), 0),
-  }), [customers, tickets, payouts]);
-
-  const updateCustomer = async (id: string, patch: Partial<Customer>) => {
-    const { error } = await supabase.from("customers").update(patch).eq("id", id);
-    if (error) {
-      setToast({ kind: "err", msg: error.message });
-      return false;
-    }
-    setCustomers((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)));
-    setToast({ kind: "ok", msg: "Saved" });
-    return true;
-  };
-
-  const updateTicket = async (id: string, patch: Partial<Ticket>) => {
-    const { error } = await supabase.from("tickets").update(patch).eq("id", id);
-    if (error) return setToast({ kind: "err", msg: error.message });
-    setTickets((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
-    setToast({ kind: "ok", msg: "Ticket updated" });
-  };
-
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    navigate({ to: "/admin/login" });
-  };
+  const showToast = useCallback((kind: "ok" | "err", msg: string) => setToast({ kind, msg }), []);
 
   if (checking) {
     return <div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
@@ -109,14 +82,15 @@ function Admin() {
 
   const navItems: { id: Tab; label: string; icon: React.ReactNode; badge?: number }[] = [
     { id: "overview", label: "Overview", icon: <LayoutDashboard className="w-4 h-4" /> },
-    { id: "customers", label: "Customers", icon: <Users className="w-4 h-4" />, badge: totals.pending || undefined },
-    { id: "tickets", label: "Tickets", icon: <MessageSquare className="w-4 h-4" />, badge: totals.openTickets || undefined },
+    { id: "customers", label: "Customers", icon: <Users className="w-4 h-4" />, badge: overview?.customers_pending || undefined },
+    { id: "tickets", label: "Tickets", icon: <MessageSquare className="w-4 h-4" />, badge: overview?.open_tickets || undefined },
     { id: "payouts", label: "Payouts", icon: <BanknoteArrowUp className="w-4 h-4" /> },
   ];
 
+  const signOut = async () => { await supabase.auth.signOut(); navigate({ to: "/admin/login" }); };
+
   return (
     <div className="mx-auto max-w-7xl px-4 md:px-5 py-6 md:py-10">
-      {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-[11px] uppercase tracking-widest text-primary mb-2">
@@ -125,8 +99,8 @@ function Admin() {
           <h1 className="text-2xl md:text-3xl font-bold leading-tight">NovaVault <span className="gradient-text">Operations</span></h1>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={loadAll} disabled={loading} className="px-3 py-2 rounded-xl glass hover:border-primary/30 text-xs inline-flex items-center gap-1.5">
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} /> Refresh
+          <button onClick={loadOverview} className="px-3 py-2 rounded-xl glass hover:border-primary/30 text-xs inline-flex items-center gap-1.5">
+            <RefreshCw className="w-3.5 h-3.5" /> Refresh
           </button>
           <button onClick={signOut} className="px-3 py-2 rounded-xl glass hover:border-destructive/40 text-xs inline-flex items-center gap-1.5">
             <LogOut className="w-3.5 h-3.5" /> Sign out
@@ -134,7 +108,6 @@ function Admin() {
         </div>
       </div>
 
-      {/* Tab nav */}
       <div className="flex gap-1.5 overflow-x-auto pb-2 mb-5 -mx-1 px-1">
         {navItems.map((n) => {
           const active = tab === n.id;
@@ -154,12 +127,11 @@ function Admin() {
         })}
       </div>
 
-      {tab === "overview" && <Overview totals={totals} customers={customers} tickets={tickets} payouts={payouts} onJump={setTab} />}
-      {tab === "customers" && <CustomersTab customers={customers} loading={loading} onUpdate={updateCustomer} />}
-      {tab === "tickets" && <TicketsTab tickets={tickets} loading={loading} onUpdate={updateTicket} />}
-      {tab === "payouts" && <PayoutsTab payouts={payouts} customers={customers} loading={loading} />}
+      {tab === "overview" && <OverviewTab ov={overview} recentCustomers={recentCustomers} recentTickets={recentTickets} onJump={setTab} />}
+      {tab === "customers" && <CustomersTab onToast={showToast} onMutated={loadOverview} />}
+      {tab === "tickets" && <TicketsTab onToast={showToast} onMutated={loadOverview} />}
+      {tab === "payouts" && <PayoutsTab />}
 
-      {/* Toast */}
       {toast && (
         <div className={`fixed bottom-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl text-sm font-medium shadow-2xl border backdrop-blur ${
           toast.kind === "ok" ? "bg-success/15 border-success/30 text-success" : "bg-destructive/15 border-destructive/30 text-destructive"
@@ -176,20 +148,17 @@ function Admin() {
 
 /* ---------------- Overview ---------------- */
 
-function Overview({ totals, customers, tickets, payouts, onJump }: {
-  totals: { customers: number; deposits: number; withdrawn: number; balances: number; pending: number; active: number; openTickets: number; paidLast24: number };
-  customers: Customer[]; tickets: Ticket[]; payouts: Payout[];
-  onJump: (t: Tab) => void;
+function OverviewTab({ ov, recentCustomers, recentTickets, onJump }: {
+  ov: Overview | null; recentCustomers: Customer[]; recentTickets: Ticket[]; onJump: (t: Tab) => void;
 }) {
-  const recentCustomers = customers.slice(0, 5);
-  const recentTickets = tickets.slice(0, 5);
+  const stat = ov ?? { customers_total: 0, customers_active: 0, customers_pending: 0, customers_suspended: 0, total_deposited: 0, total_withdrawn: 0, total_balances: 0, open_tickets: 0, payouts_total: 0, paid_last_24h: 0 };
   return (
     <>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Kpi icon={<Users />} label="Customers" value={String(totals.customers)} trend={`${totals.active} active · ${totals.pending} pending`} />
-        <Kpi icon={<Wallet />} label="Total Deposited" value={`$${totals.deposits.toLocaleString()}`} trend={`Withdrawn $${totals.withdrawn.toLocaleString()}`} />
-        <Kpi icon={<TrendingUp />} label="Live Balances" value={`$${totals.balances.toLocaleString()}`} trend="Across all accounts" />
-        <Kpi icon={<BanknoteArrowUp />} label="Paid (24h)" value={`$${totals.paidLast24.toLocaleString()}`} trend={`${payouts.length} runs total`} />
+        <Kpi icon={<Users />} label="Customers" value={String(stat.customers_total)} trend={`${stat.customers_active} active · ${stat.customers_pending} pending`} />
+        <Kpi icon={<Wallet />} label="Total Deposited" value={`$${Number(stat.total_deposited).toLocaleString()}`} trend={`Withdrawn $${Number(stat.total_withdrawn).toLocaleString()}`} />
+        <Kpi icon={<TrendingUp />} label="Live Balances" value={`$${Number(stat.total_balances).toLocaleString()}`} trend="Across all accounts" />
+        <Kpi icon={<BanknoteArrowUp />} label="Paid (24h)" value={`$${Number(stat.paid_last_24h).toLocaleString()}`} trend={`${stat.payouts_total} runs total`} />
       </div>
 
       <div className="grid lg:grid-cols-2 gap-4 mt-5">
@@ -237,33 +206,102 @@ function Overview({ totals, customers, tickets, payouts, onJump }: {
 
 /* ---------------- Customers ---------------- */
 
-function CustomersTab({ customers, loading, onUpdate }: {
-  customers: Customer[]; loading: boolean;
-  onUpdate: (id: string, patch: Partial<Customer>) => Promise<boolean>;
-}) {
+type CustomerSortKey = "created_at" | "full_name" | "email" | "balance" | "total_deposited" | "status";
+
+function CustomersTab({ onToast, onMutated }: { onToast: (k: "ok" | "err", m: string) => void; onMutated: () => void }) {
+  const [rows, setRows] = useState<Customer[]>([]);
+  const [count, setCount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(0);
+  const [sortKey, setSortKey] = useState<CustomerSortKey>("created_at");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [qInput, setQInput] = useState("");
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "pending" | "suspended">("all");
   const [editId, setEditId] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
 
-  const filtered = customers.filter((c) => {
-    if (statusFilter !== "all" && c.status !== statusFilter) return false;
-    if (!q) return true;
-    return [c.full_name, c.email, c.phone, c.binance_uid, c.binance_wallet_address, c.country, c.referred_by]
-      .filter(Boolean).some((v) => v!.toLowerCase().includes(q.toLowerCase()));
-  });
+  // debounce search input
+  useEffect(() => {
+    const t = setTimeout(() => { setQ(qInput.trim()); setPage(0); }, 350);
+    return () => clearTimeout(t);
+  }, [qInput]);
 
-  const exportCsv = () => {
+  useEffect(() => { setPage(0); }, [statusFilter, sortKey, sortDir]);
+
+  const fetchPage = useCallback(async () => {
+    setLoading(true);
+    let query = supabase.from("customers").select("*", { count: "exact" });
+    if (statusFilter !== "all") query = query.eq("status", statusFilter);
+    if (q) {
+      const esc = q.replace(/[%,]/g, " ");
+      query = query.or(
+        `full_name.ilike.%${esc}%,email.ilike.%${esc}%,phone.ilike.%${esc}%,binance_uid.ilike.%${esc}%,binance_wallet_address.ilike.%${esc}%,country.ilike.%${esc}%,referred_by.ilike.%${esc}%`
+      );
+    }
+    const from = page * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+    const { data, error, count: cnt } = await query
+      .order(sortKey, { ascending: sortDir === "asc" })
+      .range(from, to);
+    setLoading(false);
+    if (error) { onToast("err", error.message); return; }
+    setRows(data ?? []);
+    setCount(cnt ?? 0);
+  }, [page, sortKey, sortDir, q, statusFilter, onToast]);
+
+  useEffect(() => { void fetchPage(); }, [fetchPage]);
+
+  const updateCustomer = async (id: string, patch: Partial<Customer>) => {
+    const { error } = await supabase.from("customers").update(patch).eq("id", id);
+    if (error) { onToast("err", error.message); return false; }
+    setRows((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+    onToast("ok", "Saved");
+    onMutated();
+    return true;
+  };
+
+  const exportCsv = async () => {
+    setExporting(true);
+    // Stream all matching rows in chunks of 1000
+    let all: Customer[] = [];
+    let from = 0;
+    const CHUNK = 1000;
+    while (true) {
+      let query = supabase.from("customers").select("*");
+      if (statusFilter !== "all") query = query.eq("status", statusFilter);
+      if (q) {
+        const esc = q.replace(/[%,]/g, " ");
+        query = query.or(
+          `full_name.ilike.%${esc}%,email.ilike.%${esc}%,phone.ilike.%${esc}%,binance_uid.ilike.%${esc}%,binance_wallet_address.ilike.%${esc}%,country.ilike.%${esc}%,referred_by.ilike.%${esc}%`
+        );
+      }
+      const { data, error } = await query
+        .order(sortKey, { ascending: sortDir === "asc" })
+        .range(from, from + CHUNK - 1);
+      if (error) { onToast("err", error.message); setExporting(false); return; }
+      if (!data || data.length === 0) break;
+      all = all.concat(data);
+      if (data.length < CHUNK) break;
+      from += CHUNK;
+    }
     const headers = ["Name", "Email", "Phone", "Country", "Binance UID", "Wallet", "Balance", "Deposited", "Withdrawn", "Status", "Joined"];
-    const rows = filtered.map((c) => [
+    const csvRows = all.map((c) => [
       c.full_name, c.email, c.phone || "", c.country || "", c.binance_uid, c.binance_wallet_address || "",
       c.balance, c.total_deposited, c.total_withdrawn, c.status, new Date(c.created_at).toISOString(),
     ]);
-    const csv = [headers, ...rows].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const csv = [headers, ...csvRows].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url; a.download = `customers-${new Date().toISOString().slice(0, 10)}.csv`; a.click();
     URL.revokeObjectURL(url);
+    setExporting(false);
+  };
+
+  const toggleSort = (key: CustomerSortKey) => {
+    if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortKey(key); setSortDir("asc"); }
   };
 
   return (
@@ -271,16 +309,16 @@ function CustomersTab({ customers, loading, onUpdate }: {
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div>
           <h3 className="font-semibold">Customer Database</h3>
-          <p className="text-xs text-muted-foreground">{filtered.length} of {customers.length} · click a row to edit</p>
+          <p className="text-xs text-muted-foreground">{count.toLocaleString()} total · page {page + 1} of {Math.max(1, Math.ceil(count / PAGE_SIZE))}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search…"
+            <input value={qInput} onChange={(e) => setQInput(e.target.value)} placeholder="Search…"
               className="pl-9 pr-3 py-2 w-full sm:w-64 rounded-xl bg-input/50 border border-border focus:border-primary outline-none text-sm" />
           </div>
-          <button onClick={exportCsv} className="px-3 py-2 rounded-xl glass hover:border-primary/30 text-xs inline-flex items-center gap-1.5">
-            <Download className="w-3.5 h-3.5" /> CSV
+          <button onClick={exportCsv} disabled={exporting} className="px-3 py-2 rounded-xl glass hover:border-primary/30 text-xs inline-flex items-center gap-1.5 disabled:opacity-50">
+            {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} CSV
           </button>
         </div>
       </div>
@@ -297,37 +335,44 @@ function CustomersTab({ customers, loading, onUpdate }: {
 
       {loading ? (
         <div className="py-16 flex items-center justify-center"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>
-      ) : filtered.length === 0 ? (
+      ) : rows.length === 0 ? (
         <div className="py-12 text-center text-sm text-muted-foreground">
           No customers match.<div className="mt-3"><Link to="/register" className="text-primary text-xs">Open registration page →</Link></div>
         </div>
       ) : (
         <>
-          {/* Mobile cards */}
           <div className="md:hidden space-y-2">
-            {filtered.map((c) => (
-              <CustomerCard key={c.id} c={c} editing={editId === c.id} onEdit={() => setEditId(c.id)} onClose={() => setEditId(null)} onSave={onUpdate} />
+            {rows.map((c) => (
+              <CustomerCard key={c.id} c={c} editing={editId === c.id} onEdit={() => setEditId(c.id)} onClose={() => setEditId(null)} onSave={updateCustomer} />
             ))}
           </div>
-          {/* Desktop table */}
           <div className="hidden md:block overflow-x-auto -mx-2">
             <table className="w-full text-sm min-w-[1000px]">
               <thead>
                 <tr className="text-[11px] uppercase tracking-widest text-muted-foreground bg-white/5">
-                  {["Name", "Contact", "Country", "Binance UID", "Wallet", "Balance", "Deposited", "Status", "Joined", ""].map((h) => (
-                    <th key={h} className="text-left font-medium px-3 py-2.5">{h}</th>
-                  ))}
+                  <SortTh active={sortKey === "full_name"} dir={sortDir} onClick={() => toggleSort("full_name")}>Name</SortTh>
+                  <SortTh active={sortKey === "email"} dir={sortDir} onClick={() => toggleSort("email")}>Contact</SortTh>
+                  <th className="text-left font-medium px-3 py-2.5">Country</th>
+                  <th className="text-left font-medium px-3 py-2.5">Binance UID</th>
+                  <th className="text-left font-medium px-3 py-2.5">Wallet</th>
+                  <SortTh active={sortKey === "balance"} dir={sortDir} onClick={() => toggleSort("balance")}>Balance</SortTh>
+                  <SortTh active={sortKey === "total_deposited"} dir={sortDir} onClick={() => toggleSort("total_deposited")}>Deposited</SortTh>
+                  <SortTh active={sortKey === "status"} dir={sortDir} onClick={() => toggleSort("status")}>Status</SortTh>
+                  <SortTh active={sortKey === "created_at"} dir={sortDir} onClick={() => toggleSort("created_at")}>Joined</SortTh>
+                  <th className="text-left font-medium px-3 py-2.5"></th>
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((c) => (
-                  <CustomerRow key={c.id} c={c} editing={editId === c.id} onEdit={() => setEditId(c.id)} onClose={() => setEditId(null)} onSave={onUpdate} />
+                {rows.map((c) => (
+                  <CustomerRow key={c.id} c={c} editing={editId === c.id} onEdit={() => setEditId(c.id)} onClose={() => setEditId(null)} onSave={updateCustomer} />
                 ))}
               </tbody>
             </table>
           </div>
         </>
       )}
+
+      <Pager page={page} pageSize={PAGE_SIZE} count={count} onChange={setPage} />
     </GlassCard>
   );
 }
@@ -464,33 +509,98 @@ function Field({ label, children, full }: { label: string; children: React.React
 
 /* ---------------- Tickets ---------------- */
 
-function TicketsTab({ tickets, loading, onUpdate }: {
-  tickets: Ticket[]; loading: boolean;
-  onUpdate: (id: string, patch: Partial<Ticket>) => void;
-}) {
+type TicketSortKey = "created_at" | "updated_at" | "subject" | "status" | "priority";
+type TicketStatusFilter = "all" | "open" | "in_progress" | "resolved" | "closed";
+
+function TicketsTab({ onToast, onMutated }: { onToast: (k: "ok" | "err", m: string) => void; onMutated: () => void }) {
+  const [rows, setRows] = useState<Ticket[]>([]);
+  const [count, setCount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(0);
+  const [sortKey, setSortKey] = useState<TicketSortKey>("created_at");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [qInput, setQInput] = useState("");
   const [q, setQ] = useState("");
-  const filtered = tickets.filter((t) => !q || [t.subject, t.email, t.ticket_number, t.full_name].some((v) => v?.toLowerCase().includes(q.toLowerCase())));
+  const [statusFilter, setStatusFilter] = useState<TicketStatusFilter>("all");
+
+  useEffect(() => {
+    const t = setTimeout(() => { setQ(qInput.trim()); setPage(0); }, 350);
+    return () => clearTimeout(t);
+  }, [qInput]);
+
+  useEffect(() => { setPage(0); }, [statusFilter, sortKey, sortDir]);
+
+  const fetchPage = useCallback(async () => {
+    setLoading(true);
+    let query = supabase.from("tickets").select("*", { count: "exact" });
+    if (statusFilter !== "all") query = query.eq("status", statusFilter);
+    if (q) {
+      const esc = q.replace(/[%,]/g, " ");
+      query = query.or(
+        `subject.ilike.%${esc}%,email.ilike.%${esc}%,full_name.ilike.%${esc}%,ticket_number.ilike.%${esc}%`
+      );
+    }
+    const from = page * PAGE_SIZE;
+    const { data, error, count: cnt } = await query
+      .order(sortKey, { ascending: sortDir === "asc" })
+      .range(from, from + PAGE_SIZE - 1);
+    setLoading(false);
+    if (error) { onToast("err", error.message); return; }
+    setRows(data ?? []);
+    setCount(cnt ?? 0);
+  }, [page, sortKey, sortDir, q, statusFilter, onToast]);
+
+  useEffect(() => { void fetchPage(); }, [fetchPage]);
+
+  const updateTicket = async (id: string, patch: Partial<Ticket>) => {
+    const { error } = await supabase.from("tickets").update(patch).eq("id", id);
+    if (error) return onToast("err", error.message);
+    setRows((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+    onToast("ok", "Ticket updated");
+    onMutated();
+  };
+
+  const toggleSort = (key: TicketSortKey) => {
+    if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortKey(key); setSortDir("asc"); }
+  };
 
   return (
     <GlassCard>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div>
           <h3 className="font-semibold">Support Tickets</h3>
-          <p className="text-xs text-muted-foreground">{filtered.length} of {tickets.length}</p>
+          <p className="text-xs text-muted-foreground">{count.toLocaleString()} total · page {page + 1} of {Math.max(1, Math.ceil(count / PAGE_SIZE))}</p>
         </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search tickets…"
+          <input value={qInput} onChange={(e) => setQInput(e.target.value)} placeholder="Search tickets…"
             className="pl-9 pr-3 py-2 w-full sm:w-64 rounded-xl bg-input/50 border border-border focus:border-primary outline-none text-sm" />
         </div>
       </div>
+
+      <div className="flex flex-wrap items-center gap-1.5 mb-4">
+        <Filter className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+        {(["all", "open", "in_progress", "resolved", "closed"] as const).map((s) => (
+          <button key={s} onClick={() => setStatusFilter(s)}
+            className={`px-2.5 py-1 rounded-full text-[11px] uppercase tracking-wider font-medium border ${
+              statusFilter === s ? "bg-primary text-primary-foreground border-primary" : "glass border-border"
+            }`}>{s.replace("_", " ")}</button>
+        ))}
+        <div className="ml-auto flex items-center gap-1.5">
+          <SortChip label="Newest" active={sortKey === "created_at" && sortDir === "desc"} onClick={() => { setSortKey("created_at"); setSortDir("desc"); }} />
+          <SortChip label="Updated" active={sortKey === "updated_at" && sortDir === "desc"} onClick={() => { setSortKey("updated_at"); setSortDir("desc"); }} />
+          <SortChip label="Priority" active={sortKey === "priority"} onClick={() => toggleSort("priority")} />
+        </div>
+      </div>
+
       {loading ? (
         <div className="py-16 flex items-center justify-center"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>
-      ) : filtered.length === 0 ? (
+      ) : rows.length === 0 ? (
         <p className="py-12 text-center text-sm text-muted-foreground">No tickets.</p>
       ) : (
         <div className="space-y-2">
-          {filtered.map((t) => (
+          {rows.map((t) => (
             <div key={t.id} className="rounded-xl glass p-3.5">
               <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div className="min-w-0 flex-1">
@@ -503,7 +613,7 @@ function TicketsTab({ tickets, loading, onUpdate }: {
                   <p className="text-xs text-muted-foreground truncate">{t.full_name} · {t.email}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <select value={t.status} onChange={(e) => onUpdate(t.id, { status: e.target.value as Ticket["status"], resolved_at: e.target.value === "resolved" ? new Date().toISOString() : null })}
+                  <select value={t.status} onChange={(e) => updateTicket(t.id, { status: e.target.value as Ticket["status"], resolved_at: e.target.value === "resolved" ? new Date().toISOString() : null })}
                     className="px-2 py-1.5 rounded-lg bg-input border border-border text-xs">
                     <option value="open">open</option>
                     <option value="in_progress">in_progress</option>
@@ -518,30 +628,83 @@ function TicketsTab({ tickets, loading, onUpdate }: {
           ))}
         </div>
       )}
+
+      <Pager page={page} pageSize={PAGE_SIZE} count={count} onChange={setPage} />
     </GlassCard>
   );
 }
 
 /* ---------------- Payouts ---------------- */
 
-function PayoutsTab({ payouts, customers, loading }: { payouts: Payout[]; customers: Customer[]; loading: boolean }) {
-  const map = useMemo(() => Object.fromEntries(customers.map((c) => [c.user_id, c])), [customers]);
+type PayoutSortKey = "ran_at" | "amount";
+
+function PayoutsTab() {
+  const [rows, setRows] = useState<Payout[]>([]);
+  const [count, setCount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(0);
+  const [sortKey, setSortKey] = useState<PayoutSortKey>("ran_at");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [customerMap, setCustomerMap] = useState<Record<string, Customer>>({});
+  const cacheRef = useRef<Record<string, Customer>>({});
+
+  useEffect(() => { setPage(0); }, [sortKey, sortDir]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      const from = page * PAGE_SIZE;
+      const { data, error, count: cnt } = await supabase
+        .from("payout_runs").select("*", { count: "exact" })
+        .order(sortKey, { ascending: sortDir === "asc" })
+        .range(from, from + PAGE_SIZE - 1);
+      if (cancelled) return;
+      setLoading(false);
+      if (error || !data) return;
+      setRows(data);
+      setCount(cnt ?? 0);
+
+      // Look up customers we don't have cached yet
+      const missing = Array.from(new Set(data.map((p) => p.user_id).filter((u) => !cacheRef.current[u])));
+      if (missing.length > 0) {
+        const { data: cs } = await supabase.from("customers").select("*").in("user_id", missing);
+        if (cs) {
+          for (const c of cs) if (c.user_id) cacheRef.current[c.user_id] = c;
+          setCustomerMap({ ...cacheRef.current });
+        }
+      } else {
+        setCustomerMap({ ...cacheRef.current });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [page, sortKey, sortDir]);
+
+  const toggleSort = (key: PayoutSortKey) => {
+    if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortKey(key); setSortDir("desc"); }
+  };
+
   return (
     <GlassCard>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div>
           <h3 className="font-semibold">Payout Runs</h3>
-          <p className="text-xs text-muted-foreground">Latest 100 payouts processed</p>
+          <p className="text-xs text-muted-foreground">{count.toLocaleString()} total · page {page + 1} of {Math.max(1, Math.ceil(count / PAGE_SIZE))}</p>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <SortChip label="Date" active={sortKey === "ran_at"} onClick={() => toggleSort("ran_at")} dir={sortKey === "ran_at" ? sortDir : undefined} />
+          <SortChip label="Amount" active={sortKey === "amount"} onClick={() => toggleSort("amount")} dir={sortKey === "amount" ? sortDir : undefined} />
         </div>
       </div>
       {loading ? (
         <div className="py-16 flex items-center justify-center"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>
-      ) : payouts.length === 0 ? (
+      ) : rows.length === 0 ? (
         <p className="py-12 text-center text-sm text-muted-foreground">No payouts yet.</p>
       ) : (
         <div className="space-y-2">
-          {payouts.map((p) => {
-            const c = map[p.user_id];
+          {rows.map((p) => {
+            const c = customerMap[p.user_id];
             return (
               <div key={p.id} className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg glass">
                 <div className="min-w-0">
@@ -554,11 +717,58 @@ function PayoutsTab({ payouts, customers, loading }: { payouts: Payout[]; custom
           })}
         </div>
       )}
+      <Pager page={page} pageSize={PAGE_SIZE} count={count} onChange={setPage} />
     </GlassCard>
   );
 }
 
 /* ---------------- Bits ---------------- */
+
+function Pager({ page, pageSize, count, onChange }: { page: number; pageSize: number; count: number; onChange: (p: number) => void }) {
+  const totalPages = Math.max(1, Math.ceil(count / pageSize));
+  if (count <= pageSize) return null;
+  const from = count === 0 ? 0 : page * pageSize + 1;
+  const to = Math.min((page + 1) * pageSize, count);
+  return (
+    <div className="mt-4 flex items-center justify-between gap-3 flex-wrap">
+      <p className="text-[11px] text-muted-foreground">Showing {from}–{to} of {count.toLocaleString()}</p>
+      <div className="flex items-center gap-1.5">
+        <button onClick={() => onChange(Math.max(0, page - 1))} disabled={page === 0}
+          className="p-1.5 rounded-lg glass hover:border-primary/30 disabled:opacity-40 disabled:hover:border-border">
+          <ChevronLeft className="w-3.5 h-3.5" />
+        </button>
+        <span className="text-xs px-3 py-1.5 rounded-lg glass">{page + 1} / {totalPages}</span>
+        <button onClick={() => onChange(Math.min(totalPages - 1, page + 1))} disabled={page >= totalPages - 1}
+          className="p-1.5 rounded-lg glass hover:border-primary/30 disabled:opacity-40 disabled:hover:border-border">
+          <ChevronRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function SortTh({ children, active, dir, onClick }: { children: React.ReactNode; active: boolean; dir: SortDir; onClick: () => void }) {
+  return (
+    <th className="text-left font-medium px-3 py-2.5">
+      <button onClick={onClick} className={`inline-flex items-center gap-1 hover:text-primary transition ${active ? "text-primary" : ""}`}>
+        {children}
+        {active ? (dir === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : <ArrowUpDown className="w-3 h-3 opacity-50" />}
+      </button>
+    </th>
+  );
+}
+
+function SortChip({ label, active, onClick, dir }: { label: string; active: boolean; onClick: () => void; dir?: SortDir }) {
+  return (
+    <button onClick={onClick}
+      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium border ${
+        active ? "bg-primary/15 text-primary border-primary/30" : "glass border-border hover:border-primary/30"
+      }`}>
+      {label}
+      {active && dir ? (dir === "asc" ? <ArrowUp className="w-3 h-3" /> : <ArrowDown className="w-3 h-3" />) : null}
+    </button>
+  );
+}
 
 function Kpi({ icon, label, value, trend }: { icon: React.ReactNode; label: string; value: string; trend: string }) {
   return (

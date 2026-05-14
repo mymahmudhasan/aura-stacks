@@ -55,18 +55,24 @@ export function Header() {
         </nav>
 
         <div className="hidden lg:flex items-center gap-2">
-          <Link
-            to="/login"
-            className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition"
-          >
-            Sign in
-          </Link>
-          <Link
-            to="/register"
-            className="relative px-4 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition glow-primary"
-          >
-            Get started
-          </Link>
+          {signedIn ? (
+            <AccountBadge />
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition"
+              >
+                Sign in
+              </Link>
+              <Link
+                to="/register"
+                className="relative px-4 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition glow-primary"
+              >
+                Get started
+              </Link>
+            </>
+          )}
         </div>
 
         <button

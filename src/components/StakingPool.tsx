@@ -102,11 +102,11 @@ export function StakingPool() {
 
             <div>
               <h3 className="text-3xl md:text-4xl font-bold tracking-tight">
-                <span className="gradient-text">$820,000 USDT</span> shared by{" "}
-                <span className="text-gold">100 winners</span> — every 24 hours
+                <span className="gradient-text">${fmt(POOL_TOTAL)} USDT</span> shared by{" "}
+                <span className="text-gold">{WINNERS} winners</span> — every 24 hours
               </h3>
               <p className="mt-3 text-sm md:text-base text-muted-foreground">
-                Join the daily reward pool from any active staking plan. When the timer hits zero, 100 connected members are randomly selected and split the entire pool — that's <span className="text-foreground font-semibold">$8,200 USDT</span> per winner, paid instantly to your wallet.
+                Join the daily reward pool from any active staking plan. When the timer hits zero, {WINNERS} connected members are randomly selected and split the entire pool — that's <span className="text-foreground font-semibold">${fmt(PER_WINNER)} USDT</span> per winner, paid instantly to your wallet.
               </p>
             </div>
 

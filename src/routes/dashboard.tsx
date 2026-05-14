@@ -1,5 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Wallet, TrendingUp, Activity, Clock, ArrowDownLeft, ArrowUpRight, Cpu, Lock, Brain, Bell } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Wallet, TrendingUp, Activity, Clock, ArrowDownLeft, ArrowUpRight, Cpu, Lock, Brain, Bell, Users, Share2 } from "lucide-react";
 import { CTA, GlassCard, Section } from "@/components/ui-bits";
 
 export const Route = createFileRoute("/dashboard")({

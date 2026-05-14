@@ -14,6 +14,7 @@ import { Route as SupportRouteImport } from './routes/support'
 import { Route as StakingRouteImport } from './routes/staking'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ReferralsRouteImport } from './routes/referrals'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as MiningRouteImport } from './routes/mining'
 import { Route as LoginRouteImport } from './routes/login'
@@ -50,6 +51,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReferralsRoute = ReferralsRouteImport.update({
+  id: '/referrals',
+  path: '/referrals',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -125,6 +131,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/mining': typeof MiningRoute
   '/privacy': typeof PrivacyRoute
+  '/referrals': typeof ReferralsRoute
   '/register': typeof RegisterRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staking': typeof StakingRoute
@@ -144,6 +151,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/mining': typeof MiningRoute
   '/privacy': typeof PrivacyRoute
+  '/referrals': typeof ReferralsRoute
   '/register': typeof RegisterRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staking': typeof StakingRoute
@@ -164,6 +172,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/mining': typeof MiningRoute
   '/privacy': typeof PrivacyRoute
+  '/referrals': typeof ReferralsRoute
   '/register': typeof RegisterRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staking': typeof StakingRoute
@@ -185,6 +194,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mining'
     | '/privacy'
+    | '/referrals'
     | '/register'
     | '/sitemap.xml'
     | '/staking'
@@ -204,6 +214,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mining'
     | '/privacy'
+    | '/referrals'
     | '/register'
     | '/sitemap.xml'
     | '/staking'
@@ -223,6 +234,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/mining'
     | '/privacy'
+    | '/referrals'
     | '/register'
     | '/sitemap.xml'
     | '/staking'
@@ -243,6 +255,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   MiningRoute: typeof MiningRoute
   PrivacyRoute: typeof PrivacyRoute
+  ReferralsRoute: typeof ReferralsRoute
   RegisterRoute: typeof RegisterRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StakingRoute: typeof StakingRoute
@@ -285,6 +298,13 @@ declare module '@tanstack/react-router' {
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/referrals': {
+      id: '/referrals'
+      path: '/referrals'
+      fullPath: '/referrals'
+      preLoaderRoute: typeof ReferralsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -396,6 +416,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   MiningRoute: MiningRoute,
   PrivacyRoute: PrivacyRoute,
+  ReferralsRoute: ReferralsRoute,
   RegisterRoute: RegisterRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StakingRoute: StakingRoute,

@@ -20,7 +20,14 @@ function AITrading() {
     <>
       <PageHero
         eyebrow="AI Trading"
-        title={<>AI-powered trading for the <span className="gradient-text">next generation</span></>}
+        title={
+          <>
+            <span className="block text-shimmer text-2xl md:text-4xl lg:text-5xl font-extrabold uppercase tracking-[0.2em] mb-5">
+              ◉ Live Market · Real-time
+            </span>
+            AI-powered trading for the <span className="gradient-text">next generation</span>
+          </>
+        }
         subtitle="Experience automated market analysis and intelligent crypto trading systems. NovaTrad.Ai's AI scans hundreds of pairs and executes optimized strategies 24/7."
       />
 

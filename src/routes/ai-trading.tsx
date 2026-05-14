@@ -52,6 +52,14 @@ function AITrading() {
         </div>
       </Section>
 
+      <Section
+        eyebrow="Live market"
+        title={<>Today's <span className="gradient-text">forex &amp; crypto</span> markets</>}
+        subtitle="Real-time prices our AI bot is watching right now. Switch pairs to see what your AI trader is analyzing."
+      >
+        <LiveForexChart />
+      </Section>
+
       <Section eyebrow="Bot performance" title={<>Live AI <span className="gradient-text">strategy stats</span></>} subtitle="Performance is reported transparently. Past results do not guarantee future returns.">
         <div className="grid md:grid-cols-3 gap-5">
           {[

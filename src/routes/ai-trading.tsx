@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Brain, Bot, LineChart, ShieldCheck, Sparkles, Activity } from "lucide-react";
 import { CTA, GlassCard, PageHero, Section } from "@/components/ui-bits";
 import { ServiceReferral } from "@/components/ServiceReferral";
+import { LiveForexChart } from "@/components/LiveForexChart";
 import aiImg from "@/assets/ai-trader-bot.png";
 
 export const Route = createFileRoute("/ai-trading")({

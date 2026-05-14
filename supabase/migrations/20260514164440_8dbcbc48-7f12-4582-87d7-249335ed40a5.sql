@@ -1,0 +1,1 @@
+ALTER TABLE public.customers ALTER COLUMN binance_uid DROP NOT NULL;

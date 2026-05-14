@@ -409,7 +409,7 @@ function CustomerRow({ c, editing, onEdit, onClose, onSave }: {
         <p className="text-[11px] inline-flex items-center gap-1"><Phone className="w-2.5 h-2.5" />{c.phone || "—"}</p>
       </Td>
       <Td muted><span className="inline-flex items-center gap-1"><Globe2 className="w-3 h-3" />{c.country || "—"}</span></Td>
-      <Td><CopyChip label={c.binance_uid} /></Td>
+      <Td><CopyChip label={c.binance_uid || "—"} /></Td>
       <Td><CopyChip label={c.binance_wallet_address || "—"} truncate /></Td>
       <Td>
         {editing ? (
@@ -475,7 +475,7 @@ function CustomerCard({ c, editing, onEdit, onClose, onSave }: {
         <Field label="Deposited">{editing ? <input type="number" value={dep} onChange={(e) => setDep(e.target.value)} className="w-full px-2 py-1 rounded bg-input border border-primary/40" /> : `$${Number(c.total_deposited).toLocaleString()}`}</Field>
         <Field label="Country">{c.country || "—"}</Field>
         <Field label="Phone">{c.phone || "—"}</Field>
-        <Field label="Binance UID" full><CopyChip label={c.binance_uid} /></Field>
+        <Field label="Binance UID" full><CopyChip label={c.binance_uid || "—"} /></Field>
         <Field label="Wallet" full><CopyChip label={c.binance_wallet_address || "—"} truncate /></Field>
         {editing && (
           <Field label="Status" full>

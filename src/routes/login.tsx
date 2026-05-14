@@ -104,8 +104,6 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
             <>
               <input value={form.phone} onChange={upd("phone")} placeholder="Phone number" className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none" />
               <input value={form.country} onChange={upd("country")} placeholder="Country" className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none" />
-              <input required value={form.binanceUid} onChange={upd("binanceUid")} placeholder="Binance UID (required)" className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none font-mono text-sm" />
-              <input value={form.binanceWallet} onChange={upd("binanceWallet")} placeholder="Binance wallet address (USDT/BTC)" className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none font-mono text-sm" />
             </>
           )}
           <input required type="password" value={form.password} onChange={upd("password")} placeholder="Password (min 6 chars)" minLength={6} className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none" />

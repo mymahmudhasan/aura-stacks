@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Lock, TrendingUp, Timer, Layers } from "lucide-react";
 import { CTA, GlassCard, PageHero, Section } from "@/components/ui-bits";
+import { ServiceReferral } from "@/components/ServiceReferral";
 import stakingImg from "@/assets/staking-visual.jpg";
 
 export const Route = createFileRoute("/staking")({
@@ -88,6 +89,17 @@ function Staking() {
           </div>
         </div>
       </Section>
+
+      <ServiceReferral
+        serviceName="Staking"
+        accent="gold"
+        bonus="Refer $10,000+ in locked stakes → +1% bonus APY for 30 days."
+        tiers={[
+          { level: "Direct (L1)", rate: "6%", note: "Of every stake your direct referral locks across any tier." },
+          { level: "Network (L2)", rate: "2%", note: "Of stakes from your referrals' invited stakers." },
+          { level: "Reward Share", rate: "0.5%", note: "Of daily staking rewards earned by your full network." },
+        ]}
+      />
     </>
   );
 }

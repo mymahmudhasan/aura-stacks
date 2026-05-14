@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Cpu, Check, Zap } from "lucide-react";
 import { CTA, GlassCard, PageHero, Section } from "@/components/ui-bits";
+import { ServiceReferral } from "@/components/ServiceReferral";
 import miningImg from "@/assets/mining-visual.jpg";
 
 export const Route = createFileRoute("/mining")({
@@ -89,6 +90,17 @@ function Mining() {
           <div className="mt-6 flex items-center gap-2 text-xs text-muted-foreground"><Zap className="w-4 h-4 text-primary" />Estimates based on Premium plan at 2.0% daily. Actual returns may vary.</div>
         </GlassCard>
       </Section>
+
+      <ServiceReferral
+        serviceName="Mining"
+        accent="primary"
+        bonus="Refer 5 active miners → unlock a $250 hashrate bonus."
+        tiers={[
+          { level: "Direct (L1)", rate: "8%", note: "On every deposit your referral makes into any mining plan." },
+          { level: "Network (L2)", rate: "3%", note: "On deposits made by your referrals' referrals." },
+          { level: "Daily Rewards", rate: "1%", note: "Of the daily mining payouts your network earns — for life." },
+        ]}
+      />
     </>
   );
 }

@@ -240,16 +240,41 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
             <p className="text-sm text-muted-foreground text-center mt-1.5">
               {isLogin
                 ? "Sign in to your investor dashboard."
-                : "Step 1 of 2 — we'll send a 6-digit SMS code to verify your phone."}
+                : "Step 1 of 2 — choose how you'd like to verify your account."}
             </p>
 
             {!isLogin && (
-              <div className="mt-5 rounded-xl border border-primary/30 bg-primary/5 p-3 flex items-start gap-2.5">
-                <Cable className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  <span className="text-foreground font-medium">Phone verification required.</span> A 6-digit code will be sent by SMS to confirm it's really you.
-                </p>
-              </div>
+              <>
+                <div className="mt-5 grid grid-cols-2 gap-2 p-1 rounded-xl bg-input/40 border border-border">
+                  <button
+                    type="button"
+                    onClick={() => setVerifyMethod("phone")}
+                    className={`px-3 py-2 rounded-lg text-xs font-medium inline-flex items-center justify-center gap-2 transition ${
+                      verifyMethod === "phone" ? "bg-primary text-primary-foreground glow-primary" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Phone className="w-3.5 h-3.5" /> Phone (SMS)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setVerifyMethod("email")}
+                    className={`px-3 py-2 rounded-lg text-xs font-medium inline-flex items-center justify-center gap-2 transition ${
+                      verifyMethod === "email" ? "bg-primary text-primary-foreground glow-primary" : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Mail className="w-3.5 h-3.5" /> Email code
+                  </button>
+                </div>
+                <div className="mt-3 rounded-xl border border-primary/30 bg-primary/5 p-3 flex items-start gap-2.5">
+                  <Cable className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    <span className="text-foreground font-medium">
+                      {verifyMethod === "phone" ? "Phone verification" : "Email verification"} required.
+                    </span>{" "}
+                    A 6-digit code will be sent by {verifyMethod === "phone" ? "SMS to your phone" : "email to your inbox"} to confirm it's really you.
+                  </p>
+                </div>
+              </>
             )}
 
             <form className="mt-5 space-y-3" onSubmit={onSubmit}>

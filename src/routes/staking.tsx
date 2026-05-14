@@ -1,15 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Lock, TrendingUp, Timer, Layers } from "lucide-react";
+import { Lock, TrendingUp, Timer, Layers, Gift, Zap, Sparkles, Flame, BadgePercent, Crown } from "lucide-react";
 import { CTA, GlassCard, PageHero, Section } from "@/components/ui-bits";
 import { ServiceReferral } from "@/components/ServiceReferral";
 import stakingImg from "@/assets/staking-visual.jpg";
+import vaultImg from "@/assets/staking-vault.jpg";
+import poolImg from "@/assets/staking-pool.jpg";
+import rewardsImg from "@/assets/staking-rewards.jpg";
 
 export const Route = createFileRoute("/staking")({
   component: Staking,
   head: () => ({
     meta: [
-      { title: "Staking Plans — NovaVault" },
-      { name: "description", content: "Lock, stake and earn daily rewards. Choose from 1, 3, 6 or 12-month staking with up to 38% APY on top crypto assets." },
+      { title: "Staking Plans & Offers — NovaVault" },
+      { name: "description", content: "Lock, stake and earn daily rewards. Limited-time bonus APY offers, new-investor boost and VIP staking from $50 to $2,500+." },
     ],
   }),
 });
@@ -19,6 +22,41 @@ const tiers = [
   { d: "3 Months", apy: "18%", min: "$250", flex: "Fixed" },
   { d: "6 Months", apy: "26%", min: "$1,000", flex: "Fixed" },
   { d: "12 Months", apy: "38%", min: "$2,500", flex: "Fixed", best: true },
+];
+
+const offers = [
+  {
+    icon: <Sparkles className="w-5 h-5" />,
+    badge: "New investor",
+    title: "+3% Welcome APY Boost",
+    desc: "First-time stakers get an extra 3% APY for the first 30 days on any plan. Auto-applied at first stake.",
+    accent: "primary" as const,
+    cta: "Claim boost",
+  },
+  {
+    icon: <Crown className="w-5 h-5" />,
+    badge: "VIP · 12 month",
+    title: "Lock $5,000+ → 42% APY",
+    desc: "Premium tier upgrade with priority withdrawals, dedicated manager and free monthly compounding.",
+    accent: "gold" as const,
+    cta: "Go VIP",
+  },
+  {
+    icon: <Flame className="w-5 h-5" />,
+    badge: "Limited · 7 days",
+    title: "Double Daily Rewards",
+    desc: "Stake any USDT plan this week and receive 2× daily payouts for the first 14 days. Stackable with welcome boost.",
+    accent: "primary" as const,
+    cta: "Activate offer",
+  },
+  {
+    icon: <Gift className="w-5 h-5" />,
+    badge: "Refer & earn",
+    title: "$25 Bonus per Friend",
+    desc: "Get $25 USDT credited instantly when a referred friend stakes $500+. Unlimited referrals.",
+    accent: "gold" as const,
+    cta: "Get my link",
+  },
 ];
 
 function Staking() {
@@ -42,6 +80,62 @@ function Staking() {
               <h3 className="font-semibold">{f.t}</h3>
               <p className="text-sm text-muted-foreground mt-1.5">{f.d}</p>
             </GlassCard>
+          ))}
+        </div>
+      </Section>
+
+      {/* Visual showcase */}
+      <Section eyebrow="Inside the vault" title={<>Where your <span className="gradient-text">capital works</span> for you</>} subtitle="Multi-chain staking pools secured by institutional-grade custody. Watch your assets grow in real time.">
+        <div className="grid md:grid-cols-3 gap-5">
+          <div className="relative rounded-3xl overflow-hidden border border-border/60 group">
+            <img src={vaultImg} alt="Multi-asset crypto vault" loading="lazy" width={1280} height={896} className="w-full h-64 object-cover transition duration-700 group-hover:scale-105" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+            <div className="absolute bottom-0 p-5">
+              <p className="text-xs uppercase tracking-widest text-primary">Multi-asset</p>
+              <h3 className="text-xl font-bold mt-1">BTC · ETH · USDT · BNB</h3>
+            </div>
+          </div>
+          <div className="relative rounded-3xl overflow-hidden border border-border/60 group glow-gold">
+            <img src={poolImg} alt="Live staking pool" loading="lazy" width={1280} height={896} className="w-full h-64 object-cover transition duration-700 group-hover:scale-105" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+            <div className="absolute bottom-0 p-5">
+              <p className="text-xs uppercase tracking-widest text-gold">Live pool</p>
+              <h3 className="text-xl font-bold mt-1">$284M+ TVL</h3>
+            </div>
+          </div>
+          <div className="relative rounded-3xl overflow-hidden border border-border/60 group">
+            <img src={rewardsImg} alt="Daily reward unlock" loading="lazy" width={1280} height={896} className="w-full h-64 object-cover transition duration-700 group-hover:scale-105" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+            <div className="absolute bottom-0 p-5">
+              <p className="text-xs uppercase tracking-widest text-primary">Daily unlock</p>
+              <h3 className="text-xl font-bold mt-1">Rewards every 24h</h3>
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      {/* Limited offers */}
+      <Section eyebrow="Live offers" title={<>Limited-time <span className="gradient-text">staking offers</span></>} subtitle="Stack these promos with any plan to maximize your APY. Offers refresh weekly.">
+        <div className="grid sm:grid-cols-2 gap-5">
+          {offers.map((o) => (
+            <div key={o.title} className={`relative rounded-2xl p-6 overflow-hidden ${o.accent === "gold" ? "glass-strong border-gold/30" : "glass"}`}>
+              <div className={`absolute -top-16 -right-16 w-48 h-48 rounded-full blur-3xl opacity-30 ${o.accent === "gold" ? "bg-[image:var(--gradient-gold)]" : "bg-primary"}`} />
+              <div className="relative flex items-start gap-4">
+                <div className={`shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${o.accent === "gold" ? "bg-[image:var(--gradient-gold)] text-gold-foreground" : "bg-primary/15 text-primary"}`}>
+                  {o.icon}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className={`inline-flex items-center gap-1 text-[10px] uppercase tracking-widest px-2 py-1 rounded-full ${o.accent === "gold" ? "bg-gold/15 text-gold border border-gold/20" : "bg-primary/15 text-primary border border-primary/20"}`}>
+                    <BadgePercent className="w-3 h-3" /> {o.badge}
+                  </span>
+                  <h3 className="text-lg md:text-xl font-bold mt-2">{o.title}</h3>
+                  <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{o.desc}</p>
+                  <CTA to="/register" variant={o.accent === "gold" ? "gold" : "primary"} className="mt-4">
+                    <Zap className="w-4 h-4" /> {o.cta}
+                  </CTA>
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       </Section>

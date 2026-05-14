@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Brain, Bot, LineChart, ShieldCheck, Sparkles, Activity } from "lucide-react";
 import { CTA, GlassCard, PageHero, Section } from "@/components/ui-bits";
 import { ServiceReferral } from "@/components/ServiceReferral";
+import { LiveForexChart } from "@/components/LiveForexChart";
 import aiImg from "@/assets/ai-trader-bot.png";
 
 export const Route = createFileRoute("/ai-trading")({
@@ -49,6 +50,14 @@ function AITrading() {
             <div className="mt-7 flex gap-3"><CTA to="/register">Activate AI Bot</CTA><CTA to="/faq" variant="ghost">Learn more</CTA></div>
           </div>
         </div>
+      </Section>
+
+      <Section
+        eyebrow="Live market"
+        title={<>Today's <span className="gradient-text">forex &amp; crypto</span> markets</>}
+        subtitle="Real-time prices our AI bot is watching right now. Switch pairs to see what your AI trader is analyzing."
+      >
+        <LiveForexChart />
       </Section>
 
       <Section eyebrow="Bot performance" title={<>Live AI <span className="gradient-text">strategy stats</span></>} subtitle="Performance is reported transparently. Past results do not guarantee future returns.">

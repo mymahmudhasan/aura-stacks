@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { X, MessageCircle, Send } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
-// Default WhatsApp number — change this to your real support number (international format, no +).
-const DEFAULT_WA_NUMBER = "14155551234";
-const STORAGE_KEY = "novatrad.waNumber";
+// Fallback used only if the database setting hasn't loaded yet.
+const FALLBACK_WA_NUMBER = "14155551234";
+const EVENT = "novatrad:whatsapp-number-changed";
 
 function WhatsAppIcon({ className = "w-6 h-6" }: { className?: string }) {
   return (
@@ -16,13 +17,28 @@ function WhatsAppIcon({ className = "w-6 h-6" }: { className?: string }) {
 export function WhatsAppWidget() {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
-  const [number, setNumber] = useState(DEFAULT_WA_NUMBER);
+  const [number, setNumber] = useState(FALLBACK_WA_NUMBER);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) setNumber(stored);
-    } catch {}
+    let cancelled = false;
+    const load = async () => {
+      const { data } = await supabase
+        .from("site_settings")
+        .select("whatsapp_number")
+        .eq("id", 1)
+        .maybeSingle();
+      if (!cancelled && data?.whatsapp_number) setNumber(data.whatsapp_number);
+    };
+    load();
+    const onChange = (e: Event) => {
+      const detail = (e as CustomEvent<string>).detail;
+      if (typeof detail === "string" && detail) setNumber(detail);
+    };
+    window.addEventListener(EVENT, onChange);
+    return () => {
+      cancelled = true;
+      window.removeEventListener(EVENT, onChange);
+    };
   }, []);
 
   const greeting =

@@ -198,9 +198,12 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
             <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/15 mx-auto mb-3">
               <ShieldCheck className="w-6 h-6 text-primary" />
             </div>
-            <h1 className="text-2xl font-bold text-center">Verify your phone</h1>
+            <h1 className="text-2xl font-bold text-center">{verifyMethod === "phone" ? "Verify your phone" : "Verify your email"}</h1>
             <p className="text-sm text-muted-foreground text-center mt-1.5">
-              Enter the 6-digit code we sent to <span className="text-foreground font-medium">{normalizedPhone()}</span>.
+              Enter the 6-digit code we sent to{" "}
+              <span className="text-foreground font-medium">
+                {verifyMethod === "phone" ? normalizedPhone() : form.email}
+              </span>.
             </p>
 
             <form className="mt-6 space-y-3" onSubmit={onVerify}>

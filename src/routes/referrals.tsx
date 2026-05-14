@@ -84,6 +84,13 @@ function Referrals() {
   const [activity, setActivity] = useState<EarningRow[]>([]);
   const [monthEarned, setMonthEarned] = useState(0);
   const [lastMonthEarned, setLastMonthEarned] = useState(0);
+  const [payout, setPayout] = useState<PayoutInfo | null>(null);
+  const [nowTick, setNowTick] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => setNowTick((n) => n + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   const referralId = useMemo(() => shortId(userId), [userId]);
 

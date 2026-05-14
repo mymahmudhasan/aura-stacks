@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Menu, X, ShieldCheck, BadgeCheck, Award, Lock, Globe2, Cpu, Phone } from "lucide-react";
 import logo from "@/assets/novatrad-logo.png";
 import { WhatsAppWidget } from "@/components/WhatsAppWidget";
+import { AccountBadge, useIsSignedIn } from "@/components/AccountBadge";
 
 const nav = [
   { to: "/", label: "Home" },
@@ -19,6 +20,7 @@ const nav = [
 export function Header() {
   const [open, setOpen] = useState(false);
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const signedIn = useIsSignedIn();
 
   return (
     <header className="sticky top-0 z-50 glass-strong border-b border-border/40">
@@ -53,18 +55,24 @@ export function Header() {
         </nav>
 
         <div className="hidden lg:flex items-center gap-2">
-          <Link
-            to="/login"
-            className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition"
-          >
-            Sign in
-          </Link>
-          <Link
-            to="/register"
-            className="relative px-4 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition glow-primary"
-          >
-            Get started
-          </Link>
+          {signedIn ? (
+            <AccountBadge />
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition"
+              >
+                Sign in
+              </Link>
+              <Link
+                to="/register"
+                className="relative px-4 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition glow-primary"
+              >
+                Get started
+              </Link>
+            </>
+          )}
         </div>
 
         <button
@@ -88,9 +96,15 @@ export function Header() {
               {n.label}
             </Link>
           ))}
-          <div className="pt-3 mt-3 border-t border-border/40 flex gap-2">
-            <Link to="/login" onClick={() => setOpen(false)} className="flex-1 px-4 py-2.5 text-sm text-center rounded-lg border border-border">Sign in</Link>
-            <Link to="/register" onClick={() => setOpen(false)} className="flex-1 px-4 py-2.5 text-sm text-center rounded-lg bg-primary text-primary-foreground">Get started</Link>
+          <div className="pt-3 mt-3 border-t border-border/40 flex gap-2 items-center">
+            {signedIn ? (
+              <AccountBadge compact />
+            ) : (
+              <>
+                <Link to="/login" onClick={() => setOpen(false)} className="flex-1 px-4 py-2.5 text-sm text-center rounded-lg border border-border">Sign in</Link>
+                <Link to="/register" onClick={() => setOpen(false)} className="flex-1 px-4 py-2.5 text-sm text-center rounded-lg bg-primary text-primary-foreground">Get started</Link>
+              </>
+            )}
           </div>
         </div>
       )}

@@ -231,22 +231,22 @@ export function StakingPool() {
         <div className="glass-strong rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-4">
             <Users className="w-5 h-5 text-primary" />
-            <h4 className="text-lg font-bold">How $820,000 is divided</h4>
+            <h4 className="text-lg font-bold">How ${fmt(POOL_TOTAL)} is divided</h4>
           </div>
 
           {/* Visual breakdown bar */}
           <div className="space-y-3">
             <div>
               <div className="flex justify-between text-xs mb-1">
-                <span className="text-muted-foreground">100 winners × $8,200</span>
-                <span className="font-mono text-gold">$820,000</span>
+                <span className="text-muted-foreground">{WINNERS} winners × ${fmt(PER_WINNER)}</span>
+                <span className="font-mono text-gold">${fmt(POOL_TOTAL)}</span>
               </div>
               <div className="grid grid-cols-10 gap-1">
-                {Array.from({ length: 100 }).map((_, i) => (
+                {Array.from({ length: WINNERS }).map((_, i) => (
                   <div
                     key={i}
                     className="aspect-square rounded-sm bg-gold/30 hover:bg-gold transition"
-                    title={`Winner #${i + 1} · $8,200 USDT`}
+                    title={`Winner #${i + 1} · $${fmt(PER_WINNER)} USDT`}
                   />
                 ))}
               </div>
@@ -254,11 +254,11 @@ export function StakingPool() {
 
             <div className="grid grid-cols-3 gap-3 pt-2">
               <div className="text-center">
-                <p className="text-2xl font-bold gradient-text">100</p>
+                <p className="text-2xl font-bold gradient-text">{WINNERS}</p>
                 <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Winners / day</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-gold">$8,200</p>
+                <p className="text-2xl font-bold text-gold">${fmt(PER_WINNER)}</p>
                 <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Per winner</p>
               </div>
               <div className="text-center">
@@ -267,6 +267,7 @@ export function StakingPool() {
               </div>
             </div>
           </div>
+        </div>
         </div>
 
         <div className="glass-strong rounded-2xl p-6">

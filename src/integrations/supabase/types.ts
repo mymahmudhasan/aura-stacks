@@ -344,6 +344,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_admin_overview: {
+        Args: never
+        Returns: {
+          customers_active: number
+          customers_pending: number
+          customers_suspended: number
+          customers_total: number
+          open_tickets: number
+          paid_last_24h: number
+          payouts_total: number
+          total_balances: number
+          total_deposited: number
+          total_withdrawn: number
+        }[]
+      }
       get_next_payout: {
         Args: { _user_id: string }
         Returns: {

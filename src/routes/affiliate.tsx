@@ -6,7 +6,7 @@ export const Route = createFileRoute("/affiliate")({
   component: Affiliate,
   head: () => ({
     meta: [
-      { title: "Affiliate & Referral Commissions — NovaVault" },
+      { title: "Affiliate & Referral Commissions — NovaTrad.Ai" },
       { name: "description", content: "Earn lifetime crypto commissions per service — Mining, Staking and AI Trading — across 3 referral tiers, paid daily to your Binance wallet." },
     ],
   }),
@@ -51,14 +51,14 @@ function Affiliate() {
       <PageHero
         eyebrow="Affiliate · Referral Marketing"
         title={<>Build your network. <span className="gradient-text">Earn for life.</span></>}
-        subtitle="Every NovaVault service has its own referral commission. Share, refer, and earn lifetime crypto rewards paid daily to your Binance wallet."
+        subtitle="Every NovaTrad.Ai service has its own referral commission. Share, refer, and earn lifetime crypto rewards paid daily to your Binance wallet."
       />
 
       {/* HOW IT WORKS */}
       <Section eyebrow="How it works" title={<>Three steps to <span className="gradient-text">passive crypto income</span></>}>
         <div className="grid md:grid-cols-3 gap-5">
           {[
-            { i: <Share2 />, t: "1. Share your link", d: "Get a unique referral link for each NovaVault service from your dashboard." },
+            { i: <Share2 />, t: "1. Share your link", d: "Get a unique referral link for each NovaTrad.Ai service from your dashboard." },
             { i: <Users />, t: "2. They invest", d: "When your friends register and invest in any service, they're permanently linked to your network." },
             { i: <Wallet />, t: "3. You earn — daily", d: "Commissions are auto-paid to your Binance wallet every 24 hours, for life." },
           ].map((s) => (

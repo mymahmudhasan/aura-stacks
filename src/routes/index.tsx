@@ -280,19 +280,31 @@ function Home() {
       >
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           {[
-            { name: "Google", tag: "Cloud & AI" },
-            { name: "Nvidia", tag: "GPU Compute" },
-            { name: "Amazon", tag: "AWS Infra" },
-            { name: "Innovixus Labs", tag: "Research" },
-            { name: "ZenTech", tag: "Security" },
+            { name: "Google", tag: "Cloud & AI", href: "https://cloud.google.com", logo: "https://cdn.simpleicons.org/google/ffffff" },
+            { name: "Nvidia", tag: "GPU Compute", href: "https://www.nvidia.com", logo: "https://cdn.simpleicons.org/nvidia/76b900" },
+            { name: "Amazon", tag: "AWS Infra", href: "https://aws.amazon.com", logo: "https://cdn.simpleicons.org/amazonwebservices/ff9900" },
+            { name: "Innovixus Labs", tag: "Research", href: "https://www.innovixuslabs.com", logo: "https://cdn.simpleicons.org/atlassian/5cbdb9" },
+            { name: "ZenTech", tag: "Security", href: "https://www.zentech.com", logo: "https://cdn.simpleicons.org/zendesk/03363d" },
           ].map((p) => (
-            <div
+            <a
               key={p.name}
+              href={p.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`${p.name} — opens in a new tab`}
               className="group glass rounded-2xl p-5 flex flex-col items-center justify-center text-center hover:border-primary/40 hover:-translate-y-0.5 transition"
             >
-              <p className="text-lg md:text-xl font-bold tracking-tight gradient-text">{p.name}</p>
+              <img
+                src={p.logo}
+                alt={`${p.name} logo`}
+                width={40}
+                height={40}
+                loading="lazy"
+                className="w-10 h-10 object-contain mb-3 opacity-90 group-hover:opacity-100 transition"
+              />
+              <p className="text-base md:text-lg font-bold tracking-tight">{p.name}</p>
               <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-muted-foreground">{p.tag}</p>
-            </div>
+            </a>
           ))}
         </div>
       </Section>

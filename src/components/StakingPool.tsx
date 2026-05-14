@@ -13,10 +13,9 @@ import {
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 import poolImg from "@/assets/staking-prize-pool.jpg";
+import { usePoolSettings } from "@/hooks/use-pool-settings";
 
-const POOL_TOTAL = 820000; // USDT
-const WINNERS = 100;
-const PER_WINNER = POOL_TOTAL / WINNERS; // 8200
+const fmt = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 0 });
 
 function nextPoolClose() {
   // Closes at next 00:00 UTC

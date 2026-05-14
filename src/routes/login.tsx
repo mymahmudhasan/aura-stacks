@@ -116,20 +116,35 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
     setSuccess(null);
     setLoading(true);
     try {
-      const phone = normalizedPhone();
-      const { error } = await supabase.auth.verifyOtp({
-        phone,
-        token: otp.trim(),
-        type: "phone_change",
-      });
-      if (error) throw error;
-
-      const { data: u } = await supabase.auth.getUser();
-      if (u.user) {
-        await supabase
-          .from("customers")
-          .update({ phone_verified_at: new Date().toISOString() })
-          .eq("user_id", u.user.id);
+      if (verifyMethod === "phone") {
+        const phone = normalizedPhone();
+        const { error } = await supabase.auth.verifyOtp({
+          phone,
+          token: otp.trim(),
+          type: "phone_change",
+        });
+        if (error) throw error;
+        const { data: u } = await supabase.auth.getUser();
+        if (u.user) {
+          await supabase
+            .from("customers")
+            .update({ phone_verified_at: new Date().toISOString() })
+            .eq("user_id", u.user.id);
+        }
+      } else {
+        const { error } = await supabase.auth.verifyOtp({
+          email: form.email,
+          token: otp.trim(),
+          type: "email",
+        });
+        if (error) throw error;
+        const { data: u } = await supabase.auth.getUser();
+        if (u.user) {
+          await supabase
+            .from("customers")
+            .update({ email_verified_at: new Date().toISOString() })
+            .eq("user_id", u.user.id);
+        }
       }
       navigate({ to: "/dashboard" });
     } catch (err) {
@@ -144,8 +159,16 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
     setSuccess(null);
     setLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({ phone: normalizedPhone() });
-      if (error) throw error;
+      if (verifyMethod === "phone") {
+        const { error } = await supabase.auth.updateUser({ phone: normalizedPhone() });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.auth.signInWithOtp({
+          email: form.email,
+          options: { shouldCreateUser: false },
+        });
+        if (error) throw error;
+      }
       setSuccess("A new code has been sent.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't resend code");

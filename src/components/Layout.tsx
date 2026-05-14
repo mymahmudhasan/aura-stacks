@@ -20,6 +20,7 @@ const nav = [
 export function Header() {
   const [open, setOpen] = useState(false);
   const path = useRouterState({ select: (s) => s.location.pathname });
+  const signedIn = useIsSignedIn();
 
   return (
     <header className="sticky top-0 z-50 glass-strong border-b border-border/40">

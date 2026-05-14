@@ -475,7 +475,7 @@ function CustomerCard({ c, editing, onEdit, onClose, onSave }: {
         <Field label="Deposited">{editing ? <input type="number" value={dep} onChange={(e) => setDep(e.target.value)} className="w-full px-2 py-1 rounded bg-input border border-primary/40" /> : `$${Number(c.total_deposited).toLocaleString()}`}</Field>
         <Field label="Country">{c.country || "—"}</Field>
         <Field label="Phone">{c.phone || "—"}</Field>
-        <Field label="Binance UID" full><CopyChip label={c.binance_uid} /></Field>
+        <Field label="Binance UID" full><CopyChip label={c.binance_uid || "—"} /></Field>
         <Field label="Wallet" full><CopyChip label={c.binance_wallet_address || "—"} truncate /></Field>
         {editing && (
           <Field label="Status" full>

@@ -16,11 +16,13 @@ export type Database = {
     Tables: {
       customers: {
         Row: {
+          account_type: string
           balance: number
           binance_uid: string | null
           binance_wallet_address: string | null
           country: string | null
           created_at: string
+          demo_balance: number
           email: string
           full_name: string
           id: string
@@ -35,11 +37,13 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          account_type?: string
           balance?: number
           binance_uid?: string | null
           binance_wallet_address?: string | null
           country?: string | null
           created_at?: string
+          demo_balance?: number
           email: string
           full_name: string
           id?: string
@@ -54,11 +58,13 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          account_type?: string
           balance?: number
           binance_uid?: string | null
           binance_wallet_address?: string | null
           country?: string | null
           created_at?: string
+          demo_balance?: number
           email?: string
           full_name?: string
           id?: string

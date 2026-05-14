@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Cpu, Lock, Brain, Shield, Zap, Globe, TrendingUp, Users, Sparkles, Bot, BadgeCheck, Headphones, Activity, LineChart, Cable, AlertTriangle } from "lucide-react";
-import heroImg from "@/assets/ai-trading.jpg";
+import heroImg from "@/assets/ai-trader-bot.png";
 import miningImg from "@/assets/mining-visual.jpg";
 import stakingImg from "@/assets/staking-visual.jpg";
 import { CTA, GlassCard, Section, StatPill } from "@/components/ui-bits";
@@ -45,16 +45,16 @@ function Home() {
           </div>
 
           <div className="relative">
-            <div className="absolute -inset-10 bg-primary/30 blur-3xl rounded-full -z-10" />
-            <div className="relative rounded-3xl overflow-hidden border border-border/60 glow-primary">
-              <img src={heroImg} alt="AI trading neural visualization" width={1920} height={1080} className="w-full h-auto" />
-              <div className="absolute inset-0 bg-gradient-to-tr from-background/40 via-transparent to-primary/10" />
+            <div className="absolute -inset-10 bg-[image:var(--gradient-aurora)] opacity-60 blur-3xl rounded-full -z-10" />
+            <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full -z-10" />
+            <div className="relative">
+              <img src={heroImg} alt="NovaVault AI trading bot avatar" width={1024} height={1024} className="w-full h-auto drop-shadow-[0_30px_60px_rgba(56,189,248,0.35)]" />
               {/* Live overlay */}
-              <div className="absolute inset-x-4 bottom-4 glass-strong rounded-2xl p-4">
+              <div className="absolute inset-x-4 bottom-4 glass-strong rounded-2xl p-4 border border-primary/30">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
-                    <span className="text-xs uppercase tracking-widest text-muted-foreground">Live AI Strategy</span>
+                    <span className="text-xs uppercase tracking-widest text-muted-foreground">AI Bot · Live</span>
                   </div>
                   <span className="text-xs text-success font-mono">+1.84% / 24h</span>
                 </div>

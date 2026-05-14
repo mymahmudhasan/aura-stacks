@@ -98,6 +98,83 @@ export type Database = {
         }
         Relationships: []
       }
+      referral_earnings: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          level: number
+          referral_id: string | null
+          service: string
+          source_handle: string | null
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          level?: number
+          referral_id?: string | null
+          service: string
+          source_handle?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          level?: number
+          referral_id?: string | null
+          service?: string
+          source_handle?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referral_earnings_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "referrals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          id: string
+          level: number
+          referred_handle: string | null
+          referred_user_id: string | null
+          referrer_id: string
+          service: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          level?: number
+          referred_handle?: string | null
+          referred_user_id?: string | null
+          referrer_id: string
+          service: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          level?: number
+          referred_handle?: string | null
+          referred_user_id?: string | null
+          referrer_id?: string
+          service?: string
+          status?: string
+        }
+        Relationships: []
+      }
       ticket_messages: {
         Row: {
           author_id: string | null
@@ -216,6 +293,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_referral_summary: {
+        Args: { _user_id: string }
+        Returns: {
+          direct_count: number
+          earned_last_24h: number
+          lifetime_earned: number
+          network_count: number
+          service: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

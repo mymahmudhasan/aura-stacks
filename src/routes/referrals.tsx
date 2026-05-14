@@ -104,7 +104,7 @@ function Referrals() {
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
         const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
 
-        const [summaryRes, activityRes, monthRes, lastMonthRes] = await Promise.all([
+        const [summaryRes, activityRes, monthRes, lastMonthRes, payoutRes] = await Promise.all([
           supabase.rpc("get_referral_summary", { _user_id: userId }),
           supabase
             .from("referral_earnings")
@@ -123,11 +123,13 @@ function Referrals() {
             .eq("user_id", userId)
             .gte("created_at", lastMonthStart)
             .lt("created_at", monthStart),
+          supabase.rpc("get_next_payout", { _user_id: userId }),
         ]);
 
         if (cancel) return;
         if (summaryRes.error) throw summaryRes.error;
         if (activityRes.error) throw activityRes.error;
+        if (payoutRes.error) throw payoutRes.error;
 
         const rows = (summaryRes.data ?? []) as Array<{ service: string; direct_count: number | string; network_count: number | string; lifetime_earned: number | string; earned_last_24h: number | string }>;
         const normalized: SummaryRow[] = SERVICE_KEYS.map((key) => {

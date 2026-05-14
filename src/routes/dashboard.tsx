@@ -3,9 +3,14 @@ import { Wallet, TrendingUp, Activity, Clock, ArrowDownLeft, ArrowUpRight, Cpu, 
 import { useEffect, useState } from "react";
 import { CTA, GlassCard, Section } from "@/components/ui-bits";
 import { supabase } from "@/integrations/supabase/client";
+import { RequirePhoneVerified } from "@/components/RequirePhoneVerified";
 
 export const Route = createFileRoute("/dashboard")({
-  component: Dashboard,
+  component: () => (
+    <RequirePhoneVerified>
+      <Dashboard />
+    </RequirePhoneVerified>
+  ),
   head: () => ({ meta: [{ title: "Dashboard — NovaTrad.Ai" }] }),
 });
 

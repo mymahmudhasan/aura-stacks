@@ -388,3 +388,37 @@ function AILiveChart() {
     </div>
   );
 }
+
+function TickerTape() {
+  const tickers = [
+    { s: "BTC/USDT", p: "68,420.50", d: "+1.84%", up: true },
+    { s: "ETH/USDT", p: "3,842.10", d: "+2.41%", up: true },
+    { s: "SOL/USDT", p: "182.34", d: "+5.12%", up: true },
+    { s: "BNB/USDT", p: "612.80", d: "+0.92%", up: true },
+    { s: "XRP/USDT", p: "0.6240", d: "-0.31%", up: false },
+    { s: "DOGE/USDT", p: "0.1582", d: "+3.74%", up: true },
+    { s: "ADA/USDT", p: "0.4612", d: "-0.84%", up: false },
+    { s: "AVAX/USDT", p: "38.42", d: "+2.18%", up: true },
+    { s: "MATIC/USDT", p: "0.7184", d: "+1.05%", up: true },
+    { s: "LINK/USDT", p: "16.92", d: "+4.22%", up: true },
+  ];
+  const row = [...tickers, ...tickers];
+  return (
+    <div className="relative border-y border-border/40 bg-background/60 backdrop-blur-sm overflow-hidden">
+      <div className="flex animate-[ticker_45s_linear_infinite] whitespace-nowrap py-2.5">
+        {row.map((t, i) => (
+          <div key={i} className="flex items-center gap-2 px-5 text-xs font-mono shrink-0">
+            <span className="font-semibold text-foreground/90">{t.s}</span>
+            <span className="text-muted-foreground">{t.p}</span>
+            <span className={`inline-flex items-center gap-0.5 ${t.up ? "text-success" : "text-destructive"}`}>
+              {t.up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+              {t.d}
+            </span>
+            <span className="text-border">·</span>
+          </div>
+        ))}
+      </div>
+      <style>{`@keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }`}</style>
+    </div>
+  );
+}

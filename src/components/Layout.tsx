@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Menu, X, ShieldCheck, BadgeCheck, Award, Lock, Globe2, Cpu, Phone } from "lucide-react";
 import logo from "@/assets/novatrad-logo.png";
 import { WhatsAppWidget } from "@/components/WhatsAppWidget";
+import { AccountBadge, useIsSignedIn } from "@/components/AccountBadge";
 
 const nav = [
   { to: "/", label: "Home" },

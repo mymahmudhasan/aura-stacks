@@ -47,17 +47,44 @@ function DemoBanner() {
   );
 }
 
+function PromoBanner() {
+  return (
+    <div className="mb-6 rounded-2xl border border-gold/40 bg-gold/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-rise relative overflow-hidden">
+      <div className="absolute inset-0 animate-shine pointer-events-none" />
+      <div className="relative flex items-start gap-3">
+        <div className="w-10 h-10 rounded-xl bg-[image:var(--gradient-gold)] text-gold-foreground flex items-center justify-center shrink-0 shadow-[var(--shadow-gold)]">
+          <Gift className="w-5 h-5" />
+        </div>
+        <div>
+          <p className="text-sm font-bold">
+            <span className="gradient-text">25% Deposit Bonus</span> — Limited time offer
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Top up your account now and receive an extra 25% credited instantly. The more you deposit, the bigger your trading power.
+          </p>
+        </div>
+      </div>
+      <button className="relative shrink-0 rounded-xl px-4 py-2 text-sm font-semibold bg-[image:var(--gradient-gold)] text-gold-foreground glow-gold inline-flex items-center gap-2 hover:opacity-90 transition">
+        <ArrowDownLeft className="w-4 h-4" /> Deposit & Claim 25%
+      </button>
+    </div>
+  );
+}
+
 function Dashboard() {
   return (
     <Section className="!py-10">
       <DemoBanner />
+      <PromoBanner />
       <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div>
           <p className="text-sm text-muted-foreground">Welcome back,</p>
           <h1 className="text-2xl md:text-3xl font-bold">Investor <span className="gradient-text">#A2891</span></h1>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button className="glass rounded-xl px-4 py-2 text-sm flex items-center gap-2"><ArrowDownLeft className="w-4 h-4 text-success" /> Deposit</button>
+          <button className="rounded-xl px-4 py-2 text-sm font-semibold inline-flex items-center gap-2 bg-[image:var(--gradient-gold)] text-gold-foreground glow-gold hover:opacity-90 transition">
+            <ArrowDownLeft className="w-4 h-4" /> Deposit
+          </button>
           <button className="glass rounded-xl px-4 py-2 text-sm flex items-center gap-2"><ArrowUpRight className="w-4 h-4 text-gold" /> Withdraw</button>
           <Link to="/referrals" className="rounded-xl px-4 py-2 text-sm flex items-center gap-2 bg-primary text-primary-foreground glow-primary"><Share2 className="w-4 h-4" /> Referrals</Link>
           <button className="glass rounded-xl p-2"><Bell className="w-4 h-4" /></button>

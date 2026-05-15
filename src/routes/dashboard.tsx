@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Wallet, TrendingUp, Activity, Clock, ArrowDownLeft, ArrowUpRight, Cpu, Lock, Brain, Bell, Users, Share2, Sparkles } from "lucide-react";
+import { Wallet, TrendingUp, Activity, Clock, ArrowDownLeft, ArrowUpRight, Cpu, Lock, Brain, Bell, Users, Share2, Sparkles, Gift } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CTA, GlassCard, Section } from "@/components/ui-bits";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,17 +47,44 @@ function DemoBanner() {
   );
 }
 
+function PromoBanner() {
+  return (
+    <div className="mb-6 rounded-2xl border border-gold/40 bg-gold/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-rise relative overflow-hidden">
+      <div className="absolute inset-0 animate-shine pointer-events-none" />
+      <div className="relative flex items-start gap-3">
+        <div className="w-10 h-10 rounded-xl bg-[image:var(--gradient-gold)] text-gold-foreground flex items-center justify-center shrink-0 shadow-[var(--shadow-gold)]">
+          <Gift className="w-5 h-5" />
+        </div>
+        <div>
+          <p className="text-sm font-bold">
+            <span className="gradient-text">25% Deposit Bonus</span> — Limited time offer
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Top up your account now and receive an extra 25% credited instantly. The more you deposit, the bigger your trading power.
+          </p>
+        </div>
+      </div>
+      <button className="relative shrink-0 rounded-xl px-4 py-2 text-sm font-semibold bg-[image:var(--gradient-gold)] text-gold-foreground glow-gold inline-flex items-center gap-2 hover:opacity-90 transition">
+        <ArrowDownLeft className="w-4 h-4" /> Deposit & Claim 25%
+      </button>
+    </div>
+  );
+}
+
 function Dashboard() {
   return (
     <Section className="!py-10">
       <DemoBanner />
+      <PromoBanner />
       <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div>
           <p className="text-sm text-muted-foreground">Welcome back,</p>
           <h1 className="text-2xl md:text-3xl font-bold">Investor <span className="gradient-text">#A2891</span></h1>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button className="glass rounded-xl px-4 py-2 text-sm flex items-center gap-2"><ArrowDownLeft className="w-4 h-4 text-success" /> Deposit</button>
+          <button className="rounded-xl px-4 py-2 text-sm font-semibold inline-flex items-center gap-2 bg-[image:var(--gradient-gold)] text-gold-foreground glow-gold hover:opacity-90 transition">
+            <ArrowDownLeft className="w-4 h-4" /> Deposit
+          </button>
           <button className="glass rounded-xl px-4 py-2 text-sm flex items-center gap-2"><ArrowUpRight className="w-4 h-4 text-gold" /> Withdraw</button>
           <Link to="/referrals" className="rounded-xl px-4 py-2 text-sm flex items-center gap-2 bg-primary text-primary-foreground glow-primary"><Share2 className="w-4 h-4" /> Referrals</Link>
           <button className="glass rounded-xl p-2"><Bell className="w-4 h-4" /></button>
@@ -78,8 +105,8 @@ function Dashboard() {
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Stat icon={<Wallet />} label="Total Balance" value="$48,920.30" trend="+12.4%" />
-        <Stat icon={<TrendingUp />} label="Total Profit" value="$11,284.50" trend="+8.7%" />
+        <Stat icon={<Wallet />} label="Total Balance" value="$48,920.30" trend="+12.4%" highlight />
+        <Stat icon={<TrendingUp />} label="Total Profit" value="$11,284.50" trend="+8.7%" highlight />
         <Stat icon={<Activity />} label="Daily Earnings" value="$382.10" trend="Today" />
         <Stat icon={<Clock />} label="Pending Withdrawals" value="$240.00" trend="2 requests" />
       </div>
@@ -157,15 +184,15 @@ function Dashboard() {
   );
 }
 
-function Stat({ icon, label, value, trend }: { icon: React.ReactNode; label: string; value: string; trend: string }) {
+function Stat({ icon, label, value, trend, highlight = false }: { icon: React.ReactNode; label: string; value: string; trend: string; highlight?: boolean }) {
   return (
-    <GlassCard>
+    <GlassCard glow={highlight}>
       <div className="flex items-center justify-between">
-        <div className="w-11 h-11 rounded-xl bg-primary/15 text-primary flex items-center justify-center">{icon}</div>
-        <span className="text-xs text-success">{trend}</span>
+        <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${highlight ? "bg-[image:var(--gradient-gold)] text-gold-foreground" : "bg-primary/15 text-primary"}`}>{icon}</div>
+        <span className="text-xs text-success font-semibold">{trend}</span>
       </div>
       <p className="text-xs uppercase tracking-widest text-muted-foreground mt-4">{label}</p>
-      <p className="text-2xl font-bold mt-1">{value}</p>
+      <p className={`font-extrabold mt-1 ${highlight ? "text-3xl md:text-4xl gradient-text" : "text-2xl"}`}>{value}</p>
     </GlassCard>
   );
 }

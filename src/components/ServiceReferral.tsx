@@ -61,7 +61,7 @@ export function ServiceReferral({
                 <div className="w-10 h-10 rounded-xl bg-primary/15 text-primary flex items-center justify-center"><Copy className="w-4 h-4" /></div>
                 <div className="flex-1 min-w-[200px]">
                   <p className="text-xs text-muted-foreground">Your {serviceName} referral link</p>
-                  <p className="text-sm font-mono mt-0.5 truncate">novavault.io/r/<span className="text-primary">your-id</span>?p={serviceName.toLowerCase().replace(/\s+/g, "-")}</p>
+                  <p className="text-sm font-mono mt-0.5 truncate">auratrad.ai/r/<span className="text-primary">your-id</span>?p={serviceName.toLowerCase().replace(/\s+/g, "-")}</p>
                 </div>
                 <span className="text-[10px] uppercase tracking-widest px-2 py-1 rounded-full bg-success/15 text-success border border-success/20">Lifetime</span>
               </div>

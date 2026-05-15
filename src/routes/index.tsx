@@ -3,7 +3,7 @@ import { ArrowRight, Cpu, Lock, Brain, Shield, Zap, Globe, TrendingUp, Users, Sp
 import heroImg from "@/assets/ai-trader-bot.webp";
 import miningImg from "@/assets/mining-visual.webp";
 import stakingImg from "@/assets/staking-visual.webp";
-import synexisLogo from "@/assets/synexis-logo.png";
+import synexisLogo from "@/assets/synexis-logo.webp";
 import { CTA, GlassCard, Section, StatPill } from "@/components/ui-bits";
 import { LiveDeposits } from "@/components/LiveDeposits";
 

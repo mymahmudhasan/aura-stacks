@@ -3,6 +3,7 @@ import { ArrowRight, Cpu, Lock, Brain, Shield, Zap, Globe, TrendingUp, Users, Sp
 import heroImg from "@/assets/ai-trader-bot.webp";
 import miningImg from "@/assets/mining-visual.webp";
 import stakingImg from "@/assets/staking-visual.webp";
+import synexisLogo from "@/assets/synexis-logo.png";
 import { CTA, GlassCard, Section, StatPill } from "@/components/ui-bits";
 import { LiveDeposits } from "@/components/LiveDeposits";
 
@@ -302,7 +303,7 @@ function Home() {
           {[
             { name: "Google", tag: "Cloud & AI", href: "https://cloud.google.com", logo: "https://cdn.simpleicons.org/google/ffffff" },
             { name: "Nvidia", tag: "GPU Compute", href: "https://www.nvidia.com", logo: "https://cdn.simpleicons.org/nvidia/76b900" },
-            { name: "Synexis", tag: "E-Commerce", href: "https://www.synexis.com", logo: "https://cdn.simpleicons.org/shopify/ff9900" },
+            { name: "Synexis", tag: "E-Commerce", href: "https://www.synexis.com", logo: synexisLogo },
             { name: "Innovixus Labs", tag: "Research", href: "https://www.innovixuslabs.com", logo: "https://cdn.simpleicons.org/atlassian/5cbdb9" },
             { name: "ZenTech", tag: "Security", href: "https://www.zentech.com", logo: "https://cdn.simpleicons.org/zendesk/03363d" },
           ].map((p) => (

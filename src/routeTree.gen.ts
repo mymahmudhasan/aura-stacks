@@ -26,6 +26,7 @@ import { Route as AffiliateRouteImport } from './routes/affiliate'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminSmsTestRouteImport } from './routes/admin.sms-test'
 import { Route as AdminResetPasswordRouteImport } from './routes/admin.reset-password'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
 
@@ -114,6 +115,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminSmsTestRoute = AdminSmsTestRouteImport.update({
+  id: '/sms-test',
+  path: '/sms-test',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminResetPasswordRoute = AdminResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -145,6 +151,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/reset-password': typeof AdminResetPasswordRoute
+  '/admin/sms-test': typeof AdminSmsTestRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -166,6 +173,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/reset-password': typeof AdminResetPasswordRoute
+  '/admin/sms-test': typeof AdminSmsTestRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -188,6 +196,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/reset-password': typeof AdminResetPasswordRoute
+  '/admin/sms-test': typeof AdminSmsTestRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -211,6 +220,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin/login'
     | '/admin/reset-password'
+    | '/admin/sms-test'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -232,6 +242,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin/login'
     | '/admin/reset-password'
+    | '/admin/sms-test'
   id:
     | '__root__'
     | '/'
@@ -253,6 +264,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin/login'
     | '/admin/reset-password'
+    | '/admin/sms-test'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -396,6 +408,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/sms-test': {
+      id: '/admin/sms-test'
+      path: '/sms-test'
+      fullPath: '/admin/sms-test'
+      preLoaderRoute: typeof AdminSmsTestRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/reset-password': {
       id: '/admin/reset-password'
       path: '/reset-password'
@@ -416,11 +435,13 @@ declare module '@tanstack/react-router' {
 interface AdminRouteChildren {
   AdminLoginRoute: typeof AdminLoginRoute
   AdminResetPasswordRoute: typeof AdminResetPasswordRoute
+  AdminSmsTestRoute: typeof AdminSmsTestRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminLoginRoute: AdminLoginRoute,
   AdminResetPasswordRoute: AdminResetPasswordRoute,
+  AdminSmsTestRoute: AdminSmsTestRoute,
 }
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)

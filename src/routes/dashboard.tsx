@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Wallet, TrendingUp, Activity, Clock, ArrowDownLeft, ArrowUpRight, Cpu, Lock, Brain, Bell, Users, Share2, Sparkles, Gift, ArrowRight } from "lucide-react";
+import { Wallet, TrendingUp, Activity, Clock, ArrowDownLeft, ArrowUpRight, Cpu, Lock, Brain, Bell, Users, Share2, Sparkles, Gift } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CTA, GlassCard, Section } from "@/components/ui-bits";
 import { supabase } from "@/integrations/supabase/client";

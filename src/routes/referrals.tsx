@@ -301,7 +301,7 @@ function Referrals() {
             <Row k="Method" v={payout?.method ?? "Binance · USDT"} />
           </div>
           <div className="mt-5 inline-flex items-center gap-2 text-xs text-muted-foreground">
-            <ArrowUpRight className="w-3.5 h-3.5 text-gold" /> Payouts settle automatically every {payout?.cadence_hours ?? 24}h.
+            <ArrowUpRight className="w-3.5 h-3.5 text-gold" /> Payouts settle automatically every Sunday (end of week) to your Binance wallet.
           </div>
         </GlassCard>
       </div>

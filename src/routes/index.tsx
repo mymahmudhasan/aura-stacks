@@ -110,17 +110,17 @@ function Home() {
         <div className="absolute inset-0 animate-shine" />
         <div className="relative mx-auto max-w-7xl px-5 py-5 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="hidden sm:flex w-12 h-12 rounded-xl bg-[image:var(--gradient-gold)] text-gold-foreground items-center justify-center font-extrabold text-lg shadow-[var(--shadow-gold)]">
-              10%
+            <div className="hidden sm:flex w-14 h-14 rounded-xl bg-[image:var(--gradient-gold)] text-gold-foreground items-center justify-center font-extrabold text-xl shadow-[var(--shadow-gold)] animate-pulse-glow">
+              25%
             </div>
             <div>
               <p className="text-[11px] uppercase tracking-[0.25em] text-gold font-semibold">Limited offer</p>
               <p className="text-base md:text-xl font-bold">
-                Get a <span className="gradient-text">10% bonus</span> on your first deposit — instantly credited to your trading account.
+                Get a <span className="gradient-text">25% bonus</span> on your first deposit — instantly credited to your trading account.
               </p>
             </div>
           </div>
-          <CTA to="/register" variant="gold" className="whitespace-nowrap">Claim 10% Bonus <ArrowRight className="w-4 h-4" /></CTA>
+          <CTA to="/register" variant="gold" className="whitespace-nowrap">Claim 25% Bonus <ArrowRight className="w-4 h-4" /></CTA>
         </div>
       </section>
 

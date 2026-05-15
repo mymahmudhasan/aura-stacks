@@ -184,15 +184,15 @@ function Dashboard() {
   );
 }
 
-function Stat({ icon, label, value, trend }: { icon: React.ReactNode; label: string; value: string; trend: string }) {
+function Stat({ icon, label, value, trend, highlight = false }: { icon: React.ReactNode; label: string; value: string; trend: string; highlight?: boolean }) {
   return (
-    <GlassCard>
+    <GlassCard glow={highlight}>
       <div className="flex items-center justify-between">
-        <div className="w-11 h-11 rounded-xl bg-primary/15 text-primary flex items-center justify-center">{icon}</div>
-        <span className="text-xs text-success">{trend}</span>
+        <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${highlight ? "bg-[image:var(--gradient-gold)] text-gold-foreground" : "bg-primary/15 text-primary"}`}>{icon}</div>
+        <span className="text-xs text-success font-semibold">{trend}</span>
       </div>
       <p className="text-xs uppercase tracking-widest text-muted-foreground mt-4">{label}</p>
-      <p className="text-2xl font-bold mt-1">{value}</p>
+      <p className={`font-extrabold mt-1 ${highlight ? "text-3xl md:text-4xl gradient-text" : "text-2xl"}`}>{value}</p>
     </GlassCard>
   );
 }

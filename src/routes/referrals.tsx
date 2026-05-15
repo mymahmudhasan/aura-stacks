@@ -215,7 +215,7 @@ function Referrals() {
             <p className="text-4xl md:text-5xl font-bold gradient-text font-mono tracking-tight">
               {loading ? <Loader2 className="w-8 h-8 animate-spin" /> : `$${live.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`}
             </p>
-            <p className="text-xs text-muted-foreground mt-2">Last 24h: ${totals.perDay.toFixed(2)} · auto-paid daily to your Binance wallet.</p>
+            <p className="text-xs text-muted-foreground mt-2">Last 24h: ${totals.perDay.toFixed(2)} · auto-paid every Sunday to your Binance wallet.</p>
           </div>
           <SmallStat icon={<Users />} label="Direct (L1)" value={loading ? "—" : String(totals.direct)} sub="active referrals" />
           <SmallStat icon={<Users />} label="Network (L2)" value={loading ? "—" : String(totals.network)} sub="extended network" />
@@ -301,7 +301,7 @@ function Referrals() {
             <Row k="Method" v={payout?.method ?? "Binance · USDT"} />
           </div>
           <div className="mt-5 inline-flex items-center gap-2 text-xs text-muted-foreground">
-            <ArrowUpRight className="w-3.5 h-3.5 text-gold" /> Payouts settle automatically every {payout?.cadence_hours ?? 24}h.
+            <ArrowUpRight className="w-3.5 h-3.5 text-gold" /> Payouts settle automatically every Sunday (end of week) to your Binance wallet.
           </div>
         </GlassCard>
       </div>

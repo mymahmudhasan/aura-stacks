@@ -1,7 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { Hexagon, Cable, Loader2, ShieldCheck, ArrowLeft, Phone, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { sendPhoneOtp, verifyPhoneOtp } from "@/lib/phone-otp.functions";
 
 export const Route = createFileRoute("/login")({
   component: Login,
@@ -18,6 +20,8 @@ type VerifyMethod = "phone" | "email";
 export function AuthCard({ mode }: { mode: "login" | "register" }) {
   const isLogin = mode === "login";
   const navigate = useNavigate();
+  const sendOtpFn = useServerFn(sendPhoneOtp);
+  const verifyOtpFn = useServerFn(verifyPhoneOtp);
   const [form, setForm] = useState({
     fullName: "",
     email: "",
@@ -31,6 +35,7 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
   const [step, setStep] = useState<Step>("form");
   const [verifyMethod, setVerifyMethod] = useState<VerifyMethod>("phone");
   const [otp, setOtp] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -56,48 +61,38 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
         return;
       }
 
-      // Register flow
+      // Register flow — always email-first signup; phone verification is custom (Twilio).
       const phone = form.phone ? normalizedPhone() : "";
       if (verifyMethod === "phone" && !/^\+[1-9]\d{6,14}$/.test(phone)) {
         throw new Error("Enter a valid phone number in international format, e.g. +14155552671");
       }
 
-      // Sign up. Supabase emails a 6-digit OTP token (alongside the magic link)
-      // when email confirmations are enabled. We verify with type: "signup".
-      const signUpPayload: Parameters<typeof supabase.auth.signUp>[0] =
-        verifyMethod === "phone"
-          ? {
-              phone,
-              password: form.password,
-              options: { data: { full_name: form.fullName, email: form.email } },
-            }
-          : {
-              email: form.email,
-              password: form.password,
-              options: {
-                emailRedirectTo: `${window.location.origin}/dashboard`,
-                data: { full_name: form.fullName },
-              },
-            };
-
-      const { data, error } = await supabase.auth.signUp(signUpPayload);
+      const { data, error } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+          data: { full_name: form.fullName },
+        },
+      });
       if (error) throw error;
+      if (!data.user) throw new Error("Signup failed — no user returned.");
+      setUserId(data.user.id);
 
-      if (data.user) {
-        const { error: cErr } = await supabase.from("customers").insert({
-          user_id: data.user.id,
-          full_name: form.fullName,
-          email: form.email,
-          phone: phone || null,
-          country: form.country || null,
-          binance_uid: form.binanceUid,
-          binance_wallet_address: form.binanceWallet || null,
-          referred_by: form.referredBy || null,
-        });
-        if (cErr) throw cErr;
-      }
+      const { error: cErr } = await supabase.from("customers").insert({
+        user_id: data.user.id,
+        full_name: form.fullName,
+        email: form.email,
+        phone: phone || null,
+        country: form.country || null,
+        binance_uid: form.binanceUid,
+        binance_wallet_address: form.binanceWallet || null,
+        referred_by: form.referredBy || null,
+      });
+      if (cErr) throw cErr;
 
       if (verifyMethod === "phone") {
+        await sendOtpFn({ data: { userId: data.user.id, phone } });
         setSuccess(`We sent a 6-digit SMS code to ${phone}.`);
       } else {
         setSuccess(`We sent a 6-digit code to ${form.email}. Check your inbox (and spam folder).`);
@@ -117,13 +112,10 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
     setLoading(true);
     try {
       if (verifyMethod === "phone") {
-        const phone = normalizedPhone();
-        const { error } = await supabase.auth.verifyOtp({
-          phone,
-          token: otp.trim(),
-          type: "sms",
+        if (!userId) throw new Error("Session expired. Please sign up again.");
+        await verifyOtpFn({
+          data: { userId, phone: normalizedPhone(), code: otp.trim() },
         });
-        if (error) throw error;
       } else {
         const { error } = await supabase.auth.verifyOtp({
           email: form.email,
@@ -153,11 +145,8 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
     setLoading(true);
     try {
       if (verifyMethod === "phone") {
-        const { error } = await supabase.auth.resend({
-          type: "sms",
-          phone: normalizedPhone(),
-        });
-        if (error) throw error;
+        if (!userId) throw new Error("Session expired. Please sign up again.");
+        await sendOtpFn({ data: { userId, phone: normalizedPhone() } });
       } else {
         const { error } = await supabase.auth.resend({
           type: "signup",

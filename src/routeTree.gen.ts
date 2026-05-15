@@ -13,6 +13,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as StakingRouteImport } from './routes/staking'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ReferralsRouteImport } from './routes/referrals'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -49,6 +50,11 @@ const StakingRoute = StakingRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegisterRoute = RegisterRouteImport.update({
@@ -152,6 +158,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/referrals': typeof ReferralsRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staking': typeof StakingRoute
   '/support': typeof SupportRoute
@@ -175,6 +182,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/referrals': typeof ReferralsRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staking': typeof StakingRoute
   '/support': typeof SupportRoute
@@ -199,6 +207,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/referrals': typeof ReferralsRoute
   '/register': typeof RegisterRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/staking': typeof StakingRoute
   '/support': typeof SupportRoute
@@ -224,6 +233,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/referrals'
     | '/register'
+    | '/reset-password'
     | '/sitemap.xml'
     | '/staking'
     | '/support'
@@ -247,6 +257,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/referrals'
     | '/register'
+    | '/reset-password'
     | '/sitemap.xml'
     | '/staking'
     | '/support'
@@ -270,6 +281,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/referrals'
     | '/register'
+    | '/reset-password'
     | '/sitemap.xml'
     | '/staking'
     | '/support'
@@ -294,6 +306,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   ReferralsRoute: typeof ReferralsRoute
   RegisterRoute: typeof RegisterRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StakingRoute: typeof StakingRoute
   SupportRoute: typeof SupportRoute
@@ -328,6 +341,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/register': {
@@ -481,6 +501,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   ReferralsRoute: ReferralsRoute,
   RegisterRoute: RegisterRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StakingRoute: StakingRoute,
   SupportRoute: SupportRoute,

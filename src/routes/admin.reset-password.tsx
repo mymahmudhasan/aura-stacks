@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin/reset-password")({
   component: AdminResetPassword,
-  head: () => ({ meta: [{ title: "Reset Admin Password — NovaTrad.Ai" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Reset Admin Password — AuraTrad.Ai" }, { name: "robots", content: "noindex" }] }),
 });
 
 function AdminResetPassword() {

@@ -69,8 +69,8 @@ export const Route = createFileRoute("/contact")({
   component: Contact,
   head: () => ({
     meta: [
-      { title: "Contact — NovaTrad.Ai" },
-      { name: "description", content: "Get in touch with NovaTrad.Ai — 24/7 support across email, Telegram and Discord." },
+      { title: "Contact — AuraTrad.Ai" },
+      { name: "description", content: "Get in touch with AuraTrad.Ai — 24/7 support across email, Telegram and Discord." },
     ],
   }),
 });

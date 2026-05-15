@@ -42,7 +42,7 @@ export function WhatsAppWidget() {
   }, []);
 
   const greeting =
-    "Hi NovaTrad.Ai support 👋 — I have a question about my account / investment.";
+    "Hi AuraTrad.Ai support 👋 — I have a question about my account / investment.";
 
   const sendOnWhatsApp = (text: string) => {
     const url = `https://wa.me/${number}?text=${encodeURIComponent(text || greeting)}`;
@@ -71,7 +71,7 @@ export function WhatsAppWidget() {
                 <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-success border-2 border-background animate-pulse" />
               </div>
               <div className="leading-tight">
-                <p className="text-sm font-semibold">NovaTrad.Ai Support</p>
+                <p className="text-sm font-semibold">AuraTrad.Ai Support</p>
                 <p className="text-[11px] text-success">Online · replies in minutes</p>
               </div>
             </div>

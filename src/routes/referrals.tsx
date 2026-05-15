@@ -11,7 +11,7 @@ export const Route = createFileRoute("/referrals")({
     return { userId: data.user.id };
   },
   component: Referrals,
-  head: () => ({ meta: [{ title: "Referral Dashboard — NovaTrad.Ai" }] }),
+  head: () => ({ meta: [{ title: "Referral Dashboard — AuraTrad.Ai" }] }),
 });
 
 const SERVICE_META = {

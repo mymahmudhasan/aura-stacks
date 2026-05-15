@@ -42,9 +42,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "NovaTrad.Ai — Premium Crypto Mining, Staking & AI Trading" },
-      { name: "description", content: "NovaTrad.Ai is the next-generation crypto investment platform for mining, Binance-style staking and AI-assisted trading. Earn passive crypto rewards securely." },
-      { property: "og:title", content: "NovaTrad.Ai — Premium Crypto Investment Platform" },
+      { title: "AuraTrad.Ai — Premium Crypto Mining, Staking & AI Trading" },
+      { name: "description", content: "AuraTrad.Ai is the next-generation crypto investment platform for mining, Binance-style staking and AI-assisted trading. Earn passive crypto rewards securely." },
+      { property: "og:title", content: "AuraTrad.Ai — Premium Crypto Investment Platform" },
       { property: "og:description", content: "Mining, staking and AI trading in one premium dashboard." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -52,7 +52,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
       { name: "twitter:image", content: "/og-image.jpg" },
-      { property: "og:site_name", content: "NovaTrad.Ai" },
+      { property: "og:site_name", content: "AuraTrad.Ai" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

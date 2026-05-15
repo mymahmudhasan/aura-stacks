@@ -66,7 +66,7 @@ export const sendTestSms = createServerFn({ method: "POST" })
     const code = String(randomInt(0, 1_000_000)).padStart(6, "0");
     const params = new URLSearchParams({
       To: data.phone,
-      Body: `NovaTrad.Ai test code: ${code} (test only — do not share).`,
+      Body: `AuraTrad.Ai test code: ${code} (test only — do not share).`,
     });
     if (MSID) params.set("MessagingServiceSid", MSID);
     else if (FROM) params.set("From", FROM);

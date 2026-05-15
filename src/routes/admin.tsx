@@ -13,7 +13,7 @@ import { usePoolSettings, DEFAULT_POOL_SETTINGS } from "@/hooks/use-pool-setting
 
 export const Route = createFileRoute("/admin")({
   component: Admin,
-  head: () => ({ meta: [{ title: "Admin — NovaTrad.Ai" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Admin — AuraTrad.Ai" }, { name: "robots", content: "noindex" }] }),
 });
 
 type Customer = Tables<"customers">;
@@ -98,7 +98,7 @@ function Admin() {
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-[11px] uppercase tracking-widest text-primary mb-2">
             <ShieldCheck className="w-3 h-3" /> Admin Console
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold leading-tight">NovaTrad.Ai <span className="gradient-text">Operations</span></h1>
+          <h1 className="text-2xl md:text-3xl font-bold leading-tight">AuraTrad.Ai <span className="gradient-text">Operations</span></h1>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={loadOverview} className="px-3 py-2 rounded-xl glass hover:border-primary/30 text-xs inline-flex items-center gap-1.5">
@@ -1021,7 +1021,7 @@ function WhatsAppSettings({ onToast }: { onToast: (kind: "ok" | "err", msg: stri
         </button>
         {saved && (
           <a
-            href={`https://wa.me/${saved}?text=${encodeURIComponent("Test from NovaTrad.Ai admin")}`}
+            href={`https://wa.me/${saved}?text=${encodeURIComponent("Test from AuraTrad.Ai admin")}`}
             target="_blank" rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl glass text-sm font-medium hover:border-success/40"
           >

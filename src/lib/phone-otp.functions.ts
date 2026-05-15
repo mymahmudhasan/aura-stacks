@@ -84,7 +84,7 @@ export const sendPhoneOtp = createServerFn({ method: "POST" })
     });
     if (insErr) throw new Error(insErr.message);
 
-    await sendTwilioSms(data.phone, `Your NovaTrad.Ai verification code is ${code}. Expires in ${OTP_TTL_MIN} minutes.`);
+    await sendTwilioSms(data.phone, `Your AuraTrad.Ai verification code is ${code}. Expires in ${OTP_TTL_MIN} minutes.`);
 
     return { sent: true, expires_at };
   });

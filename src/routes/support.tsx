@@ -8,8 +8,8 @@ export const Route = createFileRoute("/support")({
   component: Support,
   head: () => ({
     meta: [
-      { title: "Support — NovaTrad.Ai" },
-      { name: "description", content: "Open a support ticket and track its status. NovaTrad.Ai support replies within 24 hours." },
+      { title: "Support — AuraTrad.Ai" },
+      { name: "description", content: "Open a support ticket and track its status. AuraTrad.Ai support replies within 24 hours." },
     ],
   }),
 });

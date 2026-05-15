@@ -8,7 +8,7 @@ export const Route = createFileRoute("/mining")({
   component: Mining,
   head: () => ({
     meta: [
-      { title: "Mining Plans — NovaTrad.Ai" },
+      { title: "Mining Plans — AuraTrad.Ai" },
       { name: "description", content: "Power your crypto future with smart mining. Choose from Starter to VIP mining plans and earn daily crypto rewards." },
     ],
   }),
@@ -37,7 +37,7 @@ function Mining() {
           </div>
           <div>
             <h2 className="text-3xl md:text-4xl font-bold">Industrial-grade <span className="gradient-text">infrastructure</span></h2>
-            <p className="mt-4 text-muted-foreground">NovaTrad.Ai operates next-generation mining facilities optimized for performance, cooling and renewable energy. Your investment powers real hashrate.</p>
+            <p className="mt-4 text-muted-foreground">AuraTrad.Ai operates next-generation mining facilities optimized for performance, cooling and renewable energy. Your investment powers real hashrate.</p>
             <ul className="mt-6 space-y-3">
               {["Live profit counter & daily auto-distribution", "Mining history logs and full transparency", "Active investment tracking dashboard", "Automatic ROI estimation per plan"].map((p) => (
                 <li key={p} className="flex items-start gap-2.5 text-sm"><Check className="w-4 h-4 text-primary mt-0.5" />{p}</li>

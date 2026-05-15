@@ -121,6 +121,11 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
             {isLogin ? "Sign in" : "Create account"}
           </button>
         </form>
+        {isLogin && (
+          <p className="text-xs text-center mt-3">
+            <Link to="/forgot-password" className="text-primary hover:underline">Forgot your password?</Link>
+          </p>
+        )}
         {!isLogin && (
           <p className="text-[11px] text-center text-muted-foreground mt-3">
             Don't have a Binance account? <a href="https://accounts.binance.com/register" target="_blank" rel="noopener noreferrer" className="text-primary">Create one →</a>

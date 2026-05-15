@@ -62,14 +62,25 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
         throw new Error("Enter a valid phone number in international format, e.g. +14155552671");
       }
 
-      const { data, error } = await supabase.auth.signUp({
-        email: form.email,
-        password: form.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/dashboard`,
-          data: { full_name: form.fullName },
-        },
-      });
+      // Sign up. Supabase emails a 6-digit OTP token (alongside the magic link)
+      // when email confirmations are enabled. We verify with type: "signup".
+      const signUpPayload: Parameters<typeof supabase.auth.signUp>[0] =
+        verifyMethod === "phone"
+          ? {
+              phone,
+              password: form.password,
+              options: { data: { full_name: form.fullName, email: form.email } },
+            }
+          : {
+              email: form.email,
+              password: form.password,
+              options: {
+                emailRedirectTo: `${window.location.origin}/dashboard`,
+                data: { full_name: form.fullName },
+              },
+            };
+
+      const { data, error } = await supabase.auth.signUp(signUpPayload);
       if (error) throw error;
 
       if (data.user) {
@@ -87,20 +98,9 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
       }
 
       if (verifyMethod === "phone") {
-        if (!data.session) {
-          setSuccess("Account created. Check your email to confirm, then sign in to verify your phone.");
-          return;
-        }
-        const { error: pErr } = await supabase.auth.updateUser({ phone });
-        if (pErr) throw new Error(`Couldn't send SMS code: ${pErr.message}`);
-        setSuccess(`We sent a 6-digit code to ${phone}.`);
+        setSuccess(`We sent a 6-digit SMS code to ${phone}.`);
       } else {
-        const { error: eErr } = await supabase.auth.signInWithOtp({
-          email: form.email,
-          options: { shouldCreateUser: false },
-        });
-        if (eErr) throw new Error(`Couldn't send email code: ${eErr.message}`);
-        setSuccess(`We sent a 6-digit code to ${form.email}.`);
+        setSuccess(`We sent a 6-digit code to ${form.email}. Check your inbox (and spam folder).`);
       }
       setStep("verify");
     } catch (err) {
@@ -121,21 +121,14 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
         const { error } = await supabase.auth.verifyOtp({
           phone,
           token: otp.trim(),
-          type: "phone_change",
+          type: "sms",
         });
         if (error) throw error;
-        const { data: u } = await supabase.auth.getUser();
-        if (u.user) {
-          await supabase
-            .from("customers")
-            .update({ phone_verified_at: new Date().toISOString() })
-            .eq("user_id", u.user.id);
-        }
       } else {
         const { error } = await supabase.auth.verifyOtp({
           email: form.email,
           token: otp.trim(),
-          type: "email",
+          type: "signup",
         });
         if (error) throw error;
         const { data: u } = await supabase.auth.getUser();
@@ -160,12 +153,16 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
     setLoading(true);
     try {
       if (verifyMethod === "phone") {
-        const { error } = await supabase.auth.updateUser({ phone: normalizedPhone() });
+        const { error } = await supabase.auth.resend({
+          type: "sms",
+          phone: normalizedPhone(),
+        });
         if (error) throw error;
       } else {
-        const { error } = await supabase.auth.signInWithOtp({
+        const { error } = await supabase.auth.resend({
+          type: "signup",
           email: form.email,
-          options: { shouldCreateUser: false },
+          options: { emailRedirectTo: `${window.location.origin}/dashboard` },
         });
         if (error) throw error;
       }

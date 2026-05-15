@@ -121,21 +121,14 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
         const { error } = await supabase.auth.verifyOtp({
           phone,
           token: otp.trim(),
-          type: "phone_change",
+          type: "sms",
         });
         if (error) throw error;
-        const { data: u } = await supabase.auth.getUser();
-        if (u.user) {
-          await supabase
-            .from("customers")
-            .update({ phone_verified_at: new Date().toISOString() })
-            .eq("user_id", u.user.id);
-        }
       } else {
         const { error } = await supabase.auth.verifyOtp({
           email: form.email,
           token: otp.trim(),
-          type: "email",
+          type: "signup",
         });
         if (error) throw error;
         const { data: u } = await supabase.auth.getUser();

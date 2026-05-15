@@ -105,8 +105,8 @@ function Dashboard() {
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Stat icon={<Wallet />} label="Total Balance" value="$48,920.30" trend="+12.4%" />
-        <Stat icon={<TrendingUp />} label="Total Profit" value="$11,284.50" trend="+8.7%" />
+        <Stat icon={<Wallet />} label="Total Balance" value="$48,920.30" trend="+12.4%" highlight />
+        <Stat icon={<TrendingUp />} label="Total Profit" value="$11,284.50" trend="+8.7%" highlight />
         <Stat icon={<Activity />} label="Daily Earnings" value="$382.10" trend="Today" />
         <Stat icon={<Clock />} label="Pending Withdrawals" value="$240.00" trend="2 requests" />
       </div>

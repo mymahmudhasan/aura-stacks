@@ -3,7 +3,7 @@ import { Brain, Bot, LineChart, ShieldCheck, Sparkles, Activity } from "lucide-r
 import { CTA, GlassCard, PageHero, Section } from "@/components/ui-bits";
 import { ServiceReferral } from "@/components/ServiceReferral";
 import { LiveForexChart } from "@/components/LiveForexChart";
-import aiImg from "@/assets/ai-trader-bot.png";
+import aiImg from "@/assets/ai-trader-bot.webp";
 
 export const Route = createFileRoute("/ai-trading")({
   component: AITrading,

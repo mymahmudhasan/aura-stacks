@@ -215,7 +215,7 @@ function Referrals() {
             <p className="text-4xl md:text-5xl font-bold gradient-text font-mono tracking-tight">
               {loading ? <Loader2 className="w-8 h-8 animate-spin" /> : `$${live.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}`}
             </p>
-            <p className="text-xs text-muted-foreground mt-2">Last 24h: ${totals.perDay.toFixed(2)} · auto-paid daily to your Binance wallet.</p>
+            <p className="text-xs text-muted-foreground mt-2">Last 24h: ${totals.perDay.toFixed(2)} · auto-paid every Sunday to your Binance wallet.</p>
           </div>
           <SmallStat icon={<Users />} label="Direct (L1)" value={loading ? "—" : String(totals.direct)} sub="active referrals" />
           <SmallStat icon={<Users />} label="Network (L2)" value={loading ? "—" : String(totals.network)} sub="extended network" />

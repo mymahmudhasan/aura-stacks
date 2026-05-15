@@ -153,12 +153,16 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
     setLoading(true);
     try {
       if (verifyMethod === "phone") {
-        const { error } = await supabase.auth.updateUser({ phone: normalizedPhone() });
+        const { error } = await supabase.auth.resend({
+          type: "sms",
+          phone: normalizedPhone(),
+        });
         if (error) throw error;
       } else {
-        const { error } = await supabase.auth.signInWithOtp({
+        const { error } = await supabase.auth.resend({
+          type: "signup",
           email: form.email,
-          options: { shouldCreateUser: false },
+          options: { emailRedirectTo: `${window.location.origin}/dashboard` },
         });
         if (error) throw error;
       }

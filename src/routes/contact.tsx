@@ -69,8 +69,8 @@ export const Route = createFileRoute("/contact")({
   component: Contact,
   head: () => ({
     meta: [
-      { title: "Contact — NovaTrad.Ai" },
-      { name: "description", content: "Get in touch with NovaTrad.Ai — 24/7 support across email, Telegram and Discord." },
+      { title: "Contact — AuraTrad.Ai" },
+      { name: "description", content: "Get in touch with AuraTrad.Ai — 24/7 support across email, Telegram and Discord." },
     ],
   }),
 });
@@ -119,19 +119,19 @@ function Contact() {
             <GlassCard>
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-primary/15 text-primary flex items-center justify-center"><Mail /></div>
-                <div><p className="text-sm text-muted-foreground">{c.emailLabel}</p><p className="font-medium">support@novavault.io</p></div>
+                <div><p className="text-sm text-muted-foreground">{c.emailLabel}</p><p className="font-medium">support@auratrad.ai</p></div>
               </div>
             </GlassCard>
             <GlassCard>
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-primary/15 text-primary flex items-center justify-center"><MessageSquare /></div>
-                <div><p className="text-sm text-muted-foreground">{c.telegramLabel}</p><p className="font-medium">t.me/novavault</p></div>
+                <div><p className="text-sm text-muted-foreground">{c.telegramLabel}</p><p className="font-medium">t.me/auratrad</p></div>
               </div>
             </GlassCard>
             <GlassCard>
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-primary/15 text-primary flex items-center justify-center"><MessageSquare /></div>
-                <div><p className="text-sm text-muted-foreground">{c.discordLabel}</p><p className="font-medium">discord.gg/novavault</p></div>
+                <div><p className="text-sm text-muted-foreground">{c.discordLabel}</p><p className="font-medium">discord.gg/auratrad</p></div>
               </div>
             </GlassCard>
             <CTA to="/faq" variant="ghost" className="w-full justify-center">{c.faq}</CTA>

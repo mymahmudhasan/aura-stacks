@@ -13,7 +13,7 @@ export const Route = createFileRoute("/staking")({
   component: Staking,
   head: () => ({
     meta: [
-      { title: "Staking Plans & Offers — NovaTrad.Ai" },
+      { title: "Staking Plans & Offers — AuraTrad.Ai" },
       { name: "description", content: "Lock, stake and earn daily rewards. Limited-time bonus APY offers, new-investor boost and VIP staking from $50 to $2,500+." },
     ],
   }),

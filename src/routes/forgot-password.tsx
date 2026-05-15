@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/forgot-password")({
   component: ForgotPassword,
-  head: () => ({ meta: [{ title: "Forgot password — NovaTrad.Ai" }] }),
+  head: () => ({ meta: [{ title: "Forgot password — AuraTrad.Ai" }] }),
 });
 
 function ForgotPassword() {
@@ -36,7 +36,7 @@ function ForgotPassword() {
       <div className="relative w-full max-w-md glass-strong rounded-3xl p-8 glow-primary">
         <Link to="/" className="flex items-center gap-2.5 justify-center mb-6">
           <Hexagon className="w-8 h-8 text-primary fill-primary/20" strokeWidth={1.5} />
-          <span className="text-lg font-bold">Nova<span className="gradient-text">Vault</span></span>
+          <span className="text-lg font-bold">Aura<span className="gradient-text">Trad.Ai</span></span>
         </Link>
 
         <Link to="/login" className="text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 mb-3">

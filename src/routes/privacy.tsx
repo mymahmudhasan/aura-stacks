@@ -3,7 +3,7 @@ import { PageHero, Section } from "@/components/ui-bits";
 
 export const Route = createFileRoute("/privacy")({
   component: Privacy,
-  head: () => ({ meta: [{ title: "Privacy Policy — NovaTrad.Ai" }] }),
+  head: () => ({ meta: [{ title: "Privacy Policy — AuraTrad.Ai" }] }),
 });
 
 function Privacy() {

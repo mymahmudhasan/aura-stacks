@@ -11,7 +11,7 @@ export const Route = createFileRoute("/dashboard")({
       <Dashboard />
     </RequirePhoneVerified>
   ),
-  head: () => ({ meta: [{ title: "Dashboard — NovaTrad.Ai" }] }),
+  head: () => ({ meta: [{ title: "Dashboard — AuraTrad.Ai" }] }),
 });
 
 function DemoBanner() {

@@ -9,7 +9,7 @@ export const Route = createFileRoute("/admin/sms-test")({
   component: SmsTestPage,
   head: () => ({
     meta: [
-      { title: "SMS Test — NovaTrad.Ai Admin" },
+      { title: "SMS Test — AuraTrad.Ai Admin" },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),

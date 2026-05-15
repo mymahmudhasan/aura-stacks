@@ -9,7 +9,7 @@ export const Route = createFileRoute("/ai-trading")({
   component: AITrading,
   head: () => ({
     meta: [
-      { title: "AI Trading — NovaTrad.Ai" },
+      { title: "AI Trading — AuraTrad.Ai" },
       { name: "description", content: "AI-powered trading for the next generation. Experience automated market analysis and intelligent crypto trading systems." },
     ],
   }),
@@ -28,7 +28,7 @@ function AITrading() {
             AI-powered trading for the <span className="gradient-text">next generation</span>
           </>
         }
-        subtitle="Experience automated market analysis and intelligent crypto trading systems. NovaTrad.Ai's AI scans hundreds of pairs and executes optimized strategies 24/7."
+        subtitle="Experience automated market analysis and intelligent crypto trading systems. AuraTrad.Ai's AI scans hundreds of pairs and executes optimized strategies 24/7."
       />
 
       <Section>
@@ -36,7 +36,7 @@ function AITrading() {
           <div className="relative">
             <div className="absolute -inset-10 bg-[image:var(--gradient-aurora)] opacity-50 blur-3xl -z-10 rounded-full" />
             <div className="absolute -inset-6 bg-primary/25 blur-3xl -z-10 rounded-full" />
-            <img src={aiImg} alt="NovaTrad.Ai AI trader bot avatar" loading="lazy" width={1024} height={1024} className="w-full h-auto drop-shadow-[0_30px_60px_rgba(56,189,248,0.4)]" />
+            <img src={aiImg} alt="AuraTrad.Ai AI trader bot avatar" loading="lazy" width={1024} height={1024} className="w-full h-auto drop-shadow-[0_30px_60px_rgba(56,189,248,0.4)]" />
           </div>
           <div>
             <h2 className="text-3xl md:text-4xl font-bold">Smart. Automated. <span className="gradient-text">Always on.</span></h2>

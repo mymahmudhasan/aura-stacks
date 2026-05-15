@@ -8,8 +8,8 @@ export const Route = createFileRoute("/support")({
   component: Support,
   head: () => ({
     meta: [
-      { title: "Support — NovaTrad.Ai" },
-      { name: "description", content: "Open a support ticket and track its status. NovaTrad.Ai support replies within 24 hours." },
+      { title: "Support — AuraTrad.Ai" },
+      { name: "description", content: "Open a support ticket and track its status. AuraTrad.Ai support replies within 24 hours." },
     ],
   }),
 });
@@ -297,7 +297,7 @@ function Support() {
               <ul className="text-sm text-muted-foreground space-y-2">
                 <li>• Check the <Link to="/faq" className="text-primary hover:underline">FAQ</Link> for common answers.</li>
                 <li>• For withdrawal issues, double-check your <span className="text-foreground">Binance UID</span> on file.</li>
-                <li>• Email: <span className="text-foreground">support@novavault.io</span></li>
+                <li>• Email: <span className="text-foreground">support@auratrad.ai</span></li>
               </ul>
             </GlassCard>
           </div>

@@ -11,7 +11,7 @@ export const Route = createFileRoute("/referrals")({
     return { userId: data.user.id };
   },
   component: Referrals,
-  head: () => ({ meta: [{ title: "Referral Dashboard — NovaTrad.Ai" }] }),
+  head: () => ({ meta: [{ title: "Referral Dashboard — AuraTrad.Ai" }] }),
 });
 
 const SERVICE_META = {
@@ -225,7 +225,7 @@ function Referrals() {
       {/* MASTER LINK */}
       <CopyLinkCard
         label="Master referral link"
-        url={`https://novavault.io/r/${referralId}`}
+        url={`https://auratrad.ai/r/${referralId}`}
         note="Shares all services. Use service-specific links below for higher conversion."
       />
 
@@ -316,7 +316,7 @@ function Referrals() {
 
 function ServiceCard({ svcKey, row, referralId, loading }: { svcKey: ServiceKey; row: SummaryRow; referralId: string; loading: boolean }) {
   const meta = SERVICE_META[svcKey];
-  const url = `https://novavault.io/r/${referralId}?p=${svcKey}`;
+  const url = `https://auratrad.ai/r/${referralId}?p=${svcKey}`;
   return (
     <div className={`relative rounded-2xl p-6 ${meta.accent === "gold" ? "glass-strong border-primary/40 glow-gold" : "glass"}`}>
       <div className="flex items-center justify-between mb-4">

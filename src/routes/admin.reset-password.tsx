@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin/reset-password")({
   component: AdminResetPassword,
-  head: () => ({ meta: [{ title: "Reset Admin Password — NovaTrad.Ai" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Reset Admin Password — AuraTrad.Ai" }, { name: "robots", content: "noindex" }] }),
 });
 
 function AdminResetPassword() {
@@ -97,7 +97,7 @@ function AdminResetPassword() {
       <div className="relative w-full max-w-md glass-strong rounded-3xl p-8 glow-primary">
         <Link to="/" className="flex items-center gap-2.5 justify-center mb-6">
           <Hexagon className="w-8 h-8 text-primary fill-primary/20" strokeWidth={1.5} />
-          <span className="text-lg font-bold">Nova<span className="gradient-text">Vault</span></span>
+          <span className="text-lg font-bold">Aura<span className="gradient-text">Trad.Ai</span></span>
         </Link>
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-xs uppercase tracking-widest text-primary mx-auto w-fit block">
           <ShieldCheck className="w-3 h-3 inline mr-1" /> Admin Recovery

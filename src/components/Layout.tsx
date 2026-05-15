@@ -27,11 +27,11 @@ export function Header() {
       <div className="mx-auto max-w-7xl px-5 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5 group">
           <div className="relative">
-            <img src={logo} alt="NovaTrad.Ai logo" width={36} height={36} className="w-9 h-9 object-contain" />
+            <img src={logo} alt="AuraTrad.Ai logo" width={36} height={36} className="w-9 h-9 object-contain" />
             <div className="absolute inset-0 blur-md bg-primary/40 -z-10 group-hover:bg-primary/60 transition" />
           </div>
           <span className="text-lg font-bold tracking-tight">
-            NovaTrad<span className="gradient-text">.Ai</span>
+            AuraTrad<span className="gradient-text">.Ai</span>
           </span>
         </Link>
 
@@ -206,8 +206,8 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-5 py-14 grid gap-10 md:grid-cols-4">
         <div className="md:col-span-1">
           <div className="flex items-center gap-2.5 mb-4">
-            <img src={logo} alt="NovaTrad.Ai logo" width={32} height={32} className="w-8 h-8 object-contain" loading="lazy" />
-            <span className="text-lg font-bold">NovaTrad<span className="gradient-text">.Ai</span></span>
+            <img src={logo} alt="AuraTrad.Ai logo" width={32} height={32} className="w-8 h-8 object-contain" loading="lazy" />
+            <span className="text-lg font-bold">AuraTrad<span className="gradient-text">.Ai</span></span>
           </div>
           <p className="text-sm text-muted-foreground leading-relaxed">
             Next-generation crypto investment platform for mining, staking and AI-assisted trading.
@@ -244,7 +244,7 @@ export function Footer() {
       </div>
       <div className="border-t border-border/40">
         <div className="mx-auto max-w-7xl px-5 py-5 flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
-          <p>© {new Date().getFullYear()} NovaTrad.Ai. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} AuraTrad.Ai. All rights reserved.</p>
           <p>Crypto investments carry risk. Always invest responsibly.</p>
         </div>
       </div>

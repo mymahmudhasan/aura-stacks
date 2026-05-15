@@ -302,7 +302,7 @@ function Home() {
           {[
             { name: "Google", tag: "Cloud & AI", href: "https://cloud.google.com", logo: "https://cdn.simpleicons.org/google/ffffff" },
             { name: "Nvidia", tag: "GPU Compute", href: "https://www.nvidia.com", logo: "https://cdn.simpleicons.org/nvidia/76b900" },
-            { name: "Daraz", tag: "E-Commerce", href: "https://www.daraz.com", logo: "https://cdn.simpleicons.org/shopify/ff9900" },
+            { name: "Synexis", tag: "E-Commerce", href: "https://www.synexis.com", logo: "https://cdn.simpleicons.org/shopify/ff9900" },
             { name: "Innovixus Labs", tag: "Research", href: "https://www.innovixuslabs.com", logo: "https://cdn.simpleicons.org/atlassian/5cbdb9" },
             { name: "ZenTech", tag: "Security", href: "https://www.zentech.com", logo: "https://cdn.simpleicons.org/zendesk/03363d" },
           ].map((p) => (

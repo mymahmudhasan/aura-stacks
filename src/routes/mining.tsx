@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Cpu, Check, Zap } from "lucide-react";
 import { CTA, GlassCard, PageHero, Section } from "@/components/ui-bits";
 import { ServiceReferral } from "@/components/ServiceReferral";
-import miningImg from "@/assets/mining-visual.jpg";
+import miningImg from "@/assets/mining-visual.webp";
 
 export const Route = createFileRoute("/mining")({
   component: Mining,

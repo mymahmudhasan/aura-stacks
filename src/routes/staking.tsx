@@ -4,10 +4,10 @@ import { CTA, GlassCard, PageHero, Section } from "@/components/ui-bits";
 import { ServiceReferral } from "@/components/ServiceReferral";
 import { StakingTimeline } from "@/components/StakingTimeline";
 import { StakingPool } from "@/components/StakingPool";
-import stakingImg from "@/assets/staking-visual.jpg";
-import vaultImg from "@/assets/staking-vault.jpg";
-import poolImg from "@/assets/staking-pool.jpg";
-import rewardsImg from "@/assets/staking-rewards.jpg";
+import stakingImg from "@/assets/staking-visual.webp";
+import vaultImg from "@/assets/staking-vault.webp";
+import poolImg from "@/assets/staking-pool.webp";
+import rewardsImg from "@/assets/staking-rewards.webp";
 
 export const Route = createFileRoute("/staking")({
   component: Staking,

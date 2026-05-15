@@ -12,7 +12,7 @@ import {
   Gift,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import poolImg from "@/assets/staking-prize-pool.jpg";
+import poolImg from "@/assets/staking-prize-pool.webp";
 import { usePoolSettings } from "@/hooks/use-pool-settings";
 
 const fmt = (n: number) => n.toLocaleString("en-US", { maximumFractionDigits: 0 });

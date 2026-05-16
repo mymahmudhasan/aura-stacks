@@ -7,7 +7,7 @@ type Lang = "en" | "bn";
 
 const offices: Record<Lang, Array<{ country: string; flag: string; city: string; tag: string; address: string; phone: string }>> = {
   en: [
-    { country: "Bangladesh", flag: "🇧🇩", city: "Dhaka", tag: "Regional HQ — South Asia", address: "Level 14, Bay's Galleria, 57 Gulshan Avenue, Dhaka 1212", phone: "+880 1700 112233" },
+    { country: "France", flag: "🇫🇷", city: "Paris", tag: "Europe Office", address: "25 Avenue de l'Opéra, 75001 Paris", phone: "+33 1 42 60 33 44" },
     { country: "Singapore", flag: "🇸🇬", city: "Singapore", tag: "Global Headquarters", address: "Marina Bay Financial Centre, Tower 3, #28-01, 12 Marina Boulevard, 018982", phone: "+65 6812 4400" },
     { country: "United Arab Emirates", flag: "🇦🇪", city: "Dubai", tag: "Middle East Hub", address: "Office 3204, Burj Daman Tower, DIFC, Dubai", phone: "+971 4 555 8800" },
     { country: "United Kingdom", flag: "🇬🇧", city: "London", tag: "Europe Hub", address: "Floor 22, The Leadenhall Building, 122 Leadenhall St, London EC3V 4AB", phone: "+44 20 7946 1100" },
@@ -17,7 +17,7 @@ const offices: Record<Lang, Array<{ country: string; flag: string; city: string;
     { country: "Australia", flag: "🇦🇺", city: "Sydney", tag: "Oceania Office", address: "Level 38, International Tower One, 100 Barangaroo Avenue, Sydney NSW 2000", phone: "+61 2 8001 6600" },
   ],
   bn: [
-    { country: "বাংলাদেশ", flag: "🇧🇩", city: "ঢাকা", tag: "আঞ্চলিক সদর দপ্তর — দক্ষিণ এশিয়া", address: "লেভেল ১৪, বে'স গ্যালেরিয়া, ৫৭ গুলশান এভিনিউ, ঢাকা ১২১২", phone: "+৮৮০ ১৭০০ ১১২২৩৩" },
+    { country: "ফ্রান্স", flag: "🇫🇷", city: "প্যারিস", tag: "ইউরোপ অফিস", address: "২৫ অ্যাভিনিউ ডি ল'ওপেরা, ৭৫০০১ প্যারিস", phone: "+৩৩ ১ ৪২ ৬০ ৩৩ ৪৪" },
     { country: "সিঙ্গাপুর", flag: "🇸🇬", city: "সিঙ্গাপুর", tag: "গ্লোবাল সদর দপ্তর", address: "মেরিনা বে ফাইন্যান্সিয়াল সেন্টার, টাওয়ার ৩, #২৮-০১, ১২ মেরিনা বুলেভার্ড, ০১৮৯৮২", phone: "+৬৫ ৬৮১২ ৪৪০০" },
     { country: "সংযুক্ত আরব আমিরাত", flag: "🇦🇪", city: "দুবাই", tag: "মধ্যপ্রাচ্য কেন্দ্র", address: "অফিস ৩২০৪, বুর্জ দামান টাওয়ার, ডিআইএফসি, দুবাই", phone: "+৯৭১ ৪ ৫৫৫ ৮৮০০" },
     { country: "যুক্তরাজ্য", flag: "🇬🇧", city: "লন্ডন", tag: "ইউরোপ কেন্দ্র", address: "ফ্লোর ২২, দ্য লিডেনহল বিল্ডিং, ১২২ লিডেনহল স্ট্রিট, লন্ডন EC3V 4AB", phone: "+৪৪ ২০ ৭৯৪৬ ১১০০" },

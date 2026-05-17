@@ -31,14 +31,17 @@ function fmt(n: number) {
 }
 
 export function LiveDeposits() {
-  // Live chart points: dollars deposited per minute (last 30 minutes)
+  const [mounted, setMounted] = useState(false);
+  // Use a deterministic SSR seed; randomize after mount to avoid hydration mismatch.
   const [points, setPoints] = useState<number[]>(() =>
-    Array.from({ length: 30 }, (_, i) => 12000 + Math.round(Math.sin(i / 3) * 3000 + Math.random() * 4000)),
+    Array.from({ length: 30 }, (_, i) => 12000 + Math.round(Math.sin(i / 3) * 3000 + i * 50)),
   );
   const [feed, setFeed] = useState<Deposit[]>(() =>
     SEED.slice(0, 6).map((s, i) => ({ ...s, id: i, ago: `${i + 1}s ago` })),
   );
   const [totalToday, setTotalToday] = useState(2_184_320);
+
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     const t = setInterval(() => {

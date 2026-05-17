@@ -1,9 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Wallet, TrendingUp, Activity, Clock, ArrowDownLeft, ArrowUpRight, Cpu, Lock, Brain, Bell, Users, Share2, Sparkles, Gift } from "lucide-react";
-import { useEffect, useState } from "react";
+import {
+  Wallet, TrendingUp, Activity, Clock, ArrowDownLeft, ArrowUpRight,
+  Cpu, Lock, Brain, Bell, Users, Share2, Sparkles, Gift, Loader2, TrendingDown, RefreshCw,
+} from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { CTA, GlassCard, Section } from "@/components/ui-bits";
 import { supabase } from "@/integrations/supabase/client";
 import { RequirePhoneVerified } from "@/components/RequirePhoneVerified";
+import { getMyWallet, getMyInvestments, getMyDeposits, getMyWithdrawals } from "@/lib/wallet.functions";
 
 export const Route = createFileRoute("/dashboard")({
   component: () => (
@@ -14,80 +18,165 @@ export const Route = createFileRoute("/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — AuraTrad.Ai" }] }),
 });
 
-function DemoBanner() {
-  const [info, setInfo] = useState<{ type: string; demo: number } | null>(null);
-  useEffect(() => {
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data } = await supabase
-        .from("customers")
-        .select("account_type, demo_balance")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (data) setInfo({ type: data.account_type, demo: Number(data.demo_balance) });
-    })();
-  }, []);
-  if (!info || info.type !== "demo") return null;
-  return (
-    <div className="mb-6 rounded-2xl border border-success/30 bg-success/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-      <div className="flex items-start gap-3">
-        <div className="w-9 h-9 rounded-lg bg-success/20 text-success flex items-center justify-center shrink-0">
-          <Sparkles className="w-4 h-4" />
-        </div>
-        <div>
-          <p className="text-sm font-semibold">You're on a free demo account · ${info.demo.toLocaleString()} virtual balance</p>
-          <p className="text-xs text-muted-foreground mt-0.5">Make your first deposit from your Binance wallet to unlock real trading, mining and staking — your account upgrades automatically.</p>
-        </div>
-      </div>
-      <button className="rounded-xl px-4 py-2 text-sm bg-primary text-primary-foreground glow-primary inline-flex items-center gap-2 shrink-0">
-        <ArrowDownLeft className="w-4 h-4" /> Deposit & go live
-      </button>
-    </div>
-  );
-}
+type Customer = {
+  full_name: string | null;
+  balance: number;
+  total_deposited: number;
+  total_withdrawn: number;
+  account_type: string;
+  demo_balance: number;
+  binance_uid: string | null;
+};
+type Txn = { id: string; kind: string; amount: number; currency: string; status: string; notes: string | null; created_at: string };
+type Inv = { id: string; service: string; plan_name: string; amount: number; status: string; started_at: string | null; ends_at: string | null; created_at: string };
+type Dep = { id: string; amount: number; status: string };
+type Wd = { id: string; amount: number; status: string };
 
-function PromoBanner() {
-  return (
-    <div className="mb-6 rounded-2xl border border-gold/40 bg-gold/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-rise relative overflow-hidden">
-      <div className="absolute inset-0 animate-shine pointer-events-none" />
-      <div className="relative flex items-start gap-3">
-        <div className="w-10 h-10 rounded-xl bg-[image:var(--gradient-gold)] text-gold-foreground flex items-center justify-center shrink-0 shadow-[var(--shadow-gold)]">
-          <Gift className="w-5 h-5" />
-        </div>
-        <div>
-          <p className="text-sm font-bold">
-            <span className="gradient-text">25% Deposit Bonus</span> — Limited time offer
-          </p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Top up your account now and receive an extra 25% credited instantly. The more you deposit, the bigger your trading power.
-          </p>
-        </div>
-      </div>
-      <button className="relative shrink-0 rounded-xl px-4 py-2 text-sm font-semibold bg-[image:var(--gradient-gold)] text-gold-foreground glow-gold inline-flex items-center gap-2 hover:opacity-90 transition">
-        <ArrowDownLeft className="w-4 h-4" /> Deposit & Claim 25%
-      </button>
-    </div>
-  );
-}
+const serviceIcon: Record<string, React.ReactNode> = {
+  ai_trading: <Brain className="w-4 h-4 text-primary" />,
+  mining: <Cpu className="w-4 h-4 text-primary" />,
+  staking: <Lock className="w-4 h-4 text-primary" />,
+};
 
 function Dashboard() {
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [cust, setCust] = useState<Customer | null>(null);
+  const [demoType, setDemoType] = useState<string>("demo");
+  const [txns, setTxns] = useState<Txn[]>([]);
+  const [invs, setInvs] = useState<Inv[]>([]);
+  const [deps, setDeps] = useState<Dep[]>([]);
+  const [wds, setWds] = useState<Wd[]>([]);
+  const [accountId, setAccountId] = useState<string>("");
+
+  const load = useCallback(async (initial = false) => {
+    if (initial) setLoading(true); else setRefreshing(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      const uid = u.user?.id ?? "";
+      setAccountId(uid.slice(0, 8).toUpperCase());
+      const [w, i, d, wlist, custExtra] = await Promise.all([
+        getMyWallet(),
+        getMyInvestments(),
+        getMyDeposits(),
+        getMyWithdrawals(),
+        uid
+          ? supabase.from("customers").select("account_type,demo_balance").eq("user_id", uid).maybeSingle()
+          : Promise.resolve({ data: null }),
+      ]);
+      const c = w.customer as Partial<Customer> | null;
+      setCust({
+        full_name: c?.full_name ?? null,
+        balance: Number(c?.balance ?? 0),
+        total_deposited: Number(c?.total_deposited ?? 0),
+        total_withdrawn: Number(c?.total_withdrawn ?? 0),
+        account_type: custExtra.data?.account_type ?? "demo",
+        demo_balance: Number(custExtra.data?.demo_balance ?? 0),
+        binance_uid: (c as { binance_uid?: string | null } | null)?.binance_uid ?? null,
+      });
+      setDemoType(custExtra.data?.account_type ?? "demo");
+      setTxns(w.transactions as Txn[]);
+      setInvs(i as Inv[]);
+      setDeps(d as Dep[]);
+      setWds(wlist as Wd[]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load(true);
+    const t = setInterval(() => load(false), 30_000);
+    const onFocus = () => load(false);
+    window.addEventListener("focus", onFocus);
+    return () => { clearInterval(t); window.removeEventListener("focus", onFocus); };
+  }, [load]);
+
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const balance = cust?.balance ?? 0;
+  const totalProfit = balance + (cust?.total_withdrawn ?? 0) - (cust?.total_deposited ?? 0);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const earningsToday = txns
+    .filter((t) => t.kind === "earning" && new Date(t.created_at) >= today)
+    .reduce((s, t) => s + Number(t.amount), 0);
+  const pendingWdAmount = wds.filter((w) => w.status === "pending").reduce((s, w) => s + Number(w.amount), 0);
+  const pendingWdCount = wds.filter((w) => w.status === "pending").length;
+  const pendingDepCount = deps.filter((d) => d.status === "pending").length;
+  const activeInvs = invs.filter((i) => i.status === "active");
+
   return (
     <Section className="!py-10">
-      <DemoBanner />
-      <PromoBanner />
+      {demoType === "demo" && (
+        <div className="mb-6 rounded-2xl border border-success/30 bg-success/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-lg bg-success/20 text-success flex items-center justify-center shrink-0">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold">You're on a free demo account · ${Number(cust?.demo_balance ?? 0).toLocaleString()} virtual balance</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Make your first deposit to unlock real trading, mining and staking — your account upgrades automatically.</p>
+            </div>
+          </div>
+          <Link to="/deposit" className="rounded-xl px-4 py-2 text-sm bg-primary text-primary-foreground glow-primary inline-flex items-center gap-2 shrink-0">
+            <ArrowDownLeft className="w-4 h-4" /> Deposit & go live
+          </Link>
+        </div>
+      )}
+
+      <div className="mb-6 rounded-2xl border border-gold/40 bg-gold/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 relative overflow-hidden">
+        <div className="relative flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[image:var(--gradient-gold)] text-gold-foreground flex items-center justify-center shrink-0 shadow-[var(--shadow-gold)]">
+            <Gift className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-sm font-bold"><span className="gradient-text">25% Deposit Bonus</span> — Limited time offer</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Top up your account now and receive an extra 25% credited after admin approval.</p>
+          </div>
+        </div>
+        <Link to="/deposit" className="relative shrink-0 rounded-xl px-4 py-2 text-sm font-semibold bg-[image:var(--gradient-gold)] text-gold-foreground glow-gold inline-flex items-center gap-2 hover:opacity-90 transition">
+          <ArrowDownLeft className="w-4 h-4" /> Deposit & Claim 25%
+        </Link>
+      </div>
+
       <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
         <div>
           <p className="text-sm text-muted-foreground">Welcome back,</p>
-          <h1 className="text-2xl md:text-3xl font-bold">Investor <span className="gradient-text">#A2891</span></h1>
+          <h1 className="text-2xl md:text-3xl font-bold">
+            {cust?.full_name ?? "Investor"} <span className="gradient-text">#{accountId || "—"}</span>
+          </h1>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button className="rounded-xl px-4 py-2 text-sm font-semibold inline-flex items-center gap-2 bg-[image:var(--gradient-gold)] text-gold-foreground glow-gold hover:opacity-90 transition">
+          <Link to="/deposit" className="rounded-xl px-4 py-2 text-sm font-semibold inline-flex items-center gap-2 bg-[image:var(--gradient-gold)] text-gold-foreground glow-gold hover:opacity-90 transition">
             <ArrowDownLeft className="w-4 h-4" /> Deposit
+          </Link>
+          <Link to="/withdraw" className="glass rounded-xl px-4 py-2 text-sm flex items-center gap-2 hover:bg-primary/10 transition">
+            <ArrowUpRight className="w-4 h-4 text-gold" /> Withdraw
+          </Link>
+          <Link to="/wallet" className="glass rounded-xl px-4 py-2 text-sm flex items-center gap-2 hover:bg-primary/10 transition">
+            <Wallet className="w-4 h-4" /> Wallet
+          </Link>
+          <Link to="/referrals" className="rounded-xl px-4 py-2 text-sm flex items-center gap-2 bg-primary text-primary-foreground glow-primary">
+            <Share2 className="w-4 h-4" /> Referrals
+          </Link>
+          <button onClick={() => load(false)} disabled={refreshing} className="glass rounded-xl p-2 hover:bg-primary/10 transition" title="Refresh">
+            {refreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
           </button>
-          <button className="glass rounded-xl px-4 py-2 text-sm flex items-center gap-2"><ArrowUpRight className="w-4 h-4 text-gold" /> Withdraw</button>
-          <Link to="/referrals" className="rounded-xl px-4 py-2 text-sm flex items-center gap-2 bg-primary text-primary-foreground glow-primary"><Share2 className="w-4 h-4" /> Referrals</Link>
-          <button className="glass rounded-xl p-2"><Bell className="w-4 h-4" /></button>
+          <button className="glass rounded-xl p-2 relative" title="Notifications">
+            <Bell className="w-4 h-4" />
+            {(pendingDepCount + pendingWdCount) > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-gold text-gold-foreground text-[10px] font-bold flex items-center justify-center">
+                {pendingDepCount + pendingWdCount}
+              </span>
+            )}
+          </button>
         </div>
       </div>
 
@@ -101,66 +190,84 @@ function Dashboard() {
             <p className="text-xs text-muted-foreground mt-0.5">Make sure your Binance UID on file is correct. Payouts are processed within 24 hours.</p>
           </div>
         </div>
-        <p className="text-xs font-mono text-primary">UID · 284910321</p>
+        <p className="text-xs font-mono text-primary">UID · {cust?.binance_uid ?? "not set"}</p>
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Stat icon={<Wallet />} label="Total Balance" value="$48,920.30" trend="+12.4%" highlight />
-        <Stat icon={<TrendingUp />} label="Total Profit" value="$11,284.50" trend="+8.7%" highlight />
-        <Stat icon={<Activity />} label="Daily Earnings" value="$382.10" trend="Today" />
-        <Stat icon={<Clock />} label="Pending Withdrawals" value="$240.00" trend="2 requests" />
+        <Stat icon={<Wallet />} label="Total Balance" value={`$${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend={demoType === "demo" ? "Demo" : "Live"} highlight />
+        <Stat icon={totalProfit >= 0 ? <TrendingUp /> : <TrendingDown />} label="Total Profit" value={`${totalProfit >= 0 ? "+" : "-"}$${Math.abs(totalProfit).toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend={totalProfit >= 0 ? "All time" : "All time"} positive={totalProfit >= 0} highlight />
+        <Stat icon={<Activity />} label="Earnings Today" value={`$${earningsToday.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend="Today" positive />
+        <Stat icon={<Clock />} label="Pending Withdrawals" value={`$${pendingWdAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend={`${pendingWdCount} request${pendingWdCount === 1 ? "" : "s"}`} />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-5 mt-5">
         <GlassCard className="lg:col-span-2">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold">Active Investments</h3>
-            <span className="text-xs text-muted-foreground">6 active</span>
+            <span className="text-xs text-muted-foreground">{activeInvs.length} active</span>
           </div>
-          <div className="space-y-3">
-            {[
-              { i: <Cpu className="text-primary" />, n: "Premium Mining", a: "$10,000", d: "+$200/day", p: 60 },
-              { i: <Lock className="text-primary" />, n: "Staking 6M — ETH", a: "$5,000", d: "+$3.56/day", p: 32 },
-              { i: <Brain className="text-primary" />, n: "AI Bot — DeepGrid", a: "$3,500", d: "+$13.40/day", p: 78 },
-            ].map((row) => (
-              <div key={row.n} className="rounded-xl glass p-4">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">{row.i}</div>
-                    <div>
-                      <p className="font-medium text-sm">{row.n}</p>
-                      <p className="text-xs text-muted-foreground">Invested {row.a}</p>
+          {activeInvs.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-sm text-muted-foreground">No active investments yet.</p>
+              <div className="mt-3 flex flex-wrap gap-2 justify-center">
+                <Link to="/mining" className="text-xs px-3 py-1.5 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 transition">Browse Mining</Link>
+                <Link to="/staking" className="text-xs px-3 py-1.5 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 transition">Browse Staking</Link>
+                <Link to="/ai-trading" className="text-xs px-3 py-1.5 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 transition">Browse AI Trading</Link>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {activeInvs.map((row) => {
+                const start = row.started_at ? new Date(row.started_at).getTime() : new Date(row.created_at).getTime();
+                const end = row.ends_at ? new Date(row.ends_at).getTime() : start + 30 * 24 * 3600 * 1000;
+                const pct = Math.max(0, Math.min(100, Math.round(((Date.now() - start) / (end - start)) * 100)));
+                return (
+                  <div key={row.id} className="rounded-xl glass p-4">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">{serviceIcon[row.service] ?? <TrendingUp className="w-4 h-4 text-primary" />}</div>
+                        <div>
+                          <p className="font-medium text-sm">{row.plan_name}</p>
+                          <p className="text-xs text-muted-foreground capitalize">{row.service.replace("_", " ")} · Invested ${Number(row.amount).toLocaleString()}</p>
+                        </div>
+                      </div>
+                      <span className="text-xs font-mono text-muted-foreground">{pct}%</span>
+                    </div>
+                    <div className="mt-3 h-1.5 rounded-full bg-white/5 overflow-hidden">
+                      <div className="h-full bg-[image:var(--gradient-primary)]" style={{ width: `${pct}%` }} />
                     </div>
                   </div>
-                  <p className="text-sm text-success font-medium">{row.d}</p>
-                </div>
-                <div className="mt-3 h-1.5 rounded-full bg-white/5 overflow-hidden">
-                  <div className="h-full bg-[image:var(--gradient-primary)]" style={{ width: `${row.p}%` }} />
-                </div>
-              </div>
-            ))}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </GlassCard>
 
         <GlassCard>
-          <h3 className="font-semibold mb-4">Recent Activity</h3>
-          <ul className="space-y-3 text-sm">
-            {[
-              { t: "Mining reward distributed", a: "+$200.00", time: "2h ago", up: true },
-              { t: "Withdrawal request", a: "−$120.00", time: "5h ago", up: false },
-              { t: "AI Bot profit", a: "+$13.40", time: "8h ago", up: true },
-              { t: "Staking reward", a: "+$3.56", time: "1d ago", up: true },
-              { t: "Deposit confirmed", a: "+$5,000.00", time: "2d ago", up: true },
-            ].map((e, i) => (
-              <li key={i} className="flex items-center justify-between">
-                <div>
-                  <p>{e.t}</p>
-                  <p className="text-xs text-muted-foreground">{e.time}</p>
-                </div>
-                <span className={e.up ? "text-success" : "text-gold"}>{e.a}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">Recent Activity</h3>
+            <Link to="/wallet" className="text-xs text-primary">View all →</Link>
+          </div>
+          {txns.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">No activity yet.</p>
+          ) : (
+            <ul className="space-y-3 text-sm">
+              {txns.slice(0, 6).map((e) => {
+                const amt = Number(e.amount);
+                return (
+                  <li key={e.id} className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="capitalize truncate">{e.notes ?? e.kind.replace("_", " ")}</p>
+                      <p className="text-xs text-muted-foreground">{new Date(e.created_at).toLocaleString()}</p>
+                    </div>
+                    <span className={`shrink-0 font-medium ${amt >= 0 ? "text-success" : "text-gold"}`}>
+                      {amt >= 0 ? "+" : ""}{amt.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </GlassCard>
       </div>
 
@@ -170,7 +277,7 @@ function Dashboard() {
             <div className="w-11 h-11 rounded-xl bg-[image:var(--gradient-gold)] text-gold-foreground flex items-center justify-center"><Users className="w-5 h-5" /></div>
             <div>
               <p className="font-semibold">Referral Dashboard</p>
-              <p className="text-xs text-muted-foreground">45 direct · 133 network · $4,031.40 earned · live commissions ticking now</p>
+              <p className="text-xs text-muted-foreground">Track your direct & network referrals and live commissions.</p>
             </div>
           </div>
           <span className="text-sm text-primary group-hover:translate-x-1 transition">Open →</span>
@@ -184,12 +291,12 @@ function Dashboard() {
   );
 }
 
-function Stat({ icon, label, value, trend, highlight = false }: { icon: React.ReactNode; label: string; value: string; trend: string; highlight?: boolean }) {
+function Stat({ icon, label, value, trend, highlight = false, positive }: { icon: React.ReactNode; label: string; value: string; trend: string; highlight?: boolean; positive?: boolean }) {
   return (
     <GlassCard glow={highlight}>
       <div className="flex items-center justify-between">
         <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${highlight ? "bg-[image:var(--gradient-gold)] text-gold-foreground" : "bg-primary/15 text-primary"}`}>{icon}</div>
-        <span className="text-xs text-success font-semibold">{trend}</span>
+        <span className={`text-xs font-semibold ${positive === false ? "text-destructive" : positive === true ? "text-success" : "text-muted-foreground"}`}>{trend}</span>
       </div>
       <p className="text-xs uppercase tracking-widest text-muted-foreground mt-4">{label}</p>
       <p className={`font-extrabold mt-1 ${highlight ? "text-3xl md:text-4xl gradient-text" : "text-2xl"}`}>{value}</p>

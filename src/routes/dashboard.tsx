@@ -55,14 +55,31 @@ function Dashboard() {
   const [deps, setDeps] = useState<Dep[]>([]);
   const [wds, setWds] = useState<Wd[]>([]);
   const [accountId, setAccountId] = useState<string>("");
+  const [userId, setUserId] = useState<string>("");
   const [now, setNow] = useState<number>(() => Date.now());
+  const [mounted, setMounted] = useState(false);
+  const [planRates, setPlanRates] = useState<Record<string, number>>({});
   const [uidEditing, setUidEditing] = useState(false);
   const [uidInput, setUidInput] = useState("");
   const [uidSaving, setUidSaving] = useState(false);
   const [uidMsg, setUidMsg] = useState<string | null>(null);
+  useEffect(() => { setMounted(true); }, []);
   useEffect(() => {
+    if (!mounted) return;
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
+  }, [mounted]);
+  useEffect(() => {
+    listPlans({ data: {} })
+      .then((rows) => {
+        const map: Record<string, number> = {};
+        for (const r of rows as Array<{ name: string; daily_rate_pct: number | string | null; apy_pct: number | string | null }>) {
+          if (r.daily_rate_pct != null) map[r.name] = Number(r.daily_rate_pct) / 100;
+          else if (r.apy_pct != null) map[r.name] = Number(r.apy_pct) / 100 / 365;
+        }
+        setPlanRates(map);
+      })
+      .catch(() => { /* ignore */ });
   }, []);
   const load = useCallback(async (initial = false) => {
     if (initial) setLoading(true); else setRefreshing(true);

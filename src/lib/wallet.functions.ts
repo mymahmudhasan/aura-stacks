@@ -172,6 +172,52 @@ export const createInvestment = createServerFn({ method: "POST" })
     return activated;
   });
 
+export const listLiveActiveInvestments = createServerFn({ method: "GET" })
+  .handler(async () => {
+    const { data, error } = await supabaseAdmin
+      .from("investments")
+      .select("id,service,plan_name,amount,started_at,ends_at,user_id")
+      .eq("status", "active")
+      .order("started_at", { ascending: false })
+      .limit(30);
+    if (error) throw new Error(error.message);
+    const rows = data ?? [];
+    const userIds = Array.from(new Set(rows.map((r) => r.user_id)));
+    const handles = new Map<string, string>();
+    if (userIds.length > 0) {
+      const { data: custs } = await supabaseAdmin
+        .from("customers")
+        .select("user_id,full_name")
+        .in("user_id", userIds);
+      for (const c of custs ?? []) {
+        const name = (c.full_name ?? "").trim();
+        const h = name ? name.slice(0, 2) + "***" : "an***";
+        handles.set(c.user_id as string, h);
+      }
+    }
+    return rows.map((r) => ({
+      id: r.id,
+      service: r.service,
+      plan_name: r.plan_name,
+      amount: Number(r.amount),
+      started_at: r.started_at,
+      ends_at: r.ends_at,
+      masked_handle: handles.get(r.user_id as string) ?? "an***",
+    }));
+  });
+
+export const getMyWelcomeBonus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data } = await supabase
+      .from("welcome_bonuses")
+      .select("amount,granted_at")
+      .eq("user_id", userId)
+      .maybeSingle();
+    return data;
+  });
+
 export const getMyDeposits = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {

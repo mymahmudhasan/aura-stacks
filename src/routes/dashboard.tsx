@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { RequirePhoneVerified } from "@/components/RequirePhoneVerified";
 import { getMyWallet, getMyInvestments, getMyDeposits, getMyWithdrawals, updateBinanceUid } from "@/lib/wallet.functions";
 import { QuickInvestForm } from "@/components/QuickInvestModal";
+import { WelcomeBonusBanner } from "@/components/WelcomeBonusBanner";
+import { listPlans } from "@/lib/plans.functions";
 
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: async () => {
@@ -53,14 +55,31 @@ function Dashboard() {
   const [deps, setDeps] = useState<Dep[]>([]);
   const [wds, setWds] = useState<Wd[]>([]);
   const [accountId, setAccountId] = useState<string>("");
+  const [userId, setUserId] = useState<string>("");
   const [now, setNow] = useState<number>(() => Date.now());
+  const [mounted, setMounted] = useState(false);
+  const [planRates, setPlanRates] = useState<Record<string, number>>({});
   const [uidEditing, setUidEditing] = useState(false);
   const [uidInput, setUidInput] = useState("");
   const [uidSaving, setUidSaving] = useState(false);
   const [uidMsg, setUidMsg] = useState<string | null>(null);
+  useEffect(() => { setMounted(true); }, []);
   useEffect(() => {
+    if (!mounted) return;
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
+  }, [mounted]);
+  useEffect(() => {
+    listPlans({ data: {} })
+      .then((rows) => {
+        const map: Record<string, number> = {};
+        for (const r of rows as Array<{ name: string; daily_rate_pct: number | string | null; apy_pct: number | string | null }>) {
+          if (r.daily_rate_pct != null) map[r.name] = Number(r.daily_rate_pct) / 100;
+          else if (r.apy_pct != null) map[r.name] = Number(r.apy_pct) / 100 / 365;
+        }
+        setPlanRates(map);
+      })
+      .catch(() => { /* ignore */ });
   }, []);
   const load = useCallback(async (initial = false) => {
     if (initial) setLoading(true); else setRefreshing(true);
@@ -68,6 +87,7 @@ function Dashboard() {
       const { data: u } = await supabase.auth.getUser();
       const uid = u.user?.id ?? "";
       setAccountId(uid.slice(0, 8).toUpperCase());
+      setUserId(uid);
       const [w, i, d, wlist, custExtra] = await Promise.all([
         getMyWallet(),
         getMyInvestments(),
@@ -117,28 +137,14 @@ function Dashboard() {
   const balance = cust?.balance ?? 0;
   const activeInvs = invs.filter((i) => i.status === "active");
   const investedActive = activeInvs.reduce((s, i) => s + Number(i.amount), 0);
-  // Per-package daily ROI (derived from QuickInvestModal package definitions)
-  const dailyRateFor = (planName: string): number => {
-    const map: Record<string, number> = {
-      "Quantum Arbitrage": 0.112 / 30,
-      "Neural Momentum": 0.128 / 30,
-      "DeepGrid Scalper": 0.143 / 30,
-      "Mining Starter": 0.012,
-      "Mining Advanced": 0.016,
-      "Mining Premium": 0.020,
-      "Mining VIP": 0.024,
-      "1-Month Flexible": 0.12 / 365,
-      "3-Month Fixed": 0.18 / 365,
-      "6-Month Fixed": 0.26 / 365,
-      "12-Month VIP": 0.38 / 365,
-    };
-    return map[planName] ?? 0.01;
-  };
+  // Per-package daily ROI — sourced from active investment_plans rows so admin edits flow through.
+  const dailyRateFor = (planName: string): number => planRates[planName] ?? 0.01;
   // Live profit accrual using each package's own daily ROI, ticking every second
   const invAccrual = (i: Inv): number => {
     const start = i.started_at ? new Date(i.started_at).getTime() : new Date(i.created_at).getTime();
     const end = i.ends_at ? new Date(i.ends_at).getTime() : start + 30 * 86_400_000;
-    const elapsedMs = Math.max(0, Math.min(now, end) - start);
+    const tNow = mounted ? now : start;
+    const elapsedMs = Math.max(0, Math.min(tNow, end) - start);
     const elapsedDays = elapsedMs / 86_400_000;
     return Number(i.amount) * dailyRateFor(i.plan_name) * elapsedDays;
   };
@@ -167,6 +173,7 @@ function Dashboard() {
 
   return (
     <Section className="!py-10">
+      {userId && <WelcomeBonusBanner userId={userId} />}
       {demoType === "demo" && (
         <div className="mb-6 rounded-2xl border border-success/30 bg-success/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-start gap-3">

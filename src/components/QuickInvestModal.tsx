@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
-import { Loader2, Brain, Cpu, Lock, X, Sparkles, TrendingUp, Flame, Crown, Zap } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Loader2, Brain, Cpu, Lock, X, Sparkles, TrendingUp, Flame, Crown, Zap, RefreshCw } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { createInvestment } from "@/lib/wallet.functions";
+import { listPlans } from "@/lib/plans.functions";
 
 type Service = "ai_trading" | "mining" | "staking";
 
@@ -12,66 +13,98 @@ type Pkg = {
   max?: number;
   roi: string;
   duration: string;
+  durationDays: number;
   tag?: string;
   hot?: boolean;
 };
 
-const SERVICES: Record<Service, { label: string; icon: React.ReactNode; tagline: string; packages: Pkg[] }> = {
-  ai_trading: {
-    label: "AI Trading Bot",
-    icon: <Brain className="w-5 h-5" />,
-    tagline: "Neural-network strategies · 24/7 auto-execution",
-    packages: [
-      { id: "ai_quantum", name: "Quantum Arbitrage", min: 100, max: 999, roi: "+11.2% / mo", duration: "30d", tag: "Starter" },
-      { id: "ai_neural", name: "Neural Momentum", min: 1000, max: 4999, roi: "+12.8% / mo", duration: "45d", tag: "Popular", hot: true },
-      { id: "ai_deepgrid", name: "DeepGrid Scalper", min: 5000, roi: "+14.3% / mo", duration: "60d", tag: "Top Pick", hot: true },
-    ],
-  },
-  mining: {
-    label: "Cloud Mining",
-    icon: <Cpu className="w-5 h-5" />,
-    tagline: "Industrial-grade hashrate · daily payouts",
-    packages: [
-      { id: "mn_starter", name: "Mining Starter", min: 100, max: 999, roi: "1.2% / day", duration: "30d", tag: "Easy" },
-      { id: "mn_adv", name: "Mining Advanced", min: 1000, max: 4999, roi: "1.6% / day", duration: "45d", tag: "Popular" },
-      { id: "mn_prem", name: "Mining Premium", min: 5000, max: 24999, roi: "2.0% / day", duration: "60d", tag: "Pro" },
-      { id: "mn_vip", name: "Mining VIP", min: 25000, roi: "2.4% / day", duration: "90d", tag: "VIP" },
-    ],
-  },
-  staking: {
-    label: "Crypto Staking",
-    icon: <Lock className="w-5 h-5" />,
-    tagline: "Lock, stake & earn · flexible or fixed",
-    packages: [
-      { id: "st_1m", name: "1-Month Flexible", min: 50, roi: "12% APY", duration: "30d", tag: "Flex" },
-      { id: "st_3m", name: "3-Month Fixed", min: 250, roi: "18% APY", duration: "90d", tag: "Balanced" },
-      { id: "st_6m", name: "6-Month Fixed", min: 1000, roi: "26% APY", duration: "180d", tag: "Pro" },
-      { id: "st_12m", name: "12-Month VIP", min: 2500, roi: "38% APY", duration: "365d", tag: "Best" },
-    ],
-  },
+type DBPlan = {
+  id: string;
+  service: Service;
+  name: string;
+  min_amount: number | string;
+  max_amount: number | string | null;
+  daily_rate_pct: number | string | null;
+  apy_pct: number | string | null;
+  duration_days: number | null;
+  badge: string | null;
+  flex: string | null;
+  is_popular: boolean;
+};
+
+const SERVICE_META: Record<Service, { label: string; icon: React.ReactNode; tagline: string }> = {
+  ai_trading: { label: "AI Trading Bot", icon: <Brain className="w-5 h-5" />, tagline: "Neural-network strategies · 24/7 auto-execution" },
+  mining: { label: "Cloud Mining", icon: <Cpu className="w-5 h-5" />, tagline: "Industrial-grade hashrate · daily payouts" },
+  staking: { label: "Crypto Staking", icon: <Lock className="w-5 h-5" />, tagline: "Lock, stake & earn · flexible or fixed" },
 };
 
 const PRESETS = [100, 250, 500, 1000, 2500, 5000];
 
+function dbToPkg(p: DBPlan): Pkg {
+  const daily = p.daily_rate_pct == null ? null : Number(p.daily_rate_pct);
+  const apy = p.apy_pct == null ? null : Number(p.apy_pct);
+  const roi =
+    apy != null ? `${apy}% APY` :
+    daily != null ? `${daily}% / day` :
+    "—";
+  const days = p.duration_days ?? 30;
+  return {
+    id: p.id,
+    name: p.name,
+    min: Number(p.min_amount),
+    max: p.max_amount == null ? undefined : Number(p.max_amount),
+    roi,
+    duration: `${days}d`,
+    durationDays: days,
+    tag: p.badge ?? p.flex ?? undefined,
+    hot: p.is_popular,
+  };
+}
+
 export function QuickInvestForm({ onDone, compact = false }: { onDone?: () => void; compact?: boolean }) {
   const navigate = useNavigate();
   const [service, setService] = useState<Service>("ai_trading");
-  const [pkgId, setPkgId] = useState<string>("ai_neural");
+  const [packages, setPackages] = useState<Record<Service, Pkg[]>>({ ai_trading: [], mining: [], staking: [] });
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [errLoad, setErrLoad] = useState<string | null>(null);
+  const [pkgId, setPkgId] = useState<string>("");
   const [amount, setAmount] = useState<number>(1000);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
 
-  const meta = SERVICES[service];
-  const pkg = useMemo(() => meta.packages.find((p) => p.id === pkgId) ?? meta.packages[0], [meta, pkgId]);
-  const tooLow = amount < pkg.min;
-  const tooHigh = pkg.max ? amount > pkg.max : false;
+  const loadAll = async () => {
+    setStatus("loading"); setErrLoad(null);
+    try {
+      const rows = await listPlans({ data: {} });
+      const grouped: Record<Service, Pkg[]> = { ai_trading: [], mining: [], staking: [] };
+      for (const r of rows as DBPlan[]) {
+        if (r.service in grouped) grouped[r.service].push(dbToPkg(r));
+      }
+      setPackages(grouped);
+      const firstSvc = (Object.keys(grouped) as Service[]).find((s) => grouped[s].length > 0) ?? "ai_trading";
+      setService(firstSvc);
+      const hot = grouped[firstSvc].find((p) => p.hot) ?? grouped[firstSvc][0];
+      if (hot) { setPkgId(hot.id); setAmount(Math.max(amount, hot.min)); }
+      setStatus("ready");
+    } catch (e) {
+      setErrLoad(e instanceof Error ? e.message : "Failed to load packages");
+      setStatus("error");
+    }
+  };
+
+  useEffect(() => { loadAll(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+
+  const list = packages[service] ?? [];
+  const pkg = useMemo(() => list.find((p) => p.id === pkgId) ?? list[0], [list, pkgId]);
+  const tooLow = pkg ? amount < pkg.min : false;
+  const tooHigh = pkg?.max ? amount > pkg.max : false;
 
   const pickService = (s: Service) => {
     setService(s);
-    const first = SERVICES[s].packages.find((p) => p.hot) ?? SERVICES[s].packages[0];
-    setPkgId(first.id);
-    setAmount(Math.max(amount, first.min));
+    const first = (packages[s] ?? []).find((p) => p.hot) ?? (packages[s] ?? [])[0];
+    if (first) { setPkgId(first.id); setAmount((a) => Math.max(a, first.min)); }
+    else setPkgId("");
   };
 
   const pickPkg = (p: Pkg) => {
@@ -80,10 +113,10 @@ export function QuickInvestForm({ onDone, compact = false }: { onDone?: () => vo
   };
 
   const submit = async () => {
+    if (!pkg) return;
     setBusy(true); setErr(null); setOk(null);
     try {
-      const durationDays = parseInt(pkg.duration.replace(/[^0-9]/g, ""), 10) || 30;
-      await createInvestment({ data: { service, plan_name: pkg.name, amount: Number(amount), duration_days: durationDays } });
+      await createInvestment({ data: { service, plan_name: pkg.name, amount: Number(amount), duration_days: pkg.durationDays } });
       setOk(`Invested $${amount} in ${pkg.name}`);
       onDone?.();
       setTimeout(() => navigate({ to: "/wallet" }), 600);
@@ -92,19 +125,41 @@ export function QuickInvestForm({ onDone, compact = false }: { onDone?: () => vo
     } finally { setBusy(false); }
   };
 
+  if (status === "loading") {
+    return (
+      <div className="py-10 flex flex-col items-center gap-2 text-muted-foreground">
+        <Loader2 className="w-5 h-5 animate-spin text-primary" />
+        <p className="text-xs">Loading packages…</p>
+      </div>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <div className="py-8 text-center">
+        <p className="text-sm text-destructive mb-3">{errLoad}</p>
+        <button onClick={loadAll} className="inline-flex items-center gap-2 px-4 py-2 rounded-xl glass hover:bg-primary/10 text-sm">
+          <RefreshCw className="w-4 h-4" /> Try again
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div>
-      {/* Service tabs — uniform, AI badged Top Pick */}
+      {/* Service tabs */}
       <div className="grid grid-cols-3 gap-2 mb-4">
-        {(Object.keys(SERVICES) as Service[]).map((s) => {
-          const m = SERVICES[s];
+        {(Object.keys(SERVICE_META) as Service[]).map((s) => {
+          const m = SERVICE_META[s];
           const active = service === s;
           const isAI = s === "ai_trading";
+          const count = (packages[s] ?? []).length;
           return (
             <button
               key={s}
               onClick={() => pickService(s)}
-              className={`relative rounded-xl p-3 text-left transition hover-scale ${
+              disabled={count === 0}
+              className={`relative rounded-xl p-3 text-left transition hover-scale disabled:opacity-40 disabled:cursor-not-allowed ${
                 active
                   ? "border-2 border-primary bg-primary/10 glow-primary"
                   : "border border-white/10 glass hover:border-primary/40"
@@ -120,6 +175,7 @@ export function QuickInvestForm({ onDone, compact = false }: { onDone?: () => vo
               </div>
               <p className="text-xs font-bold leading-tight">{m.label}</p>
               <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">{m.tagline}</p>
+              <p className="text-[10px] text-primary mt-1">{count} package{count === 1 ? "" : "s"}</p>
             </button>
           );
         })}
@@ -127,90 +183,98 @@ export function QuickInvestForm({ onDone, compact = false }: { onDone?: () => vo
 
       {/* Packages */}
       <label className="block text-xs uppercase tracking-widest text-muted-foreground mb-2 inline-flex items-center gap-1">
-        <Zap className="w-3 h-3 text-primary" /> {meta.label} packages
+        <Zap className="w-3 h-3 text-primary" /> {SERVICE_META[service].label} packages
       </label>
-      <div className={`grid sm:grid-cols-2 gap-2 mb-4 ${compact ? "max-h-[220px]" : "max-h-[260px]"} overflow-y-auto pr-1`}>
-        {meta.packages.map((p) => {
-          const active = p.id === pkgId;
-          return (
-            <button
-              key={p.id}
-              onClick={() => pickPkg(p)}
-              className={`relative rounded-xl p-3 text-left transition hover-scale ${
-                active
-                  ? "border-2 border-primary bg-primary/10 glow-primary"
-                  : "border border-white/10 glass hover:border-primary/40"
-              }`}
-            >
-              {p.hot && (
-                <span className="absolute -top-2 right-2 text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-[image:var(--gradient-gold)] text-gold-foreground font-bold shadow inline-flex items-center gap-1">
-                  <Flame className="w-2.5 h-2.5" /> Hot
-                </span>
-              )}
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-sm font-bold">{p.name}</p>
-                {p.tag && (
-                  <span className="text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-primary/15 text-primary font-bold">
-                    {p.tag}
+
+      {list.length === 0 ? (
+        <p className="text-sm text-muted-foreground py-8 text-center glass rounded-xl">No packages available for this service yet.</p>
+      ) : (
+        <div className={`grid sm:grid-cols-2 gap-2 mb-4 ${compact ? "max-h-[220px]" : "max-h-[260px]"} overflow-y-auto pr-1`}>
+          {list.map((p) => {
+            const active = p.id === pkgId;
+            return (
+              <button
+                key={p.id}
+                onClick={() => pickPkg(p)}
+                className={`relative rounded-xl p-3 text-left transition hover-scale ${
+                  active
+                    ? "border-2 border-primary bg-primary/10 glow-primary"
+                    : "border border-white/10 glass hover:border-primary/40"
+                }`}
+              >
+                {p.hot && (
+                  <span className="absolute -top-2 right-2 text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-[image:var(--gradient-gold)] text-gold-foreground font-bold shadow inline-flex items-center gap-1">
+                    <Flame className="w-2.5 h-2.5" /> Hot
                   </span>
                 )}
-              </div>
-              <p className="text-base font-extrabold mt-1 text-primary">{p.roi}</p>
-              <div className="flex items-center justify-between text-[11px] text-muted-foreground mt-1">
-                <span>${p.min.toLocaleString()}{p.max ? ` – $${p.max.toLocaleString()}` : "+"}</span>
-                <span className="inline-flex items-center gap-1"><Crown className="w-3 h-3" /> {p.duration}</span>
-              </div>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Amount */}
-      <label className="block text-xs uppercase tracking-widest text-muted-foreground mb-2">Amount (USDT)</label>
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-3">
-        {PRESETS.map((v) => (
-          <button
-            key={v}
-            onClick={() => setAmount(v)}
-            disabled={v < pkg.min || (pkg.max ? v > pkg.max : false)}
-            className={`rounded-lg py-2 text-xs font-semibold transition disabled:opacity-30 disabled:cursor-not-allowed ${
-              amount === v ? "bg-[image:var(--gradient-primary)] text-primary-foreground glow-primary" : "glass hover:bg-primary/10"
-            }`}
-          >
-            ${v}
-          </button>
-        ))}
-      </div>
-      <input
-        type="number"
-        min={pkg.min}
-        max={pkg.max}
-        step="1"
-        value={amount}
-        onChange={(e) => setAmount(Number(e.target.value) || 0)}
-        className="w-full rounded-xl glass px-4 py-3 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-primary/40"
-      />
-      <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-        <TrendingUp className="w-3 h-3 text-success" />
-        {pkg.name} · min ${pkg.min}{pkg.max ? ` · max $${pkg.max.toLocaleString()}` : ""} · {pkg.roi}
-      </p>
-      {(tooLow || tooHigh) && (
-        <p className="text-xs text-destructive mt-1">
-          {tooLow ? `Minimum for ${pkg.name} is $${pkg.min}` : `Maximum for ${pkg.name} is $${pkg.max?.toLocaleString()}`}
-        </p>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-bold">{p.name}</p>
+                  {p.tag && (
+                    <span className="text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-primary/15 text-primary font-bold">
+                      {p.tag}
+                    </span>
+                  )}
+                </div>
+                <p className="text-base font-extrabold mt-1 text-primary">{p.roi}</p>
+                <div className="flex items-center justify-between text-[11px] text-muted-foreground mt-1">
+                  <span>${p.min.toLocaleString()}{p.max ? ` – $${p.max.toLocaleString()}` : "+"}</span>
+                  <span className="inline-flex items-center gap-1"><Crown className="w-3 h-3" /> {p.duration}</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
       )}
 
-      {err && <p className="text-sm text-destructive mt-3">{err}</p>}
-      {ok && <p className="text-sm text-success mt-3">{ok}</p>}
+      {pkg && (
+        <>
+          <label className="block text-xs uppercase tracking-widest text-muted-foreground mb-2">Amount (USDT)</label>
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 mb-3">
+            {PRESETS.map((v) => (
+              <button
+                key={v}
+                onClick={() => setAmount(v)}
+                disabled={v < pkg.min || (pkg.max ? v > pkg.max : false)}
+                className={`rounded-lg py-2 text-xs font-semibold transition disabled:opacity-30 disabled:cursor-not-allowed ${
+                  amount === v ? "bg-[image:var(--gradient-primary)] text-primary-foreground glow-primary" : "glass hover:bg-primary/10"
+                }`}
+              >
+                ${v}
+              </button>
+            ))}
+          </div>
+          <input
+            type="number"
+            min={pkg.min}
+            max={pkg.max}
+            step="1"
+            value={amount}
+            onChange={(e) => setAmount(Number(e.target.value) || 0)}
+            className="w-full rounded-xl glass px-4 py-3 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
+          <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+            <TrendingUp className="w-3 h-3 text-success" />
+            {pkg.name} · min ${pkg.min}{pkg.max ? ` · max $${pkg.max.toLocaleString()}` : ""} · {pkg.roi}
+          </p>
+          {(tooLow || tooHigh) && (
+            <p className="text-xs text-destructive mt-1">
+              {tooLow ? `Minimum for ${pkg.name} is $${pkg.min}` : `Maximum for ${pkg.name} is $${pkg.max?.toLocaleString()}`}
+            </p>
+          )}
 
-      <button
-        onClick={submit}
-        disabled={busy || tooLow || tooHigh}
-        className="mt-4 w-full rounded-xl py-3 text-sm font-bold bg-[image:var(--gradient-gold)] text-gold-foreground glow-gold disabled:opacity-60 inline-flex items-center justify-center gap-2 hover:opacity-90 transition"
-      >
-        {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-        Confirm ${amount} · {pkg.name}
-      </button>
+          {err && <p className="text-sm text-destructive mt-3">{err}</p>}
+          {ok && <p className="text-sm text-success mt-3">{ok}</p>}
+
+          <button
+            onClick={submit}
+            disabled={busy || tooLow || tooHigh}
+            className="mt-4 w-full rounded-xl py-3 text-sm font-bold bg-[image:var(--gradient-gold)] text-gold-foreground glow-gold disabled:opacity-60 inline-flex items-center justify-center gap-2 hover:opacity-90 transition"
+          >
+            {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+            Confirm ${amount} · {pkg.name}
+          </button>
+        </>
+      )}
     </div>
   );
 }

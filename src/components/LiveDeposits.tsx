@@ -31,28 +31,29 @@ function fmt(n: number) {
 }
 
 export function LiveDeposits() {
-  // Live chart points: dollars deposited per minute (last 30 minutes)
+  const [mounted, setMounted] = useState(false);
+  // Use a deterministic SSR seed; randomize after mount to avoid hydration mismatch.
   const [points, setPoints] = useState<number[]>(() =>
-    Array.from({ length: 30 }, (_, i) => 12000 + Math.round(Math.sin(i / 3) * 3000 + Math.random() * 4000)),
+    Array.from({ length: 30 }, (_, i) => 12000 + Math.round(Math.sin(i / 3) * 3000 + i * 50)),
   );
   const [feed, setFeed] = useState<Deposit[]>(() =>
     SEED.slice(0, 6).map((s, i) => ({ ...s, id: i, ago: `${i + 1}s ago` })),
   );
   const [totalToday, setTotalToday] = useState(2_184_320);
 
+  useEffect(() => { setMounted(true); }, []);
+
   useEffect(() => {
+    if (!mounted) return;
     const t = setInterval(() => {
-      setPoints((p) => {
-        const next = [...p.slice(1), 10000 + Math.round(Math.random() * 9000)];
-        return next;
-      });
+      setPoints((p) => [...p.slice(1), 10000 + Math.round(Math.random() * 9000)]);
       const seed = SEED[Math.floor(Math.random() * SEED.length)];
       const d: Deposit = { ...seed, id: Date.now(), ago: "just now" };
       setFeed((f) => [d, ...f.slice(0, 5)].map((x, i) => ({ ...x, ago: i === 0 ? "just now" : `${i * 7}s ago` })));
       setTotalToday((v) => v + seed.amount);
     }, 2200);
     return () => clearInterval(t);
-  }, []);
+  }, [mounted]);
 
   const total24h = useMemo(() => points.reduce((a, b) => a + b, 0) * 48, [points]);
 

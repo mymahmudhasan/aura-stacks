@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WithdrawRouteImport } from './routes/withdraw'
 import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SupportRouteImport } from './routes/support'
@@ -34,6 +35,11 @@ import { Route as AdminSmsTestRouteImport } from './routes/admin.sms-test'
 import { Route as AdminResetPasswordRouteImport } from './routes/admin.reset-password'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
 
+const WithdrawRoute = WithdrawRouteImport.update({
+  id: '/withdraw',
+  path: '/withdraw',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WalletRoute = WalletRouteImport.update({
   id: '/wallet',
   path: '/wallet',
@@ -177,6 +183,7 @@ export interface FileRoutesByFullPath {
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/wallet': typeof WalletRoute
+  '/withdraw': typeof WithdrawRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/reset-password': typeof AdminResetPasswordRoute
   '/admin/sms-test': typeof AdminSmsTestRoute
@@ -203,6 +210,7 @@ export interface FileRoutesByTo {
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/wallet': typeof WalletRoute
+  '/withdraw': typeof WithdrawRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/reset-password': typeof AdminResetPasswordRoute
   '/admin/sms-test': typeof AdminSmsTestRoute
@@ -230,6 +238,7 @@ export interface FileRoutesById {
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/wallet': typeof WalletRoute
+  '/withdraw': typeof WithdrawRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/reset-password': typeof AdminResetPasswordRoute
   '/admin/sms-test': typeof AdminSmsTestRoute
@@ -258,6 +267,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/terms'
     | '/wallet'
+    | '/withdraw'
     | '/admin/login'
     | '/admin/reset-password'
     | '/admin/sms-test'
@@ -284,6 +294,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/terms'
     | '/wallet'
+    | '/withdraw'
     | '/admin/login'
     | '/admin/reset-password'
     | '/admin/sms-test'
@@ -310,6 +321,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/terms'
     | '/wallet'
+    | '/withdraw'
     | '/admin/login'
     | '/admin/reset-password'
     | '/admin/sms-test'
@@ -337,10 +349,18 @@ export interface RootRouteChildren {
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
   WalletRoute: typeof WalletRoute
+  WithdrawRoute: typeof WithdrawRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/withdraw': {
+      id: '/withdraw'
+      path: '/withdraw'
+      fullPath: '/withdraw'
+      preLoaderRoute: typeof WithdrawRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/wallet': {
       id: '/wallet'
       path: '/wallet'
@@ -548,6 +568,7 @@ const rootRouteChildren: RootRouteChildren = {
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
   WalletRoute: WalletRoute,
+  WithdrawRoute: WithdrawRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

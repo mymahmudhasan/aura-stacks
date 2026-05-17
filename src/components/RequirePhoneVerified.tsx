@@ -25,6 +25,23 @@ export function RequirePhoneVerified({ children }: { children: React.ReactNode }
       .eq("user_id", user.id)
       .maybeSingle();
 
+    // Auto-stamp email_verified_at after the user clicks a magic link
+    // (Supabase sets email_confirmed_at on the auth user once the link is opened).
+    if (
+      data &&
+      data.account_type === "real" &&
+      !data.email_verified_at &&
+      !data.phone_verified_at &&
+      user.email_confirmed_at
+    ) {
+      await supabase
+        .from("customers")
+        .update({ email_verified_at: new Date().toISOString() })
+        .eq("user_id", user.id);
+      setStatus({ state: "ok" });
+      return;
+    }
+
     const verified = !!(data?.phone_verified_at || data?.email_verified_at);
     if (!data || data.account_type !== "real" || verified) {
       setStatus({ state: "ok" });
@@ -109,10 +126,13 @@ function VerifyRequired({
         if (!/^\S+@\S+\.\S+$/.test(email)) throw new Error("Enter a valid email address");
         const { error } = await supabase.auth.signInWithOtp({
           email,
-          options: { shouldCreateUser: false },
+          options: {
+            shouldCreateUser: false,
+            emailRedirectTo: typeof window !== "undefined" ? window.location.href : undefined,
+          },
         });
         if (error) throw error;
-        setInfo(`Email code sent to ${email}.`);
+        setInfo(`Verification link sent to ${email}. Open it on this device to unlock your dashboard.`);
       }
       setSent(true);
     } catch (err) {
@@ -229,13 +249,36 @@ function VerifyRequired({
               Send verification code
             </button>
           </div>
+        ) : method === "email" ? (
+          <div className="mt-5 space-y-3 text-center">
+            <p className="text-sm text-muted-foreground">
+              We sent a verification link to{" "}
+              <span className="text-foreground font-medium">{email}</span>. Open
+              your inbox and tap the link on this device to unlock your dashboard.
+            </p>
+            {info && <p className="text-sm text-success">{info}</p>}
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            <button
+              onClick={sendCode}
+              disabled={loading}
+              className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border text-foreground font-medium inline-flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+              Resend link
+            </button>
+            <button
+              type="button"
+              onClick={() => { setSent(false); setCode(""); }}
+              className="w-full text-xs text-muted-foreground hover:text-foreground inline-flex items-center justify-center gap-1"
+            >
+              <ArrowLeft className="w-3 h-3" /> Use a different email
+            </button>
+          </div>
         ) : (
           <form onSubmit={verify} className="mt-5 space-y-3">
             <p className="text-xs text-center text-muted-foreground">
               Code sent to{" "}
-              <span className="text-foreground font-medium">
-                {method === "phone" ? e164(phone) : email}
-              </span>
+              <span className="text-foreground font-medium">{e164(phone)}</span>
             </p>
             <input
               required
@@ -261,7 +304,7 @@ function VerifyRequired({
               onClick={() => { setSent(false); setCode(""); }}
               className="w-full text-xs text-muted-foreground hover:text-foreground inline-flex items-center justify-center gap-1"
             >
-              <ArrowLeft className="w-3 h-3" /> Use a different {method === "phone" ? "number" : "email"}
+              <ArrowLeft className="w-3 h-3" /> Use a different number
             </button>
           </form>
         )}

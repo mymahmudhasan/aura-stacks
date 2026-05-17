@@ -97,9 +97,9 @@ function DepositPage() {
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const trimmedSender = fromAddress.trim();
-    if (!senderRegex.test(trimmedSender)) {
-      setMsg({ ok: false, text: isBinance ? "Enter a valid Binance UID." : `Enter a valid ${network} address.` });
+    setSenderTouched(true);
+    if (!senderValid) {
+      setMsg({ ok: false, text: senderErrorText });
       return;
     }
     setSubmitting(true);

@@ -215,3 +215,43 @@ export const updateBinanceUid = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true, binance_uid: data.binance_uid };
   });
+
+export const getMyProfile = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+    const { data } = await supabase
+      .from("customers")
+      .select("full_name,email,phone,country,binance_uid,binance_wallet_address,preferred_coin,account_type,status")
+      .eq("user_id", userId)
+      .maybeSingle();
+    return data;
+  });
+
+export const updateMyProfile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      full_name: z.string().trim().min(1).max(120).optional(),
+      phone: z.string().trim().min(4).max(32).regex(/^[+0-9 ()\-]+$/).optional().or(z.literal("")),
+      country: z.string().trim().max(80).optional().or(z.literal("")),
+      binance_uid: z.string().trim().min(3).max(64).regex(/^[a-zA-Z0-9_-]+$/).optional().or(z.literal("")),
+      binance_wallet_address: z.string().trim().min(6).max(120).regex(/^[a-zA-Z0-9]+$/).optional().or(z.literal("")),
+      preferred_coin: z.enum(["USDT", "BTC", "ETH", "BNB"]).optional(),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+    const patch: Record<string, string | null> = {};
+    for (const [k, v] of Object.entries(data)) {
+      if (v === undefined) continue;
+      patch[k] = v === "" ? null : (v as string);
+    }
+    if (Object.keys(patch).length === 0) return { ok: true };
+    const { error } = await supabaseAdmin
+      .from("customers")
+      .update(patch)
+      .eq("user_id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });

@@ -1,9 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Lock, TrendingUp, Timer, Layers, Gift, Zap, Sparkles, Flame, BadgePercent, Crown } from "lucide-react";
 import { CTA, GlassCard, PageHero, Section } from "@/components/ui-bits";
+import { InvestButton } from "@/components/InvestButton";
 import { ServiceReferral } from "@/components/ServiceReferral";
 import { StakingTimeline } from "@/components/StakingTimeline";
 import { StakingPool } from "@/components/StakingPool";
+import { listPlans } from "@/lib/plans.functions";
 import stakingImg from "@/assets/staking-visual.webp";
 import vaultImg from "@/assets/staking-vault.webp";
 import poolImg from "@/assets/staking-pool.webp";
@@ -19,12 +22,12 @@ export const Route = createFileRoute("/staking")({
   }),
 });
 
-const tiers = [
-  { d: "1 Month", apy: "12%", min: "$50", flex: "Flexible" },
-  { d: "3 Months", apy: "18%", min: "$250", flex: "Fixed" },
-  { d: "6 Months", apy: "26%", min: "$1,000", flex: "Fixed" },
-  { d: "12 Months", apy: "38%", min: "$2,500", flex: "Fixed", best: true },
-];
+type DBPlan = {
+  id: string; name: string;
+  min_amount: number | string; apy_pct: number | string | null;
+  duration_days: number | null; flex: string | null;
+  is_popular: boolean; badge: string | null;
+};
 
 const offers = [
   {

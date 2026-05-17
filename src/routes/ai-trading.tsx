@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Brain, Bot, LineChart, ShieldCheck, Sparkles, Activity } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Brain, Bot, LineChart, ShieldCheck, Sparkles, Activity, Zap } from "lucide-react";
 import { CTA, GlassCard, PageHero, Section } from "@/components/ui-bits";
+import { InvestButton } from "@/components/InvestButton";
 import { ServiceReferral } from "@/components/ServiceReferral";
 import { LiveForexChart } from "@/components/LiveForexChart";
+import { listPlans } from "@/lib/plans.functions";
 import aiImg from "@/assets/ai-trader-bot.webp";
 
 export const Route = createFileRoute("/ai-trading")({
@@ -15,7 +18,18 @@ export const Route = createFileRoute("/ai-trading")({
   }),
 });
 
+type DBPlan = {
+  id: string; name: string;
+  min_amount: number | string; max_amount: number | string | null;
+  daily_rate_pct: number | string | null; duration_days: number | null;
+  total_roi_pct: number | string | null; is_popular: boolean; badge: string | null;
+};
+
 function AITrading() {
+  const [plans, setPlans] = useState<DBPlan[]>([]);
+  useEffect(() => {
+    listPlans({ data: { service: "ai_trading" } }).then((d) => setPlans(d as unknown as DBPlan[])).catch(() => {});
+  }, []);
   return (
     <>
       <PageHero
@@ -83,6 +97,24 @@ function AITrading() {
                 <div><p className="text-xs text-muted-foreground">Avg / mo</p><p className="text-xl font-bold text-success">{b.monthly}</p></div>
               </div>
             </GlassCard>
+          ))}
+        </div>
+      </Section>
+
+      <Section eyebrow="Plans" title={<>Activate your <span className="gradient-text">AI bot plan</span></>} subtitle="Pick a plan and let our AI trader work for you 24/7. Daily profits credited to your wallet.">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {plans.map((p) => (
+            <div key={p.id} className={`relative rounded-2xl p-6 transition ${p.is_popular ? "glass-strong border-primary/40 glow-primary" : "glass"}`}>
+              {(p.is_popular || p.badge) && <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-medium bg-[image:var(--gradient-gold)] text-gold-foreground">{p.badge || "Most popular"}</span>}
+              <div className="flex items-center gap-2 text-primary"><Bot className="w-4 h-4" /><span className="text-xs uppercase tracking-widest">{p.name}</span></div>
+              <p className="mt-4 text-3xl font-bold gradient-text">{p.daily_rate_pct ?? "—"}%<span className="text-sm font-normal text-muted-foreground">/day</span></p>
+              <div className="mt-5 space-y-2.5 text-sm">
+                <div className="flex justify-between"><span className="text-muted-foreground">Investment</span><span className="font-medium">${Number(p.min_amount).toLocaleString()}{p.max_amount ? ` – $${Number(p.max_amount).toLocaleString()}` : ""}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Duration</span><span className="font-medium">{p.duration_days ? `${p.duration_days} days` : "—"}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Total ROI</span><span className="font-medium">{p.total_roi_pct != null ? `${p.total_roi_pct}%` : "—"}</span></div>
+              </div>
+              <InvestButton service="ai_trading" planName={p.name} minAmount={Number(p.min_amount)} variant={p.is_popular ? "gold" : "ghost"} className="w-full mt-6" />
+            </div>
           ))}
         </div>
       </Section>

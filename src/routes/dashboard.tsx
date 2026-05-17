@@ -8,7 +8,7 @@ import { CTA, GlassCard, Section } from "@/components/ui-bits";
 import { supabase } from "@/integrations/supabase/client";
 import { RequirePhoneVerified } from "@/components/RequirePhoneVerified";
 import { getMyWallet, getMyInvestments, getMyDeposits, getMyWithdrawals } from "@/lib/wallet.functions";
-import { QuickInvestModal } from "@/components/QuickInvestModal";
+import { QuickInvestForm } from "@/components/QuickInvestModal";
 
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: async () => {
@@ -53,7 +53,7 @@ function Dashboard() {
   const [deps, setDeps] = useState<Dep[]>([]);
   const [wds, setWds] = useState<Wd[]>([]);
   const [accountId, setAccountId] = useState<string>("");
-  const [quickOpen, setQuickOpen] = useState(false);
+  
 
   const load = useCallback(async (initial = false) => {
     if (initial) setLoading(true); else setRefreshing(true);
@@ -223,32 +223,15 @@ function Dashboard() {
                   <p className="text-xs text-muted-foreground">{activeInvs.length} running · live updates</p>
                 </div>
               </div>
-              <button onClick={() => setQuickOpen(true)} className="rounded-xl px-4 py-2 text-sm font-semibold inline-flex items-center gap-2 bg-[image:var(--gradient-primary)] text-primary-foreground glow-primary hover:opacity-90 transition hover-scale">
-                <Sparkles className="w-4 h-4" /> Quick Invest
-              </button>
+              <span className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-[image:var(--gradient-gold)] text-gold-foreground font-bold shadow inline-flex items-center gap-1">
+                <Sparkles className="w-3 h-3" /> Quick Invest
+              </span>
             </div>
 
-            {/* Featured AI Trading invest card — always shown, top priority */}
-            <button onClick={() => setQuickOpen(true)} className="group relative block w-full text-left rounded-xl overflow-hidden border border-primary/40 bg-[image:var(--gradient-aurora)]/20 p-4 mb-4 hover:border-primary transition">
-              <div className="absolute inset-0 bg-[image:var(--gradient-primary)] opacity-10 group-hover:opacity-20 transition" />
-              <div className="relative flex items-center justify-between gap-4 flex-wrap">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-[image:var(--gradient-primary)] text-primary-foreground flex items-center justify-center shadow-[var(--shadow-glow)] animate-pulse">
-                    <Brain className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-bold text-base">AI Trading Bot</p>
-                      <span className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-gold/20 text-gold font-bold">Top Pick</span>
-                    </div>
-                    <p className="text-xs text-muted-foreground">Up to <span className="text-success font-semibold">+14.3% / mo</span> · Neural strategies, 24/7</p>
-                  </div>
-                </div>
-                <span className="text-sm font-semibold text-primary inline-flex items-center gap-1 group-hover:translate-x-1 transition">
-                  Invest now <ArrowUpRight className="w-4 h-4" />
-                </span>
-              </div>
-            </button>
+            {/* Inline Quick Invest — all features embedded */}
+            <div className="mb-5 rounded-xl border border-primary/30 bg-background/60 p-4">
+              <QuickInvestForm />
+            </div>
 
             {activeInvs.length === 0 ? (
               <div className="text-center py-6 rounded-xl glass">
@@ -337,7 +320,7 @@ function Dashboard() {
       <div className="mt-8">
         <CTA to="/mining" variant="gold">Discover new plans</CTA>
       </div>
-      <QuickInvestModal open={quickOpen} onClose={() => setQuickOpen(false)} />
+      
     </Section>
   );
 }

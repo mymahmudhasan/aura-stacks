@@ -28,9 +28,16 @@ type DBPlan = {
 
 function AITrading() {
   const [plans, setPlans] = useState<DBPlan[]>([]);
-  useEffect(() => {
-    listPlans({ data: { service: "ai_trading" } }).then((d) => setPlans(d as unknown as DBPlan[])).catch(() => {});
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [errMsg, setErrMsg] = useState<string | undefined>();
+  const load = useCallback(() => {
+    setStatus("loading");
+    setErrMsg(undefined);
+    listPlans({ data: { service: "ai_trading" } })
+      .then((d) => { setPlans(d as unknown as DBPlan[]); setStatus("ready"); })
+      .catch((e: unknown) => { setErrMsg(e instanceof Error ? e.message : undefined); setStatus("error"); });
   }, []);
+  useEffect(() => { load(); }, [load]);
   return (
     <>
       <PageHero

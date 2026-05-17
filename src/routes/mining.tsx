@@ -64,17 +64,17 @@ function Mining() {
       >
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
           {plans.map((p) => (
-            <div key={p.name} className={`relative rounded-2xl p-6 transition ${p.popular ? "glass-strong border-primary/40 glow-primary" : "glass"}`}>
-              {p.popular && <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-medium bg-[image:var(--gradient-gold)] text-gold-foreground">Most popular</span>}
+            <div key={p.id} className={`relative rounded-2xl p-6 transition ${p.is_popular ? "glass-strong border-primary/40 glow-primary" : "glass"}`}>
+              {(p.is_popular || p.badge) && <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-medium bg-[image:var(--gradient-gold)] text-gold-foreground">{p.badge || "Most popular"}</span>}
               <div className="flex items-center gap-2 text-primary"><Cpu className="w-4 h-4" /><span className="text-xs uppercase tracking-widest">{p.name}</span></div>
-              <p className="mt-4 text-3xl font-bold gradient-text">{p.daily}<span className="text-sm font-normal text-muted-foreground">/day</span></p>
+              <p className="mt-4 text-3xl font-bold gradient-text">{p.daily_rate_pct ?? "—"}%<span className="text-sm font-normal text-muted-foreground">/day</span></p>
               <div className="mt-5 space-y-2.5 text-sm">
-                <Row label="Investment" value={`${p.min} – ${p.max}`} />
-                <Row label="Duration" value={p.duration} />
-                <Row label="Total ROI" value={p.roi} />
+                <Row label="Investment" value={`${money(p.min_amount)}${p.max_amount ? ` – ${money(p.max_amount)}` : ""}`} />
+                <Row label="Duration" value={p.duration_days ? `${p.duration_days} days` : "—"} />
+                <Row label="Total ROI" value={p.total_roi_pct != null ? `${p.total_roi_pct}%` : "—"} />
                 <Row label="Distribution" value="Daily (UTC-5)" />
               </div>
-              <InvestButton service="mining" planName={`Mining ${p.name}`} minAmount={parseInt(p.min.replace(/\D/g, ""))} variant={p.popular ? "gold" : "ghost"} className="w-full mt-6" />
+              <InvestButton service="mining" planName={p.name} minAmount={Number(p.min_amount)} variant={p.is_popular ? "gold" : "ghost"} className="w-full mt-6" />
             </div>
           ))}
         </div>

@@ -48,7 +48,6 @@ function Admin() {
         .from("user_roles").select("role")
         .eq("user_id", sess.session.user.id).eq("role", "admin").maybeSingle();
       if (!role) {
-        await supabase.auth.signOut();
         return navigate({ to: "/dashboard" });
       }
       setAuthorized(true);

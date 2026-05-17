@@ -53,6 +53,7 @@ function Dashboard() {
   const [deps, setDeps] = useState<Dep[]>([]);
   const [wds, setWds] = useState<Wd[]>([]);
   const [accountId, setAccountId] = useState<string>("");
+  const [quickOpen, setQuickOpen] = useState(false);
 
   const load = useCallback(async (initial = false) => {
     if (initial) setLoading(true); else setRefreshing(true);

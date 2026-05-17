@@ -44,18 +44,16 @@ export function LiveDeposits() {
   useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
+    if (!mounted) return;
     const t = setInterval(() => {
-      setPoints((p) => {
-        const next = [...p.slice(1), 10000 + Math.round(Math.random() * 9000)];
-        return next;
-      });
+      setPoints((p) => [...p.slice(1), 10000 + Math.round(Math.random() * 9000)]);
       const seed = SEED[Math.floor(Math.random() * SEED.length)];
       const d: Deposit = { ...seed, id: Date.now(), ago: "just now" };
       setFeed((f) => [d, ...f.slice(0, 5)].map((x, i) => ({ ...x, ago: i === 0 ? "just now" : `${i * 7}s ago` })));
       setTotalToday((v) => v + seed.amount);
     }, 2200);
     return () => clearInterval(t);
-  }, []);
+  }, [mounted]);
 
   const total24h = useMemo(() => points.reduce((a, b) => a + b, 0) * 48, [points]);
 

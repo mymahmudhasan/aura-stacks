@@ -121,6 +121,7 @@ export const createInvestment = createServerFn({ method: "POST" })
       service: z.enum(["ai_trading", "mining", "staking"]),
       plan_name: z.string().trim().min(1).max(100),
       amount: z.number().positive().max(1_000_000),
+      duration_days: z.number().int().min(1).max(3650).optional(),
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -149,9 +150,16 @@ export const createInvestment = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
 
+    const startedAt = new Date();
+    const days = data.duration_days ?? 30;
+    const endsAt = new Date(startedAt.getTime() + days * 24 * 60 * 60 * 1000);
     const { data: activated, error: actErr } = await supabase
       .from("investments")
-      .update({ status: "active", started_at: new Date().toISOString() })
+      .update({
+        status: "active",
+        started_at: startedAt.toISOString(),
+        ends_at: endsAt.toISOString(),
+      })
       .eq("id", row.id)
       .select()
       .single();

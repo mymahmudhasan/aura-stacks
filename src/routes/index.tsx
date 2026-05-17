@@ -173,6 +173,7 @@ function Home() {
 
       {/* LIVE DEPOSITS — investor proof */}
       <LiveDeposits />
+      <LiveEarningsTicker />
 
       {/* AI TRADING DEEP-DIVE */}
       <Section

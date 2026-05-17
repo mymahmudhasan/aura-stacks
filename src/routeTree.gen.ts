@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as StakingRouteImport } from './routes/staking'
@@ -32,6 +33,11 @@ import { Route as AdminSmsTestRouteImport } from './routes/admin.sms-test'
 import { Route as AdminResetPasswordRouteImport } from './routes/admin.reset-password'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
 
+const WalletRoute = WalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -163,6 +169,7 @@ export interface FileRoutesByFullPath {
   '/staking': typeof StakingRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/wallet': typeof WalletRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/reset-password': typeof AdminResetPasswordRoute
   '/admin/sms-test': typeof AdminSmsTestRoute
@@ -187,6 +194,7 @@ export interface FileRoutesByTo {
   '/staking': typeof StakingRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/wallet': typeof WalletRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/reset-password': typeof AdminResetPasswordRoute
   '/admin/sms-test': typeof AdminSmsTestRoute
@@ -212,6 +220,7 @@ export interface FileRoutesById {
   '/staking': typeof StakingRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/wallet': typeof WalletRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/reset-password': typeof AdminResetPasswordRoute
   '/admin/sms-test': typeof AdminSmsTestRoute
@@ -238,6 +247,7 @@ export interface FileRouteTypes {
     | '/staking'
     | '/support'
     | '/terms'
+    | '/wallet'
     | '/admin/login'
     | '/admin/reset-password'
     | '/admin/sms-test'
@@ -262,6 +272,7 @@ export interface FileRouteTypes {
     | '/staking'
     | '/support'
     | '/terms'
+    | '/wallet'
     | '/admin/login'
     | '/admin/reset-password'
     | '/admin/sms-test'
@@ -286,6 +297,7 @@ export interface FileRouteTypes {
     | '/staking'
     | '/support'
     | '/terms'
+    | '/wallet'
     | '/admin/login'
     | '/admin/reset-password'
     | '/admin/sms-test'
@@ -311,10 +323,18 @@ export interface RootRouteChildren {
   StakingRoute: typeof StakingRoute
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
+  WalletRoute: typeof WalletRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/wallet': {
+      id: '/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof WalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
@@ -506,7 +526,18 @@ const rootRouteChildren: RootRouteChildren = {
   StakingRoute: StakingRoute,
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
+  WalletRoute: WalletRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

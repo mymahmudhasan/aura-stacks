@@ -11,8 +11,8 @@ export const Route = createFileRoute("/deposit")({
   component: DepositPage,
   head: () => ({ meta: [{ title: "Deposit — Synexis" }] }),
   beforeLoad: async () => {
-    const { data } = await supabase.auth.getUser();
-    if (!data.user) throw redirect({ to: "/login" });
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) throw redirect({ to: "/login" });
   },
 });
 

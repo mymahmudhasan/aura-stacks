@@ -126,6 +126,12 @@ function Admin() {
             </button>
           );
         })}
+        <Link
+          to="/admin/operations"
+          className="shrink-0 inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition border bg-gold/15 border-gold/40 text-gold hover:bg-gold/25"
+        >
+          <Wallet className="w-4 h-4" /> Deposits & Withdrawals
+        </Link>
       </div>
 
       {tab === "overview" && <OverviewTab ov={overview} recentCustomers={recentCustomers} recentTickets={recentTickets} onJump={setTab} />}

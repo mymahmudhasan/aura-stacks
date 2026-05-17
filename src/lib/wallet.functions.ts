@@ -57,9 +57,28 @@ export const createDeposit = createServerFn({ method: "POST" })
       amount: z.number().positive().max(1_000_000),
       network: z.enum(["TRC20", "BEP20", "ERC20", "BINANCE_PAY"]),
       tx_hash: z.string().trim().min(4).max(200),
-      from_address: z.string().trim().max(200).optional(),
+      from_address: z.string().trim().min(3).max(200),
       screenshot_url: z.string().url().max(500).optional(),
-    }).parse(input),
+    })
+      .superRefine((val, ctx) => {
+        const a = val.from_address;
+        const ok =
+          (val.network === "TRC20" && /^T[a-zA-Z0-9]{33}$/.test(a)) ||
+          (val.network === "BEP20" && /^0x[a-fA-F0-9]{40}$/.test(a)) ||
+          (val.network === "ERC20" && /^0x[a-fA-F0-9]{40}$/.test(a)) ||
+          (val.network === "BINANCE_PAY" && /^[a-zA-Z0-9_-]{3,64}$/.test(a));
+        if (!ok) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["from_address"],
+            message:
+              val.network === "BINANCE_PAY"
+                ? "Invalid Binance UID format"
+                : `Invalid ${val.network} address format`,
+          });
+        }
+      })
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
@@ -78,6 +97,14 @@ export const createDeposit = createServerFn({ method: "POST" })
       .select()
       .single();
     if (error) throw new Error(error.message);
+
+    // Remember sender for next time
+    const patch: Record<string, string | null> =
+      data.network === "BINANCE_PAY"
+        ? { binance_uid: data.from_address }
+        : { last_sender_address: data.from_address, last_sender_network: data.network };
+    await supabaseAdmin.from("customers").update(patch as never).eq("user_id", userId);
+
     return row;
   });
 
@@ -268,7 +295,7 @@ export const getMyProfile = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const { data } = await supabase
       .from("customers")
-      .select("full_name,email,phone,country,binance_uid,binance_wallet_address,preferred_coin,account_type,status")
+      .select("full_name,email,phone,country,binance_uid,binance_wallet_address,preferred_coin,account_type,status,last_sender_address,last_sender_network")
       .eq("user_id", userId)
       .maybeSingle();
     return data;

@@ -1,47 +1,59 @@
-## Plan — 4 dashboard / site polish fixes
+# Plan
 
-### 1. Show 6 decimal digits on dashboard amounts
-File: `src/routes/dashboard.tsx`
+## 1. Simplify onboarding checklist (dashboard header)
 
-- Update the 5 Stat cards (Total Balance, Portfolio Equity, Earnings Today, Earnings + Invested, Pending Withdrawals) to format with 6 fraction digits: `toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 })`.
-- Apply the same 6‑digit formatting to the "+$X earned" live accrual badge inside the featured Active Package card (line 294) so the ticker visibly increments cent‑by‑cent.
+In `src/routes/dashboard.tsx`, reduce the 4-step onboarding to **2 steps**:
 
-### 2. Make the Active Package sub‑line understandable
-File: `src/routes/dashboard.tsx` (line 277‑279)
+1. **Make first deposit** → `/deposit` (complete when `hasDeposit`)
+2. **Choose an investment package** → `/mining` (complete when user has any active investment in mining, staking, or ai_trading)
 
-Current: `Staking · $50 @ 1.000% / Day`
-New, plain‑English, multi‑chip layout:
-> **Staking plan** • **Invested:** $50 • **Daily profit:** 1.000% • **Duration:** 30 days
-Render the labels in `text-muted-foreground` and the values in `text-foreground font-semibold`, wrapped with `flex-wrap gap-x-2`. Pull duration from `ends_at − started_at`.
+- Remove the staking and AI trading steps and their icons/links.
+- Recompute progress (`completed / 2`).
+- Keep the auto-hide once both are done.
+- Update the heading copy to "2 steps to get started".
 
-### 3. Color the auto‑invest package details green
-File: `src/components/QuickInvestModal.tsx`
+## 2. Remember sender wallet address / Binance UID on deposit
 
-- Change the ROI line (line 218) from `text-primary` to `text-success` and add a subtle `bg-success/10` chip wrapper.
-- Change the min/max + duration row (line 219‑222) from `text-muted-foreground` to `text-success/80` so each package card's stats clearly stand out in green.
-- Update the small recap under the amount input (line 255‑258) icon + text to all `text-success`.
+Goal: On the deposit form, capture the user's **sender identifier** (wallet address for crypto networks, Binance UID for Binance Pay), validate the format, persist it to the customer profile, and pre-fill it next time.
 
-### 4. Remove Bangladesh office, replace with a European country
-File: `src/components/Layout.tsx` (line 118)
+### Schema (migration)
 
-Replace the Bangladesh entry with **Germany — Berlin Hub**:
-```
-{ country: "Germany", city: "Berlin Hub", flag: "🇩🇪",
-  address: "Friedrichstraße 68, 10117 Berlin", phone: "+49 30 994 0088" }
-```
-(No other office entries change.)
+Add two nullable columns to `public.customers`:
+- `last_sender_address text` — last on-chain sender address used
+- `last_sender_network text` — which network it belongs to (TRC20 / BEP20 / ERC20)
 
-### 5. Add Google voice input to the live chat widget
-File: `src/components/WhatsAppWidget.tsx`
+`binance_uid` already exists on `customers` and is reused for the Binance Pay case.
 
-- Add a microphone button beside the text input that uses the browser's Web Speech API (`window.SpeechRecognition || window.webkitSpeechRecognition`, the engine Chrome ships powered by Google).
-- Behavior:
-  - Click mic → request mic permission, start recognition (`lang = navigator.language`, `interimResults = true`).
-  - Live‑append the interim transcript into the message textbox; on `onresult` final, keep the text so the user can review/edit before sending.
-  - Click mic again (or auto‑stop on silence) to stop.
-  - Visual states: idle (muted), listening (red pulsing ring + `Mic` icon swap to `MicOff`).
-  - Gracefully hide the button if the API is unavailable (e.g. Firefox/iOS) and show a tooltip "Voice input not supported in this browser".
-- No backend changes; everything runs client‑side.
+### Server function changes (`src/lib/wallet.functions.ts`)
 
-### Out of scope
-No DB migrations, no changes to investment logic, no changes to other routes.
+- Extend `createDeposit` input to require `from_address` (already accepted, but make required and validated per network):
+  - TRC20: `^T[a-zA-Z0-9]{33}$`
+  - BEP20 / ERC20: `^0x[a-fA-F0-9]{40}$`
+  - BINANCE_PAY: 3–64 alphanumeric (treated as UID, not address)
+- After inserting the deposit, use `supabaseAdmin` to update `customers`:
+  - For crypto networks → set `last_sender_address` + `last_sender_network`.
+  - For `BINANCE_PAY` → set `binance_uid` if empty/different.
+- Extend `getMyProfile` selection (already returns `binance_uid`); add `last_sender_address` and `last_sender_network` to the returned shape.
+
+### UI changes (`src/routes/deposit.tsx`)
+
+- Add a required **"Your sending address" / "Your Binance UID"** input (label switches based on selected network).
+- On mount, fetch profile (`getMyProfile`) and prefill:
+  - If network is TRC20/BEP20/ERC20 and `last_sender_address` matches the network → prefill.
+  - If network is BINANCE_PAY → prefill `binance_uid`.
+- Show a small helper "Saved from your last deposit" badge when prefilled.
+- Client-side regex validation mirroring the server schema before submit; show inline error.
+- Pass `from_address` in `createDeposit({ data: { ... } })`.
+
+### Technical notes
+
+- No changes to RLS — update goes through `supabaseAdmin` (existing pattern in `updateBinanceUid`).
+- `getMyProfile` already exists; just widen the select. No new route needed.
+- Keep changes additive and backward compatible (columns nullable, old deposits unaffected).
+
+## Files touched
+
+- `supabase/migrations/<new>.sql` — add `last_sender_address`, `last_sender_network` to `customers`.
+- `src/lib/wallet.functions.ts` — validate + persist sender, expose on profile.
+- `src/routes/deposit.tsx` — new prefill input + validation.
+- `src/routes/dashboard.tsx` — checklist reduced to 2 steps.

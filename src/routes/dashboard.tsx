@@ -232,6 +232,65 @@ function Dashboard() {
         </div>
       </div>
 
+      {/* Featured active package — highlighted countdown right under user name/ID */}
+      {featured && (() => {
+        const start = featured.started_at ? new Date(featured.started_at).getTime() : new Date(featured.created_at).getTime();
+        const end = featured.ends_at ? new Date(featured.ends_at).getTime() : start + 30 * 86_400_000;
+        const total = Math.max(1, end - start);
+        const pct = Math.max(0, Math.min(100, Math.round(((now - start) / total) * 100)));
+        const remaining = Math.max(0, end - now);
+        const d = Math.floor(remaining / 86_400_000);
+        const h = Math.floor((remaining % 86_400_000) / 3_600_000);
+        const m = Math.floor((remaining % 3_600_000) / 60_000);
+        const s = Math.floor((remaining % 60_000) / 1000);
+        const matured = remaining === 0;
+        const accrued = invAccrual(featured);
+        const dailyPct = dailyRateFor(featured.plan_name) * 100;
+        return (
+          <div className="mb-6 rounded-2xl p-[1.5px] bg-[image:var(--gradient-aurora)] glow-primary animate-fade-in">
+            <div className="rounded-2xl bg-background/85 backdrop-blur-xl p-4 sm:p-5">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-11 h-11 rounded-xl bg-[image:var(--gradient-primary)] text-primary-foreground flex items-center justify-center shadow-[var(--shadow-glow)] shrink-0">
+                    {serviceIcon[featured.service] ?? <Sparkles className="w-5 h-5" />}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-[image:var(--gradient-gold)] text-gold-foreground font-bold">Active Package</span>
+                      {matured && <span className="text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded bg-success/20 text-success font-bold">Matured</span>}
+                    </div>
+                    <p className="font-extrabold text-base sm:text-lg mt-0.5 truncate">{featured.plan_name}</p>
+                    <p className="text-xs text-muted-foreground capitalize">
+                      {featured.service.replace("_", " ")} · ${Number(featured.amount).toLocaleString()} @ {dailyPct.toFixed(3)}% / day
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  {!matured ? (
+                    <div className="flex items-center gap-1.5 font-mono text-sm">
+                      <Clock className="w-4 h-4 text-primary" />
+                      <span className="px-2 py-1 rounded bg-primary/15 text-primary font-bold">{String(d).padStart(2, "0")}d</span>
+                      <span className="px-2 py-1 rounded bg-primary/15 text-primary font-bold">{String(h).padStart(2, "0")}h</span>
+                      <span className="px-2 py-1 rounded bg-primary/15 text-primary font-bold">{String(m).padStart(2, "0")}m</span>
+                      <span className="px-2 py-1 rounded bg-primary/15 text-primary font-bold">{String(s).padStart(2, "0")}s</span>
+                    </div>
+                  ) : (
+                    <span className="text-sm font-mono text-success font-bold">Ready to claim</span>
+                  )}
+                  <span className="text-xs font-mono text-success font-bold">+${accrued.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} earned</span>
+                </div>
+              </div>
+              <div className="mt-3 h-2 rounded-full bg-white/5 overflow-hidden">
+                <div className="h-full bg-[image:var(--gradient-primary)] transition-all duration-700" style={{ width: `${pct}%` }} />
+              </div>
+              {activeInvs.length > 1 && (
+                <p className="text-[11px] text-muted-foreground mt-2">+{activeInvs.length - 1} more active package{activeInvs.length - 1 === 1 ? "" : "s"} below</p>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
       <div className="mb-6 rounded-2xl border border-primary/30 bg-primary/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-start gap-3">
           <div className="w-9 h-9 rounded-lg bg-[image:var(--gradient-gold)] text-gold-foreground flex items-center justify-center shrink-0">
@@ -245,10 +304,11 @@ function Dashboard() {
         <p className="text-xs font-mono text-primary">UID · {cust?.binance_uid ?? "not set"}</p>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <Stat icon={<Wallet />} label="Total Balance" value={`$${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend={demoType === "demo" ? "Demo" : "Live"} highlight />
-        <Stat icon={<TrendingUp />} label="Total Profit" value={`+$${totalProfit.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend="Live" positive highlight />
+        <Stat icon={<TrendingUp />} label="Portfolio Equity" value={`$${portfolioEquity.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend="Live" positive highlight />
         <Stat icon={<Activity />} label="Earnings Today" value={`$${earningsToday.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend="Today" positive />
+        <Stat icon={<Sparkles />} label="Earnings + Invested" value={`$${earningsPlusInvested.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend="Lifetime" positive />
         <Stat icon={<Clock />} label="Pending Withdrawals" value={`$${pendingWdAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend={`${pendingWdCount} request${pendingWdCount === 1 ? "" : "s"}`} />
       </div>
 

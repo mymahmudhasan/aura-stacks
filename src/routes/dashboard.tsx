@@ -236,6 +236,7 @@ function Dashboard() {
           <Link to="/settings" className="glass rounded-xl p-2 hover:bg-primary/10 transition" title="Account Settings">
             <Settings className="w-4 h-4" />
           </Link>
+        </div>
       </div>
 
       {/* Featured active package — highlighted countdown right under user name/ID */}

@@ -1,7 +1,7 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import {
   Wallet, TrendingUp, Activity, Clock, ArrowDownLeft, ArrowUpRight,
-  Cpu, Lock, Brain, Bell, Users, Share2, Sparkles, Gift, Loader2, TrendingDown, RefreshCw, Settings,
+  Cpu, Lock, Brain, Bell, Users, Share2, Sparkles, Gift, Loader2, TrendingDown, RefreshCw, Settings, Check,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { CTA, GlassCard, Section } from "@/components/ui-bits";

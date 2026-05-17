@@ -35,6 +35,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminSmsTestRouteImport } from './routes/admin.sms-test'
 import { Route as AdminResetPasswordRouteImport } from './routes/admin.reset-password'
 import { Route as AdminOperationsRouteImport } from './routes/admin.operations'
+import { Route as ApiPublicHooksMatureInvestmentsRouteImport } from './routes/api/public/hooks/mature-investments'
 
 const WithdrawRoute = WithdrawRouteImport.update({
   id: '/withdraw',
@@ -166,6 +167,12 @@ const AdminOperationsRoute = AdminOperationsRouteImport.update({
   path: '/operations',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiPublicHooksMatureInvestmentsRoute =
+  ApiPublicHooksMatureInvestmentsRouteImport.update({
+    id: '/api/public/hooks/mature-investments',
+    path: '/api/public/hooks/mature-investments',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -194,6 +201,7 @@ export interface FileRoutesByFullPath {
   '/admin/operations': typeof AdminOperationsRoute
   '/admin/reset-password': typeof AdminResetPasswordRoute
   '/admin/sms-test': typeof AdminSmsTestRoute
+  '/api/public/hooks/mature-investments': typeof ApiPublicHooksMatureInvestmentsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -222,6 +230,7 @@ export interface FileRoutesByTo {
   '/admin/operations': typeof AdminOperationsRoute
   '/admin/reset-password': typeof AdminResetPasswordRoute
   '/admin/sms-test': typeof AdminSmsTestRoute
+  '/api/public/hooks/mature-investments': typeof ApiPublicHooksMatureInvestmentsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -251,6 +260,7 @@ export interface FileRoutesById {
   '/admin/operations': typeof AdminOperationsRoute
   '/admin/reset-password': typeof AdminResetPasswordRoute
   '/admin/sms-test': typeof AdminSmsTestRoute
+  '/api/public/hooks/mature-investments': typeof ApiPublicHooksMatureInvestmentsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -281,6 +291,7 @@ export interface FileRouteTypes {
     | '/admin/operations'
     | '/admin/reset-password'
     | '/admin/sms-test'
+    | '/api/public/hooks/mature-investments'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -309,6 +320,7 @@ export interface FileRouteTypes {
     | '/admin/operations'
     | '/admin/reset-password'
     | '/admin/sms-test'
+    | '/api/public/hooks/mature-investments'
   id:
     | '__root__'
     | '/'
@@ -337,6 +349,7 @@ export interface FileRouteTypes {
     | '/admin/operations'
     | '/admin/reset-password'
     | '/admin/sms-test'
+    | '/api/public/hooks/mature-investments'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -363,6 +376,7 @@ export interface RootRouteChildren {
   TransactionsRoute: typeof TransactionsRoute
   WalletRoute: typeof WalletRoute
   WithdrawRoute: typeof WithdrawRoute
+  ApiPublicHooksMatureInvestmentsRoute: typeof ApiPublicHooksMatureInvestmentsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -549,6 +563,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminOperationsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/public/hooks/mature-investments': {
+      id: '/api/public/hooks/mature-investments'
+      path: '/api/public/hooks/mature-investments'
+      fullPath: '/api/public/hooks/mature-investments'
+      preLoaderRoute: typeof ApiPublicHooksMatureInvestmentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -590,7 +611,18 @@ const rootRouteChildren: RootRouteChildren = {
   TransactionsRoute: TransactionsRoute,
   WalletRoute: WalletRoute,
   WithdrawRoute: WithdrawRoute,
+  ApiPublicHooksMatureInvestmentsRoute: ApiPublicHooksMatureInvestmentsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

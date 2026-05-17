@@ -12,6 +12,18 @@ function Login() {
   return <AuthCard mode="login" />;
 }
 
+const friendlyError = (msg: string) => {
+  const m = msg.toLowerCase();
+  if (m.includes("invalid login credentials")) return "Wrong email or password. Try again or reset your password.";
+  if (m.includes("user already registered") || m.includes("user_already_exists"))
+    return "An account with that email already exists. Try signing in instead.";
+  if (m.includes("email not confirmed")) return "Please confirm your email — check your inbox for the verification link.";
+  if (m.includes("password should be at least")) return msg;
+  if (m.includes("rate limit") || m.includes("too many")) return "Too many attempts — please wait a minute and try again.";
+  if (m.includes("duplicate key") && m.includes("email")) return "An account with that email already exists.";
+  return msg;
+};
+
 export function AuthCard({ mode }: { mode: "login" | "register" }) {
   const isLogin = mode === "login";
   const navigate = useNavigate();
@@ -19,14 +31,15 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
     fullName: "",
     email: "",
     password: "",
+    confirmPassword: "",
     phone: "",
     country: "",
-    binanceUid: "",
     binanceWallet: "",
     referredBy: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
 
   const upd = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
@@ -39,41 +52,57 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setInfo(null);
+    const cleanEmail = form.email.trim().toLowerCase();
     setLoading(true);
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password });
+        const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password: form.password });
         if (error) throw error;
         navigate({ to: "/dashboard" });
         return;
       }
 
+      // Register
+      if (!form.fullName.trim()) throw new Error("Please enter your full name.");
+      if (form.password.length < 6) throw new Error("Password must be at least 6 characters.");
+      if (form.password !== form.confirmPassword) throw new Error("Passwords don't match.");
+
       const { data, error } = await supabase.auth.signUp({
-        email: form.email,
+        email: cleanEmail,
         password: form.password,
         options: {
           emailRedirectTo: `${window.location.origin}/dashboard`,
-          data: { full_name: form.fullName },
+          data: { full_name: form.fullName.trim() },
         },
       });
       if (error) throw error;
       if (!data.user) throw new Error("Signup failed — no user returned.");
 
-      const { error: cErr } = await supabase.from("customers").insert({
-        user_id: data.user.id,
-        full_name: form.fullName,
-        email: form.email,
-        phone: normalizedPhone() || null,
-        country: form.country || null,
-        binance_uid: form.binanceUid,
-        binance_wallet_address: form.binanceWallet || null,
-        referred_by: form.referredBy || null,
-      });
-      if (cErr) throw cErr;
+      // Upsert customer row (idempotent — handles re-signup / repeated submits)
+      const { error: cErr } = await supabase.from("customers").upsert(
+        {
+          user_id: data.user.id,
+          full_name: form.fullName.trim(),
+          email: cleanEmail,
+          phone: normalizedPhone() || null,
+          country: form.country || null,
+          binance_wallet_address: form.binanceWallet || null,
+          referred_by: form.referredBy || null,
+        },
+        { onConflict: "user_id" },
+      );
+      if (cErr && !/duplicate|unique/i.test(cErr.message)) throw cErr;
+
+      // If email confirmation is required, Supabase returns no session.
+      if (!data.session) {
+        setInfo("Account created. Check your email to confirm, then sign in.");
+        return;
+      }
 
       navigate({ to: "/dashboard" });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(friendlyError(err instanceof Error ? err.message : "Something went wrong"));
     } finally {
       setLoading(false);
     }
@@ -113,9 +142,13 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
           )}
           <input required type="password" value={form.password} onChange={upd("password")} placeholder="Password (min 6 chars)" minLength={6} className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none" />
           {!isLogin && (
+            <input required type="password" value={form.confirmPassword} onChange={upd("confirmPassword")} placeholder="Confirm password" minLength={6} className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none" />
+          )}
+          {!isLogin && (
             <input value={form.referredBy} onChange={upd("referredBy")} placeholder="Referral code (optional)" className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none" />
           )}
           {error && <p className="text-sm text-destructive">{error}</p>}
+          {info && <p className="text-sm text-success">{info}</p>}
           <button disabled={loading} className="w-full px-4 py-3 rounded-xl bg-primary text-primary-foreground font-medium glow-primary inline-flex items-center justify-center gap-2 disabled:opacity-60">
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
             {isLogin ? "Sign in" : "Create account"}

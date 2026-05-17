@@ -947,6 +947,10 @@ function SettingsTab({ onToast }: { onToast: (kind: "ok" | "err", msg: string) =
       </GlassCard>
 
       <GlassCard className="lg:col-span-3 p-6">
+        <DepositAddressesSettings onToast={onToast} />
+      </GlassCard>
+
+      <GlassCard className="lg:col-span-3 p-6">
         <WhatsAppSettings onToast={onToast} />
       </GlassCard>
     </div>

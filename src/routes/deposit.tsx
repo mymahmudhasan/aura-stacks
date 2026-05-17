@@ -155,6 +155,23 @@ function DepositPage() {
               <Input id="hash" required minLength={4} value={txHash} onChange={(e) => setTxHash(e.target.value)} placeholder="0x... or TRX..." className="mt-1.5" />
               <p className="text-xs text-muted-foreground mt-1">From your wallet's send confirmation.</p>
             </div>
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <Label htmlFor="sender">{isBinance ? "Your Binance UID" : "Your sending wallet address"}</Label>
+                {prefilled && <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-success/15 text-success">Saved</span>}
+              </div>
+              <Input
+                id="sender"
+                required
+                value={fromAddress}
+                onChange={(e) => { setFromAddress(e.target.value); setPrefilled(false); }}
+                placeholder={isBinance ? "e.g. 123456789" : network === "TRC20" ? "T..." : "0x..."}
+                className="mt-1.5 font-mono text-xs"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                {prefilled ? "Auto-filled from your last deposit. You can change it if needed." : "We'll remember this so next time it's pre-filled."}
+              </p>
+            </div>
             <button type="submit" disabled={submitting} className="w-full rounded-xl px-4 py-3 font-semibold bg-[image:var(--gradient-gold)] text-gold-foreground glow-gold disabled:opacity-60 inline-flex items-center justify-center gap-2">
               {submitting && <Loader2 className="w-4 h-4 animate-spin" />} Submit deposit
             </button>

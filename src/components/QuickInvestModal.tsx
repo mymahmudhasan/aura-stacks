@@ -82,7 +82,8 @@ export function QuickInvestForm({ onDone, compact = false }: { onDone?: () => vo
   const submit = async () => {
     setBusy(true); setErr(null); setOk(null);
     try {
-      await createInvestment({ data: { service, plan_name: pkg.name, amount: Number(amount) } });
+      const durationDays = parseInt(pkg.duration.replace(/[^0-9]/g, ""), 10) || 30;
+      await createInvestment({ data: { service, plan_name: pkg.name, amount: Number(amount), duration_days: durationDays } });
       setOk(`Invested $${amount} in ${pkg.name}`);
       onDone?.();
       setTimeout(() => navigate({ to: "/wallet" }), 600);

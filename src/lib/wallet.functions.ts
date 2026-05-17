@@ -206,8 +206,9 @@ export const updateBinanceUid = createServerFn({ method: "POST" })
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-    const { error } = await supabase
+    const { userId } = context;
+    // Use admin client because RLS on customers has no user UPDATE policy.
+    const { error } = await supabaseAdmin
       .from("customers")
       .update({ binance_uid: data.binance_uid })
       .eq("user_id", userId);

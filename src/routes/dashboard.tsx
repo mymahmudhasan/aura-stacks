@@ -218,7 +218,7 @@ function Dashboard() {
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Stat icon={<Wallet />} label="Total Balance" value={`$${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend={demoType === "demo" ? "Demo" : "Live"} highlight />
-        <Stat icon={totalProfit >= 0 ? <TrendingUp /> : <TrendingDown />} label="Total Profit" value={`${totalProfit >= 0 ? "+" : "-"}$${Math.abs(totalProfit).toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend={totalProfit >= 0 ? "All time" : "All time"} positive={totalProfit >= 0} highlight />
+        <Stat icon={<TrendingUp />} label="Total Profit" value={`+$${totalProfit.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend="Live" positive highlight />
         <Stat icon={<Activity />} label="Earnings Today" value={`$${earningsToday.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend="Today" positive />
         <Stat icon={<Clock />} label="Pending Withdrawals" value={`$${pendingWdAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend={`${pendingWdCount} request${pendingWdCount === 1 ? "" : "s"}`} />
       </div>

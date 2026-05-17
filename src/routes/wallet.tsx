@@ -18,7 +18,7 @@ type Txn = { id: string; kind: string; amount: number; currency: string; status:
 type Inv = { id: string; service: string; plan_name: string; amount: number; currency: string; status: string; started_at: string | null; external_provider: string | null };
 type Cust = { balance: number; total_deposited: number; total_withdrawn: number; currency: string | null; full_name: string | null };
 
-const serviceIcon: Record<string, JSX.Element> = {
+const serviceIcon: Record<string, React.ReactNode> = {
   ai_trading: <Brain className="w-4 h-4" />,
   mining: <Cpu className="w-4 h-4" />,
   staking: <Lock className="w-4 h-4" />,

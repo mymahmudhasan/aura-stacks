@@ -143,21 +143,72 @@ function WithdrawPage() {
       </GlassCard>
 
       <GlassCard className="mt-6">
-        <h3 className="font-semibold mb-3">Request history</h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold">Withdrawal history</h3>
+          <button type="button" onClick={refresh} className="text-xs text-primary hover:underline">Refresh</button>
+        </div>
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground py-4 text-center">No withdrawals yet.</p>
         ) : (
-          <ul className="divide-y divide-border/40 text-sm">
-            {items.map((w) => (
-              <li key={w.id} className="py-3 flex items-center justify-between">
-                <div>
-                  <p className="font-medium">${Number(w.amount).toLocaleString()} {w.currency}</p>
-                  <p className="text-xs text-muted-foreground">{new Date(w.created_at).toLocaleString()} → {w.destination}</p>
-                  {w.admin_notes && <p className="text-xs text-muted-foreground mt-0.5">Admin: {w.admin_notes}</p>}
-                </div>
-                <span className={`text-xs px-2 py-1 rounded-full ${w.status === "paid" ? "bg-success/15 text-success" : w.status === "rejected" ? "bg-destructive/15 text-destructive" : "bg-gold/15 text-gold"}`}>{w.status}</span>
-              </li>
-            ))}
+          <ul className="space-y-3 text-sm">
+            {items.map((w) => {
+              const failed = w.status === "rejected" || w.status === "failed" || w.status === "cancelled";
+              const paid = w.status === "paid";
+              const pending = !failed && !paid;
+              const badgeCls = paid
+                ? "bg-success/15 text-success"
+                : failed
+                ? "bg-destructive/15 text-destructive"
+                : "bg-gold/15 text-gold";
+              return (
+                <li key={w.id} className="rounded-xl glass p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-semibold">
+                        ${Number(w.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })} {w.currency}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        Ref <span className="font-mono">{w.id.slice(0, 8)}</span>
+                      </p>
+                    </div>
+                    <span className={`text-[10px] uppercase tracking-widest px-2 py-1 rounded-full ${badgeCls}`}>
+                      {w.status}
+                    </span>
+                  </div>
+                  <dl className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                    <div className="flex justify-between gap-2">
+                      <dt className="text-muted-foreground">Requested</dt>
+                      <dd>{new Date(w.created_at).toLocaleString()}</dd>
+                    </div>
+                    <div className="flex justify-between gap-2">
+                      <dt className="text-muted-foreground">{paid ? "Paid" : "Settled"}</dt>
+                      <dd>{w.paid_at ? new Date(w.paid_at).toLocaleString() : "—"}</dd>
+                    </div>
+                    <div className="flex justify-between gap-2 sm:col-span-2">
+                      <dt className="text-muted-foreground shrink-0">
+                        {w.destination_type === "binance_uid" ? "Binance UID" : "Wallet"}
+                      </dt>
+                      <dd className="font-mono truncate">{w.destination}</dd>
+                    </div>
+                  </dl>
+                  {w.admin_notes && (
+                    <div className={`mt-2 rounded-lg px-3 py-2 text-xs ${failed ? "bg-destructive/10 text-destructive" : "bg-muted/40 text-muted-foreground"}`}>
+                      <span className="font-semibold">{failed ? "Failure reason" : "Admin note"}:</span> {w.admin_notes}
+                    </div>
+                  )}
+                  {failed && !w.admin_notes && (
+                    <p className="mt-2 text-xs text-destructive">
+                      This payout did not go through. Contact support with reference <span className="font-mono">{w.id.slice(0, 8)}</span> to investigate.
+                    </p>
+                  )}
+                  {pending && (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Awaiting manual processing. Payouts are reviewed within 24h.
+                    </p>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
       </GlassCard>

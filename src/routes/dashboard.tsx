@@ -246,6 +246,56 @@ function Dashboard() {
         </div>
       </div>
 
+      {(() => {
+        const hasDeposit = Number(cust?.total_deposited ?? 0) > 0 || deps.some((d) => d.status === "approved");
+        const hasMining = activeInvs.some((i) => i.service === "mining");
+        const hasStaking = activeInvs.some((i) => i.service === "staking");
+        const hasAi = activeInvs.some((i) => i.service === "ai_trading");
+        const steps = [
+          { done: hasDeposit, label: "Make first deposit", to: "/deposit", icon: <ArrowDownLeft className="w-3.5 h-3.5" /> },
+          { done: hasMining, label: "Choose a mining plan", to: "/mining", icon: <Cpu className="w-3.5 h-3.5" /> },
+          { done: hasStaking, label: "Start staking", to: "/staking", icon: <Lock className="w-3.5 h-3.5" /> },
+          { done: hasAi, label: "Enable AI trading", to: "/ai-trading", icon: <Brain className="w-3.5 h-3.5" /> },
+        ];
+        const completed = steps.filter((s) => s.done).length;
+        if (completed === steps.length) return null;
+        const pct = Math.round((completed / steps.length) * 100);
+        return (
+          <div className="mb-6 rounded-2xl border border-primary/20 bg-card/40 backdrop-blur p-4">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div>
+                <p className="text-sm font-semibold">Get started checklist</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{completed} of {steps.length} complete · activate every income stream</p>
+              </div>
+              <span className="text-xs font-bold text-primary">{pct}%</span>
+            </div>
+            <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-4">
+              <div className="h-full bg-[image:var(--gradient-primary)] transition-all" style={{ width: `${pct}%` }} />
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              {steps.map((s) => (
+                <Link
+                  key={s.label}
+                  to={s.to}
+                  className={`rounded-xl border px-3 py-2.5 flex items-center gap-2 text-xs transition ${
+                    s.done
+                      ? "border-success/30 bg-success/10 text-success"
+                      : "border-border bg-background/40 hover:bg-primary/10 hover:border-primary/30"
+                  }`}
+                >
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
+                    s.done ? "bg-success text-success-foreground" : "border border-border text-muted-foreground"
+                  }`}>
+                    {s.done ? <Check className="w-3 h-3" /> : s.icon}
+                  </span>
+                  <span className={`font-medium truncate ${s.done ? "line-through opacity-80" : ""}`}>{s.label}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Featured active package — highlighted countdown right under user name/ID */}
       {featured && (() => {
         const start = featured.started_at ? new Date(featured.started_at).getTime() : new Date(featured.created_at).getTime();

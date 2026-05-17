@@ -718,6 +718,30 @@ export type Database = {
         }
         Relationships: []
       }
+      welcome_bonuses: {
+        Row: {
+          amount: number
+          granted_at: string
+          id: string
+          source_deposit_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          granted_at?: string
+          id?: string
+          source_deposit_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          granted_at?: string
+          id?: string
+          source_deposit_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       withdrawals: {
         Row: {
           admin_notes: string | null

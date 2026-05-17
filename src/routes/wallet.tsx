@@ -9,8 +9,8 @@ export const Route = createFileRoute("/wallet")({
   component: WalletPage,
   head: () => ({ meta: [{ title: "My Wallet — Synexis" }] }),
   beforeLoad: async () => {
-    const { data } = await supabase.auth.getUser();
-    if (!data.user) throw redirect({ to: "/login" });
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) throw redirect({ to: "/login" });
   },
 });
 

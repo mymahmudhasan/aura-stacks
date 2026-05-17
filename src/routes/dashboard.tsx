@@ -11,10 +11,8 @@ import { getMyWallet, getMyInvestments, getMyDeposits, getMyWithdrawals } from "
 
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: async () => {
-    const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) {
-      throw redirect({ to: "/login" });
-    }
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) throw redirect({ to: "/login" });
   },
   component: () => (
     <RequirePhoneVerified>
@@ -165,6 +163,9 @@ function Dashboard() {
           </Link>
           <Link to="/withdraw" className="glass rounded-xl px-4 py-2 text-sm flex items-center gap-2 hover:bg-primary/10 transition">
             <ArrowUpRight className="w-4 h-4 text-gold" /> Withdraw
+          </Link>
+          <Link to="/transactions" className="glass rounded-xl px-4 py-2 text-sm flex items-center gap-2 hover:bg-primary/10 transition">
+            <Activity className="w-4 h-4 text-primary" /> Transactions
           </Link>
           <Link to="/wallet" className="glass rounded-xl px-4 py-2 text-sm flex items-center gap-2 hover:bg-primary/10 transition">
             <Wallet className="w-4 h-4" /> Wallet

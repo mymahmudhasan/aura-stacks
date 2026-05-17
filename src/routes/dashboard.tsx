@@ -1,7 +1,7 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import {
   Wallet, TrendingUp, Activity, Clock, ArrowDownLeft, ArrowUpRight,
-  Cpu, Lock, Brain, Bell, Users, Share2, Sparkles, Gift, Loader2, TrendingDown, RefreshCw,
+  Cpu, Lock, Brain, Bell, Users, Share2, Sparkles, Gift, Loader2, TrendingDown, RefreshCw, Settings,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { CTA, GlassCard, Section } from "@/components/ui-bits";
@@ -233,6 +233,9 @@ function Dashboard() {
               </span>
             )}
           </button>
+          <Link to="/settings" className="glass rounded-xl p-2 hover:bg-primary/10 transition" title="Account Settings">
+            <Settings className="w-4 h-4" />
+          </Link>
         </div>
       </div>
 

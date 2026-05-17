@@ -38,7 +38,7 @@ function Ops() {
 
   const update = async (id: string, patch: Record<string, unknown>) => {
     setBusy(id);
-    const { error } = await supabase.from(tab).update(patch).eq("id", id);
+    const { error } = await (supabase.from(tab) as any).update(patch).eq("id", id);
     if (error) alert(error.message);
     await load(); setBusy(null);
   };

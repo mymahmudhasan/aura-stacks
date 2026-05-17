@@ -22,6 +22,7 @@ import { Route as MiningRouteImport } from './routes/mining'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FaqRouteImport } from './routes/faq'
+import { Route as DepositRouteImport } from './routes/deposit'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AiTradingRouteImport } from './routes/ai-trading'
@@ -98,6 +99,11 @@ const FaqRoute = FaqRouteImport.update({
   path: '/faq',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DepositRoute = DepositRouteImport.update({
+  id: '/deposit',
+  path: '/deposit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -157,6 +163,7 @@ export interface FileRoutesByFullPath {
   '/ai-trading': typeof AiTradingRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
+  '/deposit': typeof DepositRoute
   '/faq': typeof FaqRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
@@ -182,6 +189,7 @@ export interface FileRoutesByTo {
   '/ai-trading': typeof AiTradingRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
+  '/deposit': typeof DepositRoute
   '/faq': typeof FaqRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
@@ -208,6 +216,7 @@ export interface FileRoutesById {
   '/ai-trading': typeof AiTradingRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
+  '/deposit': typeof DepositRoute
   '/faq': typeof FaqRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
@@ -235,6 +244,7 @@ export interface FileRouteTypes {
     | '/ai-trading'
     | '/contact'
     | '/dashboard'
+    | '/deposit'
     | '/faq'
     | '/forgot-password'
     | '/login'
@@ -260,6 +270,7 @@ export interface FileRouteTypes {
     | '/ai-trading'
     | '/contact'
     | '/dashboard'
+    | '/deposit'
     | '/faq'
     | '/forgot-password'
     | '/login'
@@ -285,6 +296,7 @@ export interface FileRouteTypes {
     | '/ai-trading'
     | '/contact'
     | '/dashboard'
+    | '/deposit'
     | '/faq'
     | '/forgot-password'
     | '/login'
@@ -311,6 +323,7 @@ export interface RootRouteChildren {
   AiTradingRoute: typeof AiTradingRoute
   ContactRoute: typeof ContactRoute
   DashboardRoute: typeof DashboardRoute
+  DepositRoute: typeof DepositRoute
   FaqRoute: typeof FaqRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
@@ -419,6 +432,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FaqRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/deposit': {
+      id: '/deposit'
+      path: '/deposit'
+      fullPath: '/deposit'
+      preLoaderRoute: typeof DepositRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -514,6 +534,7 @@ const rootRouteChildren: RootRouteChildren = {
   AiTradingRoute: AiTradingRoute,
   ContactRoute: ContactRoute,
   DashboardRoute: DashboardRoute,
+  DepositRoute: DepositRoute,
   FaqRoute: FaqRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
@@ -531,3 +552,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

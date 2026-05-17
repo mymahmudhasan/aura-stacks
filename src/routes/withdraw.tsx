@@ -20,27 +20,47 @@ type Withdrawal = { id: string; amount: number; currency: string; destination: s
 
 function WithdrawPage() {
   const [balance, setBalance] = useState(0);
+  const [savedUid, setSavedUid] = useState<string>("");
+  const [savedWallet, setSavedWallet] = useState<string>("");
   const [amount, setAmount] = useState("");
   const [destinationType, setDestinationType] = useState<"binance_uid" | "wallet_address">("binance_uid");
   const [destination, setDestination] = useState("");
+  const [useSaved, setUseSaved] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [items, setItems] = useState<Withdrawal[]>([]);
 
   const refresh = async () => {
     const [w, list] = await Promise.all([getMyWallet(), getMyWithdrawals()]);
-    setBalance(Number((w.customer as { balance?: number } | null)?.balance ?? 0));
+    const c = w.customer as { balance?: number; binance_uid?: string | null; binance_wallet_address?: string | null } | null;
+    setBalance(Number(c?.balance ?? 0));
+    setSavedUid(c?.binance_uid ?? "");
+    setSavedWallet(c?.binance_wallet_address ?? "");
     setItems(list as Withdrawal[]);
   };
   useEffect(() => { refresh(); }, []);
+
+  // Auto-fill destination with saved value when toggled or type changes
+  useEffect(() => {
+    if (!useSaved) return;
+    const fill = destinationType === "binance_uid" ? savedUid : savedWallet;
+    setDestination(fill);
+  }, [useSaved, destinationType, savedUid, savedWallet]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true); setMsg(null);
     try {
-      await requestWithdrawal({ data: { amount: Number(amount), destination_type: destinationType, destination: destination.trim() } });
-      setMsg({ ok: true, text: "Withdrawal request submitted. Admin processes payouts manually within 24h." });
-      setAmount(""); setDestination("");
+      const dest = (useSaved
+        ? (destinationType === "binance_uid" ? savedUid : savedWallet)
+        : destination).trim();
+      if (!dest) throw new Error(destinationType === "binance_uid"
+        ? "No Binance UID on file. Add it in Settings first."
+        : "No wallet address on file. Add it in Settings first.");
+      await requestWithdrawal({ data: { amount: Number(amount), destination_type: destinationType, destination: dest } });
+      setMsg({ ok: true, text: `Withdrawal request submitted to ${destinationType === "binance_uid" ? "Binance UID" : "wallet"} ${dest}. Admin processes payouts manually within 24h.` });
+      setAmount("");
+      if (!useSaved) setDestination("");
       await refresh();
     } catch (err) {
       setMsg({ ok: false, text: err instanceof Error ? err.message : "Failed." });

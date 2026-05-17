@@ -1,10 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Brain, Bot, LineChart, ShieldCheck, Sparkles, Activity, Zap } from "lucide-react";
 import { CTA, GlassCard, PageHero, Section } from "@/components/ui-bits";
 import { InvestButton } from "@/components/InvestButton";
 import { ServiceReferral } from "@/components/ServiceReferral";
 import { LiveForexChart } from "@/components/LiveForexChart";
+import { PlansEmpty, PlansError, PlansLoading } from "@/components/PlansState";
 import { listPlans } from "@/lib/plans.functions";
 import aiImg from "@/assets/ai-trader-bot.webp";
 

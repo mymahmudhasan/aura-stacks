@@ -26,6 +26,10 @@ type DBPlan = {
 };
 
 function AITrading() {
+  const [plans, setPlans] = useState<DBPlan[]>([]);
+  useEffect(() => {
+    listPlans({ data: { service: "ai_trading" } }).then((d) => setPlans(d as unknown as DBPlan[])).catch(() => {});
+  }, []);
   return (
     <>
       <PageHero

@@ -115,7 +115,7 @@ const offices = [
   { country: "United States", city: "HQ", flag: "🇺🇸", address: "350 5th Avenue, 21st Floor, New York, NY 10118", phone: "+1 212 555 0142" },
   { country: "Singapore", city: "APAC", flag: "🇸🇬", address: "1 Raffles Place, Tower 2, #20-61, Singapore 048616", phone: "+65 6232 0188" },
   { country: "Saudi Arabia", city: "MENA", flag: "🇸🇦", address: "Kingdom Tower, Olaya District, Riyadh 12214", phone: "+966 11 211 7400" },
-  { country: "Bangladesh", city: "South Asia", flag: "🇧🇩", address: "Bay's Galleria, Plot 2, Gulshan-1, Dhaka 1212", phone: "+880 1700 998877" },
+  { country: "Germany", city: "Berlin Hub", flag: "🇩🇪", address: "Friedrichstraße 68, 10117 Berlin", phone: "+49 30 994 0088" },
   { country: "Canada", city: "Americas", flag: "🇨🇦", address: "181 Bay Street, Suite 4400, Toronto, ON M5J 2T3", phone: "+1 416 555 0177" },
   { country: "India", city: "Operations", flag: "🇮🇳", address: "One BKC, Tower A, Bandra Kurla Complex, Mumbai 400051", phone: "+91 22 6155 0900" },
   { country: "United Kingdom", city: "Europe", flag: "🇬🇧", address: "30 St Mary Axe, Level 28, London EC3A 8BF", phone: "+44 20 7946 0123" },

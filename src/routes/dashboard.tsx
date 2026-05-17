@@ -274,9 +274,15 @@ function Dashboard() {
                       {matured && <span className="text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded bg-success/20 text-success font-bold">Matured</span>}
                     </div>
                     <p className="font-extrabold text-base sm:text-lg mt-0.5 truncate">{featured.plan_name}</p>
-                    <p className="text-xs text-muted-foreground capitalize">
-                      {featured.service.replace("_", " ")} · ${Number(featured.amount).toLocaleString()} @ {dailyPct.toFixed(3)}% / day
-                    </p>
+                    <div className="text-xs mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="capitalize"><span className="text-muted-foreground">Plan:</span> <span className="text-foreground font-semibold">{featured.service.replace("_", " ")}</span></span>
+                      <span className="text-muted-foreground">•</span>
+                      <span><span className="text-muted-foreground">Invested:</span> <span className="text-foreground font-semibold">${Number(featured.amount).toLocaleString()}</span></span>
+                      <span className="text-muted-foreground">•</span>
+                      <span><span className="text-muted-foreground">Daily profit:</span> <span className="text-success font-semibold">{dailyPct.toFixed(3)}%</span></span>
+                      <span className="text-muted-foreground">•</span>
+                      <span><span className="text-muted-foreground">Duration:</span> <span className="text-foreground font-semibold">{Math.max(1, Math.round((end - start) / 86_400_000))} days</span></span>
+                    </div>
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-2">
@@ -291,7 +297,7 @@ function Dashboard() {
                   ) : (
                     <span className="text-sm font-mono text-success font-bold">Ready to claim</span>
                   )}
-                  <span className="text-xs font-mono text-success font-bold">+${accrued.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} earned</span>
+                  <span className="text-xs font-mono text-success font-bold">+${accrued.toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 })} earned</span>
                 </div>
               </div>
               <div className="mt-3 h-2 rounded-full bg-white/5 overflow-hidden">
@@ -366,11 +372,11 @@ function Dashboard() {
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Stat icon={<Wallet />} label="Total Balance" value={`$${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend={demoType === "demo" ? "Demo" : "Live"} highlight />
-        <Stat icon={<TrendingUp />} label="Portfolio Equity" value={`$${portfolioEquity.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend="Live" positive highlight />
-        <Stat icon={<Activity />} label="Earnings Today" value={`$${earningsToday.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend="Today" positive />
-        <Stat icon={<Sparkles />} label="Earnings + Invested" value={`$${earningsPlusInvested.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend="Lifetime" positive />
-        <Stat icon={<Clock />} label="Pending Withdrawals" value={`$${pendingWdAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend={`${pendingWdCount} request${pendingWdCount === 1 ? "" : "s"}`} />
+        <Stat icon={<Wallet />} label="Total Balance" value={`$${balance.toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 })}`} trend={demoType === "demo" ? "Demo" : "Live"} highlight />
+        <Stat icon={<TrendingUp />} label="Portfolio Equity" value={`$${portfolioEquity.toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 })}`} trend="Live" positive highlight />
+        <Stat icon={<Activity />} label="Earnings Today" value={`$${earningsToday.toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 })}`} trend="Today" positive />
+        <Stat icon={<Sparkles />} label="Earnings + Invested" value={`$${earningsPlusInvested.toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 })}`} trend="Lifetime" positive />
+        <Stat icon={<Clock />} label="Pending Withdrawals" value={`$${pendingWdAmount.toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 })}`} trend={`${pendingWdCount} request${pendingWdCount === 1 ? "" : "s"}`} />
       </div>
 
       <div className="grid lg:grid-cols-3 gap-5 mt-5">

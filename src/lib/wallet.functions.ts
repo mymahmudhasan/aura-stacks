@@ -295,7 +295,7 @@ export const getMyProfile = createServerFn({ method: "GET" })
     const { supabase, userId } = context;
     const { data } = await supabase
       .from("customers")
-      .select("full_name,email,phone,country,binance_uid,binance_wallet_address,preferred_coin,account_type,status")
+      .select("full_name,email,phone,country,binance_uid,binance_wallet_address,preferred_coin,account_type,status,last_sender_address,last_sender_network")
       .eq("user_id", userId)
       .maybeSingle();
     return data;

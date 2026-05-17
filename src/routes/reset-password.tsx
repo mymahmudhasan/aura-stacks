@@ -71,21 +71,46 @@ function ResetPassword() {
         <h1 className="text-2xl font-bold text-center">Set a new password</h1>
 
         {!ready ? (
-          <div className="mt-8 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="w-4 h-4 animate-spin" /> Verifying recovery link…
+          <div className="mt-8 flex flex-col items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="w-5 h-5 animate-spin text-primary" />
+            <span>Verifying your recovery link…</span>
+            <span className="text-xs">This only takes a moment.</span>
           </div>
         ) : success ? (
-          <p className="mt-6 text-center text-success text-sm">Password updated. Redirecting…</p>
+          <div className="mt-6 text-center space-y-2">
+            <p className="text-success text-sm font-medium">Password updated successfully.</p>
+            <p className="text-xs text-muted-foreground">Redirecting you to your dashboard…</p>
+          </div>
         ) : !authorized ? (
-          <div className="mt-6 text-center space-y-3">
-            <p className="text-sm text-destructive">This link has expired or is invalid.</p>
-            <Link to="/forgot-password" className="inline-block text-xs text-primary hover:underline">
+          <div className="mt-6 space-y-4">
+            <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-sm">
+              <p className="font-medium text-destructive">Reset link invalid or expired</p>
+              <p className="text-muted-foreground mt-1.5 text-xs leading-relaxed">
+                Password reset links are single-use and expire after 1 hour. This can happen if:
+              </p>
+              <ul className="text-xs text-muted-foreground mt-2 ml-4 list-disc space-y-0.5">
+                <li>The link has already been used</li>
+                <li>More than 1 hour has passed since the email was sent</li>
+                <li>You opened the link in a different browser than where you requested it</li>
+                <li>A newer reset email was sent (only the most recent works)</li>
+              </ul>
+            </div>
+            <Link
+              to="/forgot-password"
+              className="block w-full text-center px-4 py-3 rounded-xl bg-primary text-primary-foreground font-medium glow-primary"
+            >
               Request a new reset link
             </Link>
+            <p className="text-xs text-center text-muted-foreground">
+              Remembered your password? <Link to="/login" className="text-primary hover:underline">Sign in</Link>
+            </p>
           </div>
         ) : (
           <form className="mt-6 space-y-3" onSubmit={onSubmit}>
-            <p className="text-xs text-muted-foreground">Choose a new password (min. 6 characters).</p>
+            <div className="rounded-xl border border-success/30 bg-success/10 p-3 text-xs text-muted-foreground">
+              <p className="text-success font-medium mb-0.5">Link verified ✓</p>
+              Choose a new password below. Use at least 6 characters — a mix of letters, numbers, and symbols is best.
+            </div>
             <input
               type="password"
               required

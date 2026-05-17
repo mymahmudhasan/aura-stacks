@@ -1005,7 +1005,7 @@ function DepositAddressesSettings({ onToast }: { onToast: (kind: "ok" | "err", m
       const v = (values[f.key] ?? "").trim();
       patch[f.key] = v === "" ? null : v;
     }
-    const { error } = await supabase.from("site_settings").update(patch).eq("id", 1);
+    const { error } = await supabase.from("site_settings").update(patch as never).eq("id", 1);
     setSaving(false);
     if (error) { onToast("err", error.message); return; }
     const next: Record<string, string> = {};

@@ -9,6 +9,8 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WithdrawRouteImport } from './routes/withdraw'
+import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as StakingRouteImport } from './routes/staking'
@@ -21,6 +23,7 @@ import { Route as MiningRouteImport } from './routes/mining'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as FaqRouteImport } from './routes/faq'
+import { Route as DepositRouteImport } from './routes/deposit'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AiTradingRouteImport } from './routes/ai-trading'
@@ -30,8 +33,19 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminSmsTestRouteImport } from './routes/admin.sms-test'
 import { Route as AdminResetPasswordRouteImport } from './routes/admin.reset-password'
+import { Route as AdminOperationsRouteImport } from './routes/admin.operations'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
 
+const WithdrawRoute = WithdrawRouteImport.update({
+  id: '/withdraw',
+  path: '/withdraw',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WalletRoute = WalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -92,6 +106,11 @@ const FaqRoute = FaqRouteImport.update({
   path: '/faq',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DepositRoute = DepositRouteImport.update({
+  id: '/deposit',
+  path: '/deposit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -137,6 +156,11 @@ const AdminResetPasswordRoute = AdminResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminOperationsRoute = AdminOperationsRouteImport.update({
+  id: '/operations',
+  path: '/operations',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -151,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/ai-trading': typeof AiTradingRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
+  '/deposit': typeof DepositRoute
   '/faq': typeof FaqRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
@@ -163,7 +188,10 @@ export interface FileRoutesByFullPath {
   '/staking': typeof StakingRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/wallet': typeof WalletRoute
+  '/withdraw': typeof WithdrawRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/operations': typeof AdminOperationsRoute
   '/admin/reset-password': typeof AdminResetPasswordRoute
   '/admin/sms-test': typeof AdminSmsTestRoute
 }
@@ -175,6 +203,7 @@ export interface FileRoutesByTo {
   '/ai-trading': typeof AiTradingRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
+  '/deposit': typeof DepositRoute
   '/faq': typeof FaqRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
@@ -187,7 +216,10 @@ export interface FileRoutesByTo {
   '/staking': typeof StakingRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/wallet': typeof WalletRoute
+  '/withdraw': typeof WithdrawRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/operations': typeof AdminOperationsRoute
   '/admin/reset-password': typeof AdminResetPasswordRoute
   '/admin/sms-test': typeof AdminSmsTestRoute
 }
@@ -200,6 +232,7 @@ export interface FileRoutesById {
   '/ai-trading': typeof AiTradingRoute
   '/contact': typeof ContactRoute
   '/dashboard': typeof DashboardRoute
+  '/deposit': typeof DepositRoute
   '/faq': typeof FaqRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
@@ -212,7 +245,10 @@ export interface FileRoutesById {
   '/staking': typeof StakingRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/wallet': typeof WalletRoute
+  '/withdraw': typeof WithdrawRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/operations': typeof AdminOperationsRoute
   '/admin/reset-password': typeof AdminResetPasswordRoute
   '/admin/sms-test': typeof AdminSmsTestRoute
 }
@@ -226,6 +262,7 @@ export interface FileRouteTypes {
     | '/ai-trading'
     | '/contact'
     | '/dashboard'
+    | '/deposit'
     | '/faq'
     | '/forgot-password'
     | '/login'
@@ -238,7 +275,10 @@ export interface FileRouteTypes {
     | '/staking'
     | '/support'
     | '/terms'
+    | '/wallet'
+    | '/withdraw'
     | '/admin/login'
+    | '/admin/operations'
     | '/admin/reset-password'
     | '/admin/sms-test'
   fileRoutesByTo: FileRoutesByTo
@@ -250,6 +290,7 @@ export interface FileRouteTypes {
     | '/ai-trading'
     | '/contact'
     | '/dashboard'
+    | '/deposit'
     | '/faq'
     | '/forgot-password'
     | '/login'
@@ -262,7 +303,10 @@ export interface FileRouteTypes {
     | '/staking'
     | '/support'
     | '/terms'
+    | '/wallet'
+    | '/withdraw'
     | '/admin/login'
+    | '/admin/operations'
     | '/admin/reset-password'
     | '/admin/sms-test'
   id:
@@ -274,6 +318,7 @@ export interface FileRouteTypes {
     | '/ai-trading'
     | '/contact'
     | '/dashboard'
+    | '/deposit'
     | '/faq'
     | '/forgot-password'
     | '/login'
@@ -286,7 +331,10 @@ export interface FileRouteTypes {
     | '/staking'
     | '/support'
     | '/terms'
+    | '/wallet'
+    | '/withdraw'
     | '/admin/login'
+    | '/admin/operations'
     | '/admin/reset-password'
     | '/admin/sms-test'
   fileRoutesById: FileRoutesById
@@ -299,6 +347,7 @@ export interface RootRouteChildren {
   AiTradingRoute: typeof AiTradingRoute
   ContactRoute: typeof ContactRoute
   DashboardRoute: typeof DashboardRoute
+  DepositRoute: typeof DepositRoute
   FaqRoute: typeof FaqRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
@@ -311,10 +360,26 @@ export interface RootRouteChildren {
   StakingRoute: typeof StakingRoute
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
+  WalletRoute: typeof WalletRoute
+  WithdrawRoute: typeof WithdrawRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/withdraw': {
+      id: '/withdraw'
+      path: '/withdraw'
+      fullPath: '/withdraw'
+      preLoaderRoute: typeof WithdrawRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/wallet': {
+      id: '/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof WalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/terms': {
       id: '/terms'
       path: '/terms'
@@ -399,6 +464,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FaqRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/deposit': {
+      id: '/deposit'
+      path: '/deposit'
+      fullPath: '/deposit'
+      preLoaderRoute: typeof DepositRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -462,6 +534,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminResetPasswordRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/operations': {
+      id: '/admin/operations'
+      path: '/operations'
+      fullPath: '/admin/operations'
+      preLoaderRoute: typeof AdminOperationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/login': {
       id: '/admin/login'
       path: '/login'
@@ -474,12 +553,14 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminLoginRoute: typeof AdminLoginRoute
+  AdminOperationsRoute: typeof AdminOperationsRoute
   AdminResetPasswordRoute: typeof AdminResetPasswordRoute
   AdminSmsTestRoute: typeof AdminSmsTestRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminLoginRoute: AdminLoginRoute,
+  AdminOperationsRoute: AdminOperationsRoute,
   AdminResetPasswordRoute: AdminResetPasswordRoute,
   AdminSmsTestRoute: AdminSmsTestRoute,
 }
@@ -494,6 +575,7 @@ const rootRouteChildren: RootRouteChildren = {
   AiTradingRoute: AiTradingRoute,
   ContactRoute: ContactRoute,
   DashboardRoute: DashboardRoute,
+  DepositRoute: DepositRoute,
   FaqRoute: FaqRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
@@ -506,17 +588,9 @@ const rootRouteChildren: RootRouteChildren = {
   StakingRoute: StakingRoute,
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
+  WalletRoute: WalletRoute,
+  WithdrawRoute: WithdrawRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

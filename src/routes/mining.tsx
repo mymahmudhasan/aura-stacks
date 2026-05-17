@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Cpu, Check, Zap } from "lucide-react";
 import { CTA, GlassCard, PageHero, Section } from "@/components/ui-bits";
+import { InvestButton } from "@/components/InvestButton";
 import { ServiceReferral } from "@/components/ServiceReferral";
 import miningImg from "@/assets/mining-visual.webp";
 
@@ -65,7 +66,7 @@ function Mining() {
                 <Row label="Total ROI" value={p.roi} />
                 <Row label="Distribution" value="Daily (UTC-5)" />
               </div>
-              <CTA to="/register" variant={p.popular ? "gold" : "ghost"} className="w-full mt-6">Invest now</CTA>
+              <InvestButton service="mining" planName={`Mining ${p.name}`} minAmount={parseInt(p.min.replace(/\D/g, ""))} variant={p.popular ? "gold" : "ghost"} className="w-full mt-6" />
             </div>
           ))}
         </div>

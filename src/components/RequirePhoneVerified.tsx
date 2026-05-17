@@ -25,6 +25,23 @@ export function RequirePhoneVerified({ children }: { children: React.ReactNode }
       .eq("user_id", user.id)
       .maybeSingle();
 
+    // Auto-stamp email_verified_at after the user clicks a magic link
+    // (Supabase sets email_confirmed_at on the auth user once the link is opened).
+    if (
+      data &&
+      data.account_type === "real" &&
+      !data.email_verified_at &&
+      !data.phone_verified_at &&
+      user.email_confirmed_at
+    ) {
+      await supabase
+        .from("customers")
+        .update({ email_verified_at: new Date().toISOString() })
+        .eq("user_id", user.id);
+      setStatus({ state: "ok" });
+      return;
+    }
+
     const verified = !!(data?.phone_verified_at || data?.email_verified_at);
     if (!data || data.account_type !== "real" || verified) {
       setStatus({ state: "ok" });

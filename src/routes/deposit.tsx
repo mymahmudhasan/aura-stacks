@@ -31,6 +31,9 @@ function DepositPage() {
   const [network, setNetwork] = useState<typeof NETWORKS[number]["id"]>("TRC20");
   const [amount, setAmount] = useState("");
   const [txHash, setTxHash] = useState("");
+  const [fromAddress, setFromAddress] = useState("");
+  const [prefilled, setPrefilled] = useState(false);
+  const [savedSender, setSavedSender] = useState<{ address: string | null; network: string | null; binance_uid: string | null }>({ address: null, network: null, binance_uid: null });
   const [submitting, setSubmitting] = useState(false);
   const [copied, setCopied] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -40,22 +43,63 @@ function DepositPage() {
 
   useEffect(() => {
     (async () => {
-      const s = await getDepositSettings();
+      const [s, p] = await Promise.all([getDepositSettings(), getMyProfile()]);
       setSettings(s as Settings | null);
+      const prof = p as { last_sender_address: string | null; last_sender_network: string | null; binance_uid: string | null } | null;
+      setSavedSender({
+        address: prof?.last_sender_address ?? null,
+        network: prof?.last_sender_network ?? null,
+        binance_uid: prof?.binance_uid ?? null,
+      });
       await refresh();
     })();
   }, []);
 
+  // Prefill sender when network changes (or on first load)
+  useEffect(() => {
+    if (network === "BINANCE_PAY") {
+      if (savedSender.binance_uid) {
+        setFromAddress(savedSender.binance_uid);
+        setPrefilled(true);
+      } else {
+        setFromAddress("");
+        setPrefilled(false);
+      }
+    } else if (savedSender.address && savedSender.network === network) {
+      setFromAddress(savedSender.address);
+      setPrefilled(true);
+    } else {
+      setFromAddress("");
+      setPrefilled(false);
+    }
+  }, [network, savedSender]);
+
   const address = settings?.[NETWORKS.find((n) => n.id === network)!.key] ?? "";
+
+  const isBinance = network === "BINANCE_PAY";
+  const senderRegex = isBinance
+    ? /^[a-zA-Z0-9_-]{3,64}$/
+    : network === "TRC20"
+      ? /^T[a-zA-Z0-9]{33}$/
+      : /^0x[a-fA-F0-9]{40}$/;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const trimmedSender = fromAddress.trim();
+    if (!senderRegex.test(trimmedSender)) {
+      setMsg({ ok: false, text: isBinance ? "Enter a valid Binance UID." : `Enter a valid ${network} address.` });
+      return;
+    }
     setSubmitting(true);
     setMsg(null);
     try {
-      await createDeposit({ data: { amount: Number(amount), network, tx_hash: txHash.trim() } });
+      await createDeposit({ data: { amount: Number(amount), network, tx_hash: txHash.trim(), from_address: trimmedSender } });
       setMsg({ ok: true, text: "Deposit submitted. Admin will confirm and credit your balance." });
       setAmount(""); setTxHash("");
+      setSavedSender(isBinance
+        ? { ...savedSender, binance_uid: trimmedSender }
+        : { ...savedSender, address: trimmedSender, network });
+      setPrefilled(true);
       await refresh();
     } catch (err) {
       setMsg({ ok: false, text: err instanceof Error ? err.message : "Failed to submit." });

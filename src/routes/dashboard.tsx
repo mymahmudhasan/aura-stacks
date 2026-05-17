@@ -181,7 +181,7 @@ function Dashboard() {
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <p className="text-sm font-semibold">You're on a free demo account · ${Number(cust?.demo_balance ?? 0).toLocaleString()} virtual balance</p>
+              <p className="text-sm font-semibold">You're on a free demo account</p>
               <p className="text-xs text-muted-foreground mt-0.5">Make your first deposit to unlock real trading, mining and staking — your account upgrades automatically.</p>
             </div>
           </div>

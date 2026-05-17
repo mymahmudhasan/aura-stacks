@@ -6,9 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/referrals")({
   beforeLoad: async () => {
-    const { data } = await supabase.auth.getUser();
-    if (!data.user) throw redirect({ to: "/login" });
-    return { userId: data.user.id };
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) throw redirect({ to: "/login" });
+    return { userId: data.session.user.id };
   },
   component: Referrals,
   head: () => ({ meta: [{ title: "Referral Dashboard — AuraTrad.Ai" }] }),

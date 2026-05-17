@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WithdrawRouteImport } from './routes/withdraw'
 import { Route as WalletRouteImport } from './routes/wallet'
+import { Route as TransactionsRouteImport } from './routes/transactions'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as StakingRouteImport } from './routes/staking'
@@ -43,6 +44,11 @@ const WithdrawRoute = WithdrawRouteImport.update({
 const WalletRoute = WalletRouteImport.update({
   id: '/wallet',
   path: '/wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TransactionsRoute = TransactionsRouteImport.update({
+  id: '/transactions',
+  path: '/transactions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -182,6 +188,7 @@ export interface FileRoutesByFullPath {
   '/staking': typeof StakingRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/transactions': typeof TransactionsRoute
   '/wallet': typeof WalletRoute
   '/withdraw': typeof WithdrawRoute
   '/admin/operations': typeof AdminOperationsRoute
@@ -209,6 +216,7 @@ export interface FileRoutesByTo {
   '/staking': typeof StakingRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/transactions': typeof TransactionsRoute
   '/wallet': typeof WalletRoute
   '/withdraw': typeof WithdrawRoute
   '/admin/operations': typeof AdminOperationsRoute
@@ -237,6 +245,7 @@ export interface FileRoutesById {
   '/staking': typeof StakingRoute
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
+  '/transactions': typeof TransactionsRoute
   '/wallet': typeof WalletRoute
   '/withdraw': typeof WithdrawRoute
   '/admin/operations': typeof AdminOperationsRoute
@@ -266,6 +275,7 @@ export interface FileRouteTypes {
     | '/staking'
     | '/support'
     | '/terms'
+    | '/transactions'
     | '/wallet'
     | '/withdraw'
     | '/admin/operations'
@@ -293,6 +303,7 @@ export interface FileRouteTypes {
     | '/staking'
     | '/support'
     | '/terms'
+    | '/transactions'
     | '/wallet'
     | '/withdraw'
     | '/admin/operations'
@@ -320,6 +331,7 @@ export interface FileRouteTypes {
     | '/staking'
     | '/support'
     | '/terms'
+    | '/transactions'
     | '/wallet'
     | '/withdraw'
     | '/admin/operations'
@@ -348,6 +360,7 @@ export interface RootRouteChildren {
   StakingRoute: typeof StakingRoute
   SupportRoute: typeof SupportRoute
   TermsRoute: typeof TermsRoute
+  TransactionsRoute: typeof TransactionsRoute
   WalletRoute: typeof WalletRoute
   WithdrawRoute: typeof WithdrawRoute
 }
@@ -366,6 +379,13 @@ declare module '@tanstack/react-router' {
       path: '/wallet'
       fullPath: '/wallet'
       preLoaderRoute: typeof WalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/transactions': {
+      id: '/transactions'
+      path: '/transactions'
+      fullPath: '/transactions'
+      preLoaderRoute: typeof TransactionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -567,6 +587,7 @@ const rootRouteChildren: RootRouteChildren = {
   StakingRoute: StakingRoute,
   SupportRoute: SupportRoute,
   TermsRoute: TermsRoute,
+  TransactionsRoute: TransactionsRoute,
   WalletRoute: WalletRoute,
   WithdrawRoute: WithdrawRoute,
 }

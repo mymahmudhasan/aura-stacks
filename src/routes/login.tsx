@@ -122,7 +122,7 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
         return;
       }
 
-      navigate({ to: "/dashboard" });
+      await routeAfterAuth(data.user.id);
     } catch (err) {
       setError(friendlyError(err instanceof Error ? err.message : "Something went wrong"));
     } finally {

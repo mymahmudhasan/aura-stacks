@@ -54,6 +54,10 @@ function Dashboard() {
   const [wds, setWds] = useState<Wd[]>([]);
   const [accountId, setAccountId] = useState<string>("");
   const [now, setNow] = useState<number>(() => Date.now());
+  const [uidEditing, setUidEditing] = useState(false);
+  const [uidInput, setUidInput] = useState("");
+  const [uidSaving, setUidSaving] = useState(false);
+  const [uidMsg, setUidMsg] = useState<string | null>(null);
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);

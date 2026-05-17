@@ -8,6 +8,7 @@ import { CTA, GlassCard, Section } from "@/components/ui-bits";
 import { supabase } from "@/integrations/supabase/client";
 import { RequirePhoneVerified } from "@/components/RequirePhoneVerified";
 import { getMyWallet, getMyInvestments, getMyDeposits, getMyWithdrawals } from "@/lib/wallet.functions";
+import { QuickInvestModal } from "@/components/QuickInvestModal";
 
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: async () => {
@@ -52,6 +53,7 @@ function Dashboard() {
   const [deps, setDeps] = useState<Dep[]>([]);
   const [wds, setWds] = useState<Wd[]>([]);
   const [accountId, setAccountId] = useState<string>("");
+  const [quickOpen, setQuickOpen] = useState(false);
 
   const load = useCallback(async (initial = false) => {
     if (initial) setLoading(true); else setRefreshing(true);
@@ -221,17 +223,17 @@ function Dashboard() {
                   <p className="text-xs text-muted-foreground">{activeInvs.length} running · live updates</p>
                 </div>
               </div>
-              <Link to="/ai-trading" className="rounded-xl px-4 py-2 text-sm font-semibold inline-flex items-center gap-2 bg-[image:var(--gradient-primary)] text-primary-foreground glow-primary hover:opacity-90 transition hover-scale">
-                <Brain className="w-4 h-4" /> Invest in AI Trading
-              </Link>
+              <button onClick={() => setQuickOpen(true)} className="rounded-xl px-4 py-2 text-sm font-semibold inline-flex items-center gap-2 bg-[image:var(--gradient-primary)] text-primary-foreground glow-primary hover:opacity-90 transition hover-scale">
+                <Sparkles className="w-4 h-4" /> Quick Invest
+              </button>
             </div>
 
             {/* Featured AI Trading invest card — always shown, top priority */}
-            <Link to="/ai-trading" className="group relative block rounded-xl overflow-hidden border border-primary/40 bg-[image:var(--gradient-aurora)]/20 p-4 mb-4 hover:border-primary transition">
+            <button onClick={() => setQuickOpen(true)} className="group relative block w-full text-left rounded-xl overflow-hidden border border-primary/40 bg-[image:var(--gradient-aurora)]/20 p-4 mb-4 hover:border-primary transition">
               <div className="absolute inset-0 bg-[image:var(--gradient-primary)] opacity-10 group-hover:opacity-20 transition" />
               <div className="relative flex items-center justify-between gap-4 flex-wrap">
                 <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-[image:var(--gradient-primary)] text-primary-foreground flex items-center justify-center shadow-[var(--shadow-glow)]">
+                  <div className="w-12 h-12 rounded-xl bg-[image:var(--gradient-primary)] text-primary-foreground flex items-center justify-center shadow-[var(--shadow-glow)] animate-pulse">
                     <Brain className="w-6 h-6" />
                   </div>
                   <div>
@@ -243,10 +245,10 @@ function Dashboard() {
                   </div>
                 </div>
                 <span className="text-sm font-semibold text-primary inline-flex items-center gap-1 group-hover:translate-x-1 transition">
-                  Start now <ArrowUpRight className="w-4 h-4" />
+                  Invest now <ArrowUpRight className="w-4 h-4" />
                 </span>
               </div>
-            </Link>
+            </button>
 
             {activeInvs.length === 0 ? (
               <div className="text-center py-6 rounded-xl glass">
@@ -335,6 +337,7 @@ function Dashboard() {
       <div className="mt-8">
         <CTA to="/mining" variant="gold">Discover new plans</CTA>
       </div>
+      <QuickInvestModal open={quickOpen} onClose={() => setQuickOpen(false)} />
     </Section>
   );
 }

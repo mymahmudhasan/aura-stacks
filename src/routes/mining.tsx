@@ -70,22 +70,30 @@ function Mining() {
         title={<>Choose your <span className="gradient-text">mining package</span></>}
         subtitle="Transparent pricing. Daily rewards. Cancel anytime after the lock period."
       >
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
-          {plans.map((p) => (
-            <div key={p.id} className={`relative rounded-2xl p-6 transition ${p.is_popular ? "glass-strong border-primary/40 glow-primary" : "glass"}`}>
-              {(p.is_popular || p.badge) && <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-medium bg-[image:var(--gradient-gold)] text-gold-foreground">{p.badge || "Most popular"}</span>}
-              <div className="flex items-center gap-2 text-primary"><Cpu className="w-4 h-4" /><span className="text-xs uppercase tracking-widest">{p.name}</span></div>
-              <p className="mt-4 text-3xl font-bold gradient-text">{p.daily_rate_pct ?? "—"}%<span className="text-sm font-normal text-muted-foreground">/day</span></p>
-              <div className="mt-5 space-y-2.5 text-sm">
-                <Row label="Investment" value={`${money(p.min_amount)}${p.max_amount ? ` – ${money(p.max_amount)}` : ""}`} />
-                <Row label="Duration" value={p.duration_days ? `${p.duration_days} days` : "—"} />
-                <Row label="Total ROI" value={p.total_roi_pct != null ? `${p.total_roi_pct}%` : "—"} />
-                <Row label="Distribution" value="Daily (UTC-5)" />
+        {status === "loading" ? (
+          <PlansLoading count={4} />
+        ) : status === "error" ? (
+          <PlansError onRetry={load} message={errMsg} />
+        ) : plans.length === 0 ? (
+          <PlansEmpty />
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+            {plans.map((p) => (
+              <div key={p.id} className={`relative rounded-2xl p-6 transition ${p.is_popular ? "glass-strong border-primary/40 glow-primary" : "glass"}`}>
+                {(p.is_popular || p.badge) && <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-medium bg-[image:var(--gradient-gold)] text-gold-foreground">{p.badge || "Most popular"}</span>}
+                <div className="flex items-center gap-2 text-primary"><Cpu className="w-4 h-4" /><span className="text-xs uppercase tracking-widest">{p.name}</span></div>
+                <p className="mt-4 text-3xl font-bold gradient-text">{p.daily_rate_pct ?? "—"}%<span className="text-sm font-normal text-muted-foreground">/day</span></p>
+                <div className="mt-5 space-y-2.5 text-sm">
+                  <Row label="Investment" value={`${money(p.min_amount)}${p.max_amount ? ` – ${money(p.max_amount)}` : ""}`} />
+                  <Row label="Duration" value={p.duration_days ? `${p.duration_days} days` : "—"} />
+                  <Row label="Total ROI" value={p.total_roi_pct != null ? `${p.total_roi_pct}%` : "—"} />
+                  <Row label="Distribution" value="Daily (UTC-5)" />
+                </div>
+                <InvestButton service="mining" planName={p.name} minAmount={Number(p.min_amount)} variant={p.is_popular ? "gold" : "ghost"} className="w-full mt-6" />
               </div>
-              <InvestButton service="mining" planName={p.name} minAmount={Number(p.min_amount)} variant={p.is_popular ? "gold" : "ghost"} className="w-full mt-6" />
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </Section>
 
       <Section eyebrow="Calculator" title={<>Estimate your <span className="gradient-text">earnings</span></>}>

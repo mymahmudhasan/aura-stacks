@@ -295,17 +295,64 @@ function Dashboard() {
         );
       })()}
 
-      <div className="mb-6 rounded-2xl border border-primary/30 bg-primary/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-lg bg-[image:var(--gradient-gold)] text-gold-foreground flex items-center justify-center shrink-0">
-            <ArrowUpRight className="w-4 h-4" />
+      <div className={`mb-6 rounded-2xl border p-4 flex flex-col gap-3 ${cust?.binance_uid ? "border-primary/30 bg-primary/5" : "border-destructive/40 bg-destructive/5"}`}>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${cust?.binance_uid ? "bg-[image:var(--gradient-gold)] text-gold-foreground" : "bg-destructive/20 text-destructive"}`}>
+              <ArrowUpRight className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold">
+                {cust?.binance_uid
+                  ? "Withdrawals are sent manually to your Binance wallet."
+                  : "Set your Binance UID to enable withdrawals."}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {cust?.binance_uid
+                  ? "Payouts are processed within 24 hours. Tap your UID to update it."
+                  : "Without a UID on file we can't send your payouts. Add it here in seconds."}
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-semibold">Withdrawals are sent manually to your Binance wallet.</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Make sure your Binance UID on file is correct. Payouts are processed within 24 hours.</p>
-          </div>
+          {!uidEditing ? (
+            <button
+              type="button"
+              onClick={() => { setUidInput(cust?.binance_uid ?? ""); setUidMsg(null); setUidEditing(true); }}
+              className="text-xs font-mono px-3 py-1.5 rounded-lg glass hover:bg-primary/10 transition inline-flex items-center gap-2"
+            >
+              <span className="text-primary">UID · {cust?.binance_uid ?? "not set"}</span>
+              <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{cust?.binance_uid ? "Edit" : "Add"}</span>
+            </button>
+          ) : (
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setUidSaving(true); setUidMsg(null);
+                try {
+                  await updateBinanceUid({ data: { binance_uid: uidInput.trim() } });
+                  setUidEditing(false);
+                  await load(false);
+                } catch (err) {
+                  setUidMsg(err instanceof Error ? err.message : "Failed to save UID");
+                } finally { setUidSaving(false); }
+              }}
+              className="flex items-center gap-2 w-full sm:w-auto"
+            >
+              <input
+                autoFocus
+                value={uidInput}
+                onChange={(e) => setUidInput(e.target.value)}
+                placeholder="284910321"
+                className="rounded-lg glass px-3 py-1.5 text-xs font-mono w-40 focus:outline-none focus:ring-2 focus:ring-primary/40"
+              />
+              <button type="submit" disabled={uidSaving || uidInput.trim().length < 3} className="rounded-lg px-3 py-1.5 text-xs font-semibold bg-primary text-primary-foreground glow-primary disabled:opacity-60 inline-flex items-center gap-1">
+                {uidSaving && <Loader2 className="w-3 h-3 animate-spin" />} Save
+              </button>
+              <button type="button" onClick={() => { setUidEditing(false); setUidMsg(null); }} className="text-xs text-muted-foreground hover:text-foreground px-2">Cancel</button>
+            </form>
+          )}
         </div>
-        <p className="text-xs font-mono text-primary">UID · {cust?.binance_uid ?? "not set"}</p>
+        {uidMsg && <p className="text-xs text-destructive">{uidMsg}</p>}
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">

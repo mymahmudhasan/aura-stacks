@@ -5,7 +5,7 @@ import { GlassCard, Section } from "@/components/ui-bits";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { createDeposit, getDepositSettings, getMyDeposits } from "@/lib/wallet.functions";
+import { createDeposit, getDepositSettings, getMyDeposits, getMyProfile } from "@/lib/wallet.functions";
 
 export const Route = createFileRoute("/deposit")({
   component: DepositPage,

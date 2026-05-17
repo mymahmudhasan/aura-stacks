@@ -7,7 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import { CTA, GlassCard, Section } from "@/components/ui-bits";
 import { supabase } from "@/integrations/supabase/client";
 import { RequirePhoneVerified } from "@/components/RequirePhoneVerified";
-import { getMyWallet, getMyInvestments, getMyDeposits, getMyWithdrawals } from "@/lib/wallet.functions";
+import { getMyWallet, getMyInvestments, getMyDeposits, getMyWithdrawals, updateBinanceUid } from "@/lib/wallet.functions";
 import { QuickInvestForm } from "@/components/QuickInvestModal";
 
 export const Route = createFileRoute("/dashboard")({
@@ -54,6 +54,10 @@ function Dashboard() {
   const [wds, setWds] = useState<Wd[]>([]);
   const [accountId, setAccountId] = useState<string>("");
   const [now, setNow] = useState<number>(() => Date.now());
+  const [uidEditing, setUidEditing] = useState(false);
+  const [uidInput, setUidInput] = useState("");
+  const [uidSaving, setUidSaving] = useState(false);
+  const [uidMsg, setUidMsg] = useState<string | null>(null);
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
@@ -291,17 +295,64 @@ function Dashboard() {
         );
       })()}
 
-      <div className="mb-6 rounded-2xl border border-primary/30 bg-primary/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-lg bg-[image:var(--gradient-gold)] text-gold-foreground flex items-center justify-center shrink-0">
-            <ArrowUpRight className="w-4 h-4" />
+      <div className={`mb-6 rounded-2xl border p-4 flex flex-col gap-3 ${cust?.binance_uid ? "border-primary/30 bg-primary/5" : "border-destructive/40 bg-destructive/5"}`}>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${cust?.binance_uid ? "bg-[image:var(--gradient-gold)] text-gold-foreground" : "bg-destructive/20 text-destructive"}`}>
+              <ArrowUpRight className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold">
+                {cust?.binance_uid
+                  ? "Withdrawals are sent manually to your Binance wallet."
+                  : "Set your Binance UID to enable withdrawals."}
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {cust?.binance_uid
+                  ? "Payouts are processed within 24 hours. Tap your UID to update it."
+                  : "Without a UID on file we can't send your payouts. Add it here in seconds."}
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-semibold">Withdrawals are sent manually to your Binance wallet.</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Make sure your Binance UID on file is correct. Payouts are processed within 24 hours.</p>
-          </div>
+          {!uidEditing ? (
+            <button
+              type="button"
+              onClick={() => { setUidInput(cust?.binance_uid ?? ""); setUidMsg(null); setUidEditing(true); }}
+              className="text-xs font-mono px-3 py-1.5 rounded-lg glass hover:bg-primary/10 transition inline-flex items-center gap-2"
+            >
+              <span className="text-primary">UID · {cust?.binance_uid ?? "not set"}</span>
+              <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{cust?.binance_uid ? "Edit" : "Add"}</span>
+            </button>
+          ) : (
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setUidSaving(true); setUidMsg(null);
+                try {
+                  await updateBinanceUid({ data: { binance_uid: uidInput.trim() } });
+                  setUidEditing(false);
+                  await load(false);
+                } catch (err) {
+                  setUidMsg(err instanceof Error ? err.message : "Failed to save UID");
+                } finally { setUidSaving(false); }
+              }}
+              className="flex items-center gap-2 w-full sm:w-auto"
+            >
+              <input
+                autoFocus
+                value={uidInput}
+                onChange={(e) => setUidInput(e.target.value)}
+                placeholder="284910321"
+                className="rounded-lg glass px-3 py-1.5 text-xs font-mono w-40 focus:outline-none focus:ring-2 focus:ring-primary/40"
+              />
+              <button type="submit" disabled={uidSaving || uidInput.trim().length < 3} className="rounded-lg px-3 py-1.5 text-xs font-semibold bg-primary text-primary-foreground glow-primary disabled:opacity-60 inline-flex items-center gap-1">
+                {uidSaving && <Loader2 className="w-3 h-3 animate-spin" />} Save
+              </button>
+              <button type="button" onClick={() => { setUidEditing(false); setUidMsg(null); }} className="text-xs text-muted-foreground hover:text-foreground px-2">Cancel</button>
+            </form>
+          )}
         </div>
-        <p className="text-xs font-mono text-primary">UID · {cust?.binance_uid ?? "not set"}</p>
+        {uidMsg && <p className="text-xs text-destructive">{uidMsg}</p>}
       </div>
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -336,57 +387,8 @@ function Dashboard() {
               <QuickInvestForm />
             </div>
 
-            {activeInvs.length > 0 && (
-              <div className="space-y-3">
-                {activeInvs.map((row) => {
-                  const start = row.started_at ? new Date(row.started_at).getTime() : new Date(row.created_at).getTime();
-                  const end = row.ends_at ? new Date(row.ends_at).getTime() : start + 30 * 24 * 3600 * 1000;
-                  const pct = Math.max(0, Math.min(100, Math.round(((now - start) / (end - start)) * 100)));
-                  const remaining = Math.max(0, end - now);
-                  const d = Math.floor(remaining / 86_400_000);
-                  const h = Math.floor((remaining % 86_400_000) / 3_600_000);
-                  const m = Math.floor((remaining % 3_600_000) / 60_000);
-                  const s = Math.floor((remaining % 60_000) / 1000);
-                  const matured = remaining === 0;
-                  const isAI = row.service === "ai_trading";
-                  return (
-                    <div key={row.id} className={`relative rounded-xl p-4 transition hover-scale ${isAI ? "border border-primary/40 bg-primary/5 glow-primary" : "glass"}`}>
-                      <div className="flex items-center justify-between gap-4 flex-wrap">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isAI ? "bg-[image:var(--gradient-primary)] text-primary-foreground" : "bg-primary/15"}`}>
-                            {serviceIcon[row.service] ?? <TrendingUp className="w-4 h-4 text-primary" />}
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <p className="font-semibold text-sm">{row.plan_name}</p>
-                              {isAI && <span className="text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded bg-gold/20 text-gold font-bold">AI</span>}
-                              {matured && <span className="text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded bg-success/20 text-success font-bold">Matured</span>}
-                            </div>
-                            <p className="text-xs text-muted-foreground capitalize">{row.service.replace("_", " ")} · Invested ${Number(row.amount).toLocaleString()}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          {!matured ? (
-                            <div className="flex items-center gap-1.5 font-mono text-xs">
-                              <Clock className="w-3.5 h-3.5 text-primary" />
-                              <span className="px-1.5 py-0.5 rounded bg-primary/15 text-primary font-bold">{String(d).padStart(2, "0")}d</span>
-                              <span className="px-1.5 py-0.5 rounded bg-primary/15 text-primary font-bold">{String(h).padStart(2, "0")}h</span>
-                              <span className="px-1.5 py-0.5 rounded bg-primary/15 text-primary font-bold">{String(m).padStart(2, "0")}m</span>
-                              <span className="px-1.5 py-0.5 rounded bg-primary/15 text-primary font-bold">{String(s).padStart(2, "0")}s</span>
-                            </div>
-                          ) : (
-                            <span className="text-xs font-mono text-success font-bold">Ready to claim</span>
-                          )}
-                          <span className={`text-xs font-mono ${isAI ? "text-primary font-bold" : "text-muted-foreground"}`}>{pct}%</span>
-                        </div>
-                      </div>
-                      <div className="mt-3 h-2 rounded-full bg-white/5 overflow-hidden">
-                        <div className="h-full bg-[image:var(--gradient-primary)] transition-all duration-700" style={{ width: `${pct}%` }} />
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+            {activeInvs.length === 0 && (
+              <p className="text-xs text-muted-foreground text-center py-2">No active investments yet — pick a package above to start earning.</p>
             )}
           </div>
         </div>

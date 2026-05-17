@@ -142,9 +142,13 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
           )}
           <input required type="password" value={form.password} onChange={upd("password")} placeholder="Password (min 6 chars)" minLength={6} className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none" />
           {!isLogin && (
+            <input required type="password" value={form.confirmPassword} onChange={upd("confirmPassword")} placeholder="Confirm password" minLength={6} className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none" />
+          )}
+          {!isLogin && (
             <input value={form.referredBy} onChange={upd("referredBy")} placeholder="Referral code (optional)" className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none" />
           )}
           {error && <p className="text-sm text-destructive">{error}</p>}
+          {info && <p className="text-sm text-success">{info}</p>}
           <button disabled={loading} className="w-full px-4 py-3 rounded-xl bg-primary text-primary-foreground font-medium glow-primary inline-flex items-center justify-center gap-2 disabled:opacity-60">
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
             {isLogin ? "Sign in" : "Create account"}

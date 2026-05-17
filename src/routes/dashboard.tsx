@@ -337,6 +337,7 @@ function Dashboard() {
       <div className="mt-8">
         <CTA to="/mining" variant="gold">Discover new plans</CTA>
       </div>
+      <QuickInvestModal open={quickOpen} onClose={() => setQuickOpen(false)} />
     </Section>
   );
 }

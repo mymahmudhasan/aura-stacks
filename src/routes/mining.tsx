@@ -66,7 +66,7 @@ function Mining() {
                 <Row label="Total ROI" value={p.roi} />
                 <Row label="Distribution" value="Daily (UTC-5)" />
               </div>
-              <CTA to="/register" variant={p.popular ? "gold" : "ghost"} className="w-full mt-6">Invest now</CTA>
+              <InvestButton service="mining" planName={`Mining ${p.name}`} minAmount={parseInt(p.min.replace(/\D/g, ""))} variant={p.popular ? "gold" : "ghost"} className="w-full mt-6" />
             </div>
           ))}
         </div>

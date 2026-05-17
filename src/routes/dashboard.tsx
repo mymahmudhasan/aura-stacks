@@ -258,7 +258,7 @@ function Dashboard() {
         const m = Math.floor((remaining % 3_600_000) / 60_000);
         const s = Math.floor((remaining % 60_000) / 1000);
         const matured = remaining === 0;
-        const accrued = invAccrual(featured);
+        const accrued = computeAccrual(featured);
         const dailyPct = dailyRateFor(featured.plan_name) * 100;
         return (
           <div className="mb-6 rounded-2xl p-[1.5px] bg-[image:var(--gradient-aurora)] glow-primary animate-fade-in">

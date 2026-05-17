@@ -65,6 +65,10 @@ const offers = [
 ];
 
 function Staking() {
+  const [tiers, setTiers] = useState<DBPlan[]>([]);
+  useEffect(() => {
+    listPlans({ data: { service: "staking" } }).then((d) => setTiers(d as unknown as DBPlan[])).catch(() => {});
+  }, []);
   return (
     <>
       <PageHero

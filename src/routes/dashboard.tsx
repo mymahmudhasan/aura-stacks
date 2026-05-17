@@ -111,15 +111,26 @@ function Dashboard() {
   }
 
   const balance = cust?.balance ?? 0;
-  const totalProfit = balance + (cust?.total_withdrawn ?? 0) - (cust?.total_deposited ?? 0);
+  const activeInvs = invs.filter((i) => i.status === "active");
+  const investedActive = activeInvs.reduce((s, i) => s + Number(i.amount), 0);
+  // Live profit accrual: 1% per day since each investment started, ticking every second
+  const liveAccrual = activeInvs.reduce((s, i) => {
+    const start = i.started_at ? new Date(i.started_at).getTime() : new Date(i.created_at).getTime();
+    const elapsedDays = Math.max(0, (now - start) / 86_400_000);
+    return s + Number(i.amount) * 0.01 * elapsedDays;
+  }, 0);
+  // Treat active investments as assets (not a loss); add live accrual so it grows from start
+  const totalProfit = Math.max(
+    0,
+    balance + investedActive + (cust?.total_withdrawn ?? 0) - (cust?.total_deposited ?? 0) + liveAccrual,
+  );
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const earningsToday = txns
     .filter((t) => t.kind === "earning" && new Date(t.created_at) >= today)
-    .reduce((s, t) => s + Number(t.amount), 0);
+    .reduce((s, t) => s + Number(t.amount), 0) + liveAccrual;
   const pendingWdAmount = wds.filter((w) => w.status === "pending").reduce((s, w) => s + Number(w.amount), 0);
   const pendingWdCount = wds.filter((w) => w.status === "pending").length;
   const pendingDepCount = deps.filter((d) => d.status === "pending").length;
-  const activeInvs = invs.filter((i) => i.status === "active");
 
   return (
     <Section className="!py-10">
@@ -207,7 +218,7 @@ function Dashboard() {
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Stat icon={<Wallet />} label="Total Balance" value={`$${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend={demoType === "demo" ? "Demo" : "Live"} highlight />
-        <Stat icon={totalProfit >= 0 ? <TrendingUp /> : <TrendingDown />} label="Total Profit" value={`${totalProfit >= 0 ? "+" : "-"}$${Math.abs(totalProfit).toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend={totalProfit >= 0 ? "All time" : "All time"} positive={totalProfit >= 0} highlight />
+        <Stat icon={<TrendingUp />} label="Total Profit" value={`+$${totalProfit.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend="Live" positive highlight />
         <Stat icon={<Activity />} label="Earnings Today" value={`$${earningsToday.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend="Today" positive />
         <Stat icon={<Clock />} label="Pending Withdrawals" value={`$${pendingWdAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend={`${pendingWdCount} request${pendingWdCount === 1 ? "" : "s"}`} />
       </div>

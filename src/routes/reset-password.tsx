@@ -19,6 +19,8 @@ function ResetPassword() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
+    // Only PASSWORD_RECOVERY authorizes a password change here.
+    // Having a normal active session is NOT enough.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "PASSWORD_RECOVERY" && session?.user) {
         setAuthorized(true);
@@ -26,16 +28,13 @@ function ResetPassword() {
       }
     });
 
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session?.user) {
-        setAuthorized(true);
-        setReady(true);
-      } else {
-        setTimeout(() => setReady(true), 1500);
-      }
-    });
+    // Give Supabase a moment to parse the recovery hash and fire the event.
+    const timeout = setTimeout(() => setReady(true), 1800);
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   const onSubmit = async (e: React.FormEvent) => {

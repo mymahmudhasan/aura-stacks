@@ -14,7 +14,6 @@ const nav = [
   { to: "/about", label: "About" },
   { to: "/faq", label: "FAQ" },
   { to: "/support", label: "Support" },
-  { to: "/admin", label: "Admin" },
 ];
 
 export function Header() {

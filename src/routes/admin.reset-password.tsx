@@ -87,7 +87,7 @@ function AdminResetPassword() {
     }
     setSuccess(true);
     await supabase.auth.signOut();
-    setTimeout(() => navigate({ to: "/admin/login" }), 2000);
+    setTimeout(() => navigate({ to: "/login" }), 2000);
   };
 
   return (
@@ -117,8 +117,8 @@ function AdminResetPassword() {
             <p className="text-sm text-destructive">
               {error ?? "This link has expired or is invalid. Request a new reset link."}
             </p>
-            <Link to="/admin/login" className="inline-block text-xs text-primary hover:underline">
-              Back to admin sign in
+            <Link to="/login" className="inline-block text-xs text-primary hover:underline">
+              Back to sign in
             </Link>
           </div>
         ) : (

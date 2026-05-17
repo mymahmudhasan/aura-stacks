@@ -43,13 +43,13 @@ function Admin() {
   useEffect(() => {
     (async () => {
       const { data: sess } = await supabase.auth.getSession();
-      if (!sess.session) return navigate({ to: "/admin/login" });
+      if (!sess.session) return navigate({ to: "/login" });
       const { data: role } = await supabase
         .from("user_roles").select("role")
         .eq("user_id", sess.session.user.id).eq("role", "admin").maybeSingle();
       if (!role) {
         await supabase.auth.signOut();
-        return navigate({ to: "/admin/login" });
+        return navigate({ to: "/dashboard" });
       }
       setAuthorized(true);
       setChecking(false);
@@ -89,7 +89,7 @@ function Admin() {
     { id: "settings", label: "Settings", icon: <Settings className="w-4 h-4" /> },
   ];
 
-  const signOut = async () => { await supabase.auth.signOut(); navigate({ to: "/admin/login" }); };
+  const signOut = async () => { await supabase.auth.signOut(); navigate({ to: "/login" }); };
 
   return (
     <div className="mx-auto max-w-7xl px-4 md:px-5 py-6 md:py-10">

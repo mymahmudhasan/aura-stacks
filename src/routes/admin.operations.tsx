@@ -22,9 +22,9 @@ function Ops() {
   useEffect(() => {
     (async () => {
       const { data: sess } = await supabase.auth.getSession();
-      if (!sess.session) return navigate({ to: "/admin/login" });
+      if (!sess.session) return navigate({ to: "/login" });
       const { data: role } = await supabase.from("user_roles").select("role").eq("user_id", sess.session.user.id).eq("role", "admin").maybeSingle();
-      if (!role) return navigate({ to: "/admin/login" });
+      if (!role) return navigate({ to: "/dashboard" });
       setReady(true);
     })();
   }, [navigate]);

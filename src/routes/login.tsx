@@ -50,6 +50,27 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
     return p.startsWith("+") ? p : p ? `+${p}` : "";
   };
 
+  const routeAfterAuth = async (userId?: string) => {
+    let uid = userId;
+    if (!uid) {
+      const { data } = await supabase.auth.getSession();
+      uid = data.session?.user.id;
+    }
+    if (uid) {
+      const { data: role } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", uid)
+        .eq("role", "admin")
+        .maybeSingle();
+      if (role) {
+        navigate({ to: "/admin" });
+        return;
+      }
+    }
+    navigate({ to: "/dashboard" });
+  };
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -58,9 +79,9 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
     setLoading(true);
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password: form.password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password: form.password });
         if (error) throw error;
-        navigate({ to: "/dashboard" });
+        await routeAfterAuth(data.user?.id);
         return;
       }
 
@@ -101,7 +122,7 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
         return;
       }
 
-      navigate({ to: "/dashboard" });
+      await routeAfterAuth(data.user.id);
     } catch (err) {
       setError(friendlyError(err instanceof Error ? err.message : "Something went wrong"));
     } finally {
@@ -137,7 +158,7 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
               setLoading(false);
               return;
             }
-            if (!res.redirected) navigate({ to: "/dashboard" });
+            if (!res.redirected) await routeAfterAuth();
           }}
           className="mt-5 w-full px-4 py-3 rounded-xl bg-background border border-border hover:border-primary/60 font-medium inline-flex items-center justify-center gap-2 disabled:opacity-60"
         >

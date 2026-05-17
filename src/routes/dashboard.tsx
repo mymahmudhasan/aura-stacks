@@ -233,15 +233,7 @@ function Dashboard() {
               <QuickInvestForm />
             </div>
 
-            {activeInvs.length === 0 ? (
-              <div className="text-center py-6 rounded-xl glass">
-                <p className="text-sm text-muted-foreground">No active investments yet — pick a plan below.</p>
-                <div className="mt-3 flex flex-wrap gap-2 justify-center">
-                  <Link to="/mining" className="text-xs px-3 py-1.5 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 transition">Mining</Link>
-                  <Link to="/staking" className="text-xs px-3 py-1.5 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 transition">Staking</Link>
-                </div>
-              </div>
-            ) : (
+            {activeInvs.length > 0 && (
               <div className="space-y-3">
                 {activeInvs.map((row) => {
                   const start = row.started_at ? new Date(row.started_at).getTime() : new Date(row.created_at).getTime();

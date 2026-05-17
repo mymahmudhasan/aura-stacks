@@ -208,47 +208,88 @@ function Dashboard() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-5 mt-5">
-        <GlassCard className="lg:col-span-2">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold">Active Investments</h3>
-            <span className="text-xs text-muted-foreground">{activeInvs.length} active</span>
-          </div>
-          {activeInvs.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-sm text-muted-foreground">No active investments yet.</p>
-              <div className="mt-3 flex flex-wrap gap-2 justify-center">
-                <Link to="/mining" className="text-xs px-3 py-1.5 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 transition">Browse Mining</Link>
-                <Link to="/staking" className="text-xs px-3 py-1.5 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 transition">Browse Staking</Link>
-                <Link to="/ai-trading" className="text-xs px-3 py-1.5 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 transition">Browse AI Trading</Link>
+        <div className="lg:col-span-2 relative rounded-2xl p-[1.5px] bg-[image:var(--gradient-aurora)] glow-primary animate-fade-in">
+          <div className="absolute -inset-8 bg-[image:var(--gradient-aurora)] opacity-30 blur-3xl -z-10 rounded-full pointer-events-none" />
+          <div className="rounded-2xl bg-background/80 backdrop-blur-xl p-5">
+            <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[image:var(--gradient-primary)] text-primary-foreground flex items-center justify-center shadow-[var(--shadow-glow)] animate-pulse">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-extrabold tracking-tight">Active Investments</h3>
+                  <p className="text-xs text-muted-foreground">{activeInvs.length} running · live updates</p>
+                </div>
               </div>
+              <Link to="/ai-trading" className="rounded-xl px-4 py-2 text-sm font-semibold inline-flex items-center gap-2 bg-[image:var(--gradient-primary)] text-primary-foreground glow-primary hover:opacity-90 transition hover-scale">
+                <Brain className="w-4 h-4" /> Invest in AI Trading
+              </Link>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {activeInvs.map((row) => {
-                const start = row.started_at ? new Date(row.started_at).getTime() : new Date(row.created_at).getTime();
-                const end = row.ends_at ? new Date(row.ends_at).getTime() : start + 30 * 24 * 3600 * 1000;
-                const pct = Math.max(0, Math.min(100, Math.round(((Date.now() - start) / (end - start)) * 100)));
-                return (
-                  <div key={row.id} className="rounded-xl glass p-4">
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center">{serviceIcon[row.service] ?? <TrendingUp className="w-4 h-4 text-primary" />}</div>
-                        <div>
-                          <p className="font-medium text-sm">{row.plan_name}</p>
-                          <p className="text-xs text-muted-foreground capitalize">{row.service.replace("_", " ")} · Invested ${Number(row.amount).toLocaleString()}</p>
-                        </div>
-                      </div>
-                      <span className="text-xs font-mono text-muted-foreground">{pct}%</span>
-                    </div>
-                    <div className="mt-3 h-1.5 rounded-full bg-white/5 overflow-hidden">
-                      <div className="h-full bg-[image:var(--gradient-primary)]" style={{ width: `${pct}%` }} />
-                    </div>
+
+            {/* Featured AI Trading invest card — always shown, top priority */}
+            <Link to="/ai-trading" className="group relative block rounded-xl overflow-hidden border border-primary/40 bg-[image:var(--gradient-aurora)]/20 p-4 mb-4 hover:border-primary transition">
+              <div className="absolute inset-0 bg-[image:var(--gradient-primary)] opacity-10 group-hover:opacity-20 transition" />
+              <div className="relative flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-[image:var(--gradient-primary)] text-primary-foreground flex items-center justify-center shadow-[var(--shadow-glow)]">
+                    <Brain className="w-6 h-6" />
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </GlassCard>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-base">AI Trading Bot</p>
+                      <span className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-gold/20 text-gold font-bold">Top Pick</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Up to <span className="text-success font-semibold">+14.3% / mo</span> · Neural strategies, 24/7</p>
+                  </div>
+                </div>
+                <span className="text-sm font-semibold text-primary inline-flex items-center gap-1 group-hover:translate-x-1 transition">
+                  Start now <ArrowUpRight className="w-4 h-4" />
+                </span>
+              </div>
+            </Link>
+
+            {activeInvs.length === 0 ? (
+              <div className="text-center py-6 rounded-xl glass">
+                <p className="text-sm text-muted-foreground">No active investments yet — pick a plan below.</p>
+                <div className="mt-3 flex flex-wrap gap-2 justify-center">
+                  <Link to="/mining" className="text-xs px-3 py-1.5 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 transition">Mining</Link>
+                  <Link to="/staking" className="text-xs px-3 py-1.5 rounded-lg bg-primary/15 text-primary hover:bg-primary/25 transition">Staking</Link>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {activeInvs.map((row) => {
+                  const start = row.started_at ? new Date(row.started_at).getTime() : new Date(row.created_at).getTime();
+                  const end = row.ends_at ? new Date(row.ends_at).getTime() : start + 30 * 24 * 3600 * 1000;
+                  const pct = Math.max(0, Math.min(100, Math.round(((Date.now() - start) / (end - start)) * 100)));
+                  const isAI = row.service === "ai_trading";
+                  return (
+                    <div key={row.id} className={`relative rounded-xl p-4 transition hover-scale ${isAI ? "border border-primary/40 bg-primary/5 glow-primary" : "glass"}`}>
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isAI ? "bg-[image:var(--gradient-primary)] text-primary-foreground" : "bg-primary/15"}`}>
+                            {serviceIcon[row.service] ?? <TrendingUp className="w-4 h-4 text-primary" />}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="font-semibold text-sm">{row.plan_name}</p>
+                              {isAI && <span className="text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded bg-gold/20 text-gold font-bold">AI</span>}
+                            </div>
+                            <p className="text-xs text-muted-foreground capitalize">{row.service.replace("_", " ")} · Invested ${Number(row.amount).toLocaleString()}</p>
+                          </div>
+                        </div>
+                        <span className={`text-xs font-mono ${isAI ? "text-primary font-bold" : "text-muted-foreground"}`}>{pct}%</span>
+                      </div>
+                      <div className="mt-3 h-2 rounded-full bg-white/5 overflow-hidden">
+                        <div className="h-full bg-[image:var(--gradient-primary)] transition-all duration-700" style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
 
         <GlassCard>
           <div className="flex items-center justify-between mb-4">

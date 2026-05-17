@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Lock, TrendingUp, Timer, Layers, Gift, Zap, Sparkles, Flame, BadgePercent, Crown } from "lucide-react";
 import { CTA, GlassCard, PageHero, Section } from "@/components/ui-bits";
 import { InvestButton } from "@/components/InvestButton";
 import { ServiceReferral } from "@/components/ServiceReferral";
 import { StakingTimeline } from "@/components/StakingTimeline";
 import { StakingPool } from "@/components/StakingPool";
+import { PlansEmpty, PlansError, PlansLoading } from "@/components/PlansState";
 import { listPlans } from "@/lib/plans.functions";
 import stakingImg from "@/assets/staking-visual.webp";
 import vaultImg from "@/assets/staking-vault.webp";
@@ -66,9 +67,16 @@ const offers = [
 
 function Staking() {
   const [tiers, setTiers] = useState<DBPlan[]>([]);
-  useEffect(() => {
-    listPlans({ data: { service: "staking" } }).then((d) => setTiers(d as unknown as DBPlan[])).catch(() => {});
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [errMsg, setErrMsg] = useState<string | undefined>();
+  const load = useCallback(() => {
+    setStatus("loading");
+    setErrMsg(undefined);
+    listPlans({ data: { service: "staking" } })
+      .then((d) => { setTiers(d as unknown as DBPlan[]); setStatus("ready"); })
+      .catch((e: unknown) => { setErrMsg(e instanceof Error ? e.message : undefined); setStatus("error"); });
   }, []);
+  useEffect(() => { load(); }, [load]);
   return (
     <>
       <PageHero
@@ -158,22 +166,30 @@ function Staking() {
       </Section>
 
       <Section eyebrow="Lock periods" title={<>Choose your <span className="gradient-text">staking duration</span></>}>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {tiers.map((t) => (
-            <div key={t.id} className={`relative rounded-2xl p-6 transition ${t.is_popular ? "glass-strong border-primary/40 glow-primary" : "glass"}`}>
-              {(t.is_popular || t.badge) && <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-medium bg-[image:var(--gradient-gold)] text-gold-foreground">{t.badge || "Best APY"}</span>}
-              <div className="flex items-center gap-2 text-primary"><Lock className="w-4 h-4" /><span className="text-xs uppercase tracking-widest">{t.name}</span></div>
-              <p className="mt-4 text-4xl font-bold gradient-text">{t.apy_pct ?? "—"}%</p>
-              <p className="text-xs text-muted-foreground mt-1">Estimated APY</p>
-              <div className="mt-5 space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Min stake</span><span className="font-medium">${Number(t.min_amount).toLocaleString()}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Type</span><span className="font-medium">{t.flex || "Fixed"}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Reward</span><span className="font-medium">Daily</span></div>
+        {status === "loading" ? (
+          <PlansLoading count={4} />
+        ) : status === "error" ? (
+          <PlansError onRetry={load} message={errMsg} />
+        ) : tiers.length === 0 ? (
+          <PlansEmpty />
+        ) : (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {tiers.map((t) => (
+              <div key={t.id} className={`relative rounded-2xl p-6 transition ${t.is_popular ? "glass-strong border-primary/40 glow-primary" : "glass"}`}>
+                {(t.is_popular || t.badge) && <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-medium bg-[image:var(--gradient-gold)] text-gold-foreground">{t.badge || "Best APY"}</span>}
+                <div className="flex items-center gap-2 text-primary"><Lock className="w-4 h-4" /><span className="text-xs uppercase tracking-widest">{t.name}</span></div>
+                <p className="mt-4 text-4xl font-bold gradient-text">{t.apy_pct ?? "—"}%</p>
+                <p className="text-xs text-muted-foreground mt-1">Estimated APY</p>
+                <div className="mt-5 space-y-2 text-sm">
+                  <div className="flex justify-between"><span className="text-muted-foreground">Min stake</span><span className="font-medium">${Number(t.min_amount).toLocaleString()}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Type</span><span className="font-medium">{t.flex || "Fixed"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Reward</span><span className="font-medium">Daily</span></div>
+                </div>
+                <InvestButton service="staking" planName={t.name} minAmount={Number(t.min_amount)} variant={t.is_popular ? "gold" : "ghost"} className="w-full mt-6" />
               </div>
-              <InvestButton service="staking" planName={t.name} minAmount={Number(t.min_amount)} variant={t.is_popular ? "gold" : "ghost"} className="w-full mt-6" />
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </Section>
 
       <Section

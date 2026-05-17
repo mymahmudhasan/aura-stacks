@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { X, MessageCircle, Send } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { X, MessageCircle, Send, Mic, MicOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 // Fallback used only if the database setting hasn't loaded yet.
@@ -18,6 +18,10 @@ export function WhatsAppWidget() {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [number, setNumber] = useState(FALLBACK_WA_NUMBER);
+  const [listening, setListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
+  const recognitionRef = useRef<any>(null);
+  const baseTextRef = useRef("");
 
   useEffect(() => {
     let cancelled = false;
@@ -40,6 +44,46 @@ export function WhatsAppWidget() {
       window.removeEventListener(EVENT, onChange);
     };
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    setSpeechSupported(!!SR);
+  }, []);
+
+  const stopListening = () => {
+    try { recognitionRef.current?.stop(); } catch { /* noop */ }
+    setListening(false);
+  };
+
+  const startListening = () => {
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) return;
+    if (listening) { stopListening(); return; }
+    const rec = new SR();
+    rec.lang = navigator.language || "en-US";
+    rec.interimResults = true;
+    rec.continuous = false;
+    baseTextRef.current = message ? message.trimEnd() + " " : "";
+    rec.onresult = (event: any) => {
+      let transcript = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      setMessage(baseTextRef.current + transcript);
+    };
+    rec.onerror = () => setListening(false);
+    rec.onend = () => setListening(false);
+    recognitionRef.current = rec;
+    try {
+      rec.start();
+      setListening(true);
+    } catch {
+      setListening(false);
+    }
+  };
+
+  useEffect(() => () => { try { recognitionRef.current?.stop(); } catch { /* noop */ } }, []);
 
   const greeting =
     "Hi AuraTrad.Ai support 👋 — I have a question about my account / investment.";
@@ -88,8 +132,8 @@ export function WhatsAppWidget() {
           <div className="p-4 space-y-3 bg-card/30">
             <div className="rounded-xl rounded-tl-sm bg-white/5 px-3 py-2.5 text-xs text-foreground/90 leading-relaxed">
               👋 Hi there! I'm here to help with deposits, withdrawals, AI bot
-              issues or any account question. Pick a topic or send a message —
-              we'll continue on WhatsApp.
+              issues or any account question. Pick a topic, type, or tap the mic to
+              speak — we'll continue on WhatsApp.
             </div>
 
             <div className="space-y-1.5">
@@ -107,6 +151,7 @@ export function WhatsAppWidget() {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
+                stopListening();
                 sendOnWhatsApp(message);
               }}
               className="flex items-center gap-2 pt-1"
@@ -115,9 +160,34 @@ export function WhatsAppWidget() {
                 type="text"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Type your question…"
+                placeholder={listening ? "Listening…" : "Type or tap mic to speak…"}
                 className="flex-1 px-3 py-2 rounded-lg bg-input/50 border border-border focus:border-success outline-none text-xs"
               />
+              {speechSupported ? (
+                <button
+                  type="button"
+                  onClick={startListening}
+                  aria-label={listening ? "Stop voice input" : "Start voice input"}
+                  title={listening ? "Stop listening" : "Speak your message (Google voice)"}
+                  className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition ${
+                    listening
+                      ? "bg-destructive text-white animate-pulse ring-2 ring-destructive/40"
+                      : "glass hover:border-success/40 text-foreground"
+                  }`}
+                >
+                  {listening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled
+                  aria-label="Voice input not supported"
+                  title="Voice input not supported in this browser"
+                  className="w-9 h-9 rounded-lg glass flex items-center justify-center shrink-0 opacity-40 cursor-not-allowed"
+                >
+                  <Mic className="w-4 h-4" />
+                </button>
+              )}
               <button
                 type="submit"
                 aria-label="Send on WhatsApp"
@@ -128,7 +198,7 @@ export function WhatsAppWidget() {
             </form>
 
             <p className="text-[10px] text-muted-foreground text-center pt-1">
-              Opens in WhatsApp · end-to-end encrypted
+              {listening ? "🎙️ Listening — speak now" : "Opens in WhatsApp · end-to-end encrypted"}
             </p>
           </div>
         </div>

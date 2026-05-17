@@ -215,8 +215,8 @@ export function QuickInvestForm({ onDone, compact = false }: { onDone?: () => vo
                     </span>
                   )}
                 </div>
-                <p className="text-base font-extrabold mt-1 text-primary">{p.roi}</p>
-                <div className="flex items-center justify-between text-[11px] text-muted-foreground mt-1">
+                <p className="text-base font-extrabold mt-1 text-success inline-block px-2 py-0.5 rounded-md bg-success/10">{p.roi}</p>
+                <div className="flex items-center justify-between text-[11px] text-success/80 mt-1 font-semibold">
                   <span>${p.min.toLocaleString()}{p.max ? ` – $${p.max.toLocaleString()}` : "+"}</span>
                   <span className="inline-flex items-center gap-1"><Crown className="w-3 h-3" /> {p.duration}</span>
                 </div>
@@ -252,7 +252,7 @@ export function QuickInvestForm({ onDone, compact = false }: { onDone?: () => vo
             onChange={(e) => setAmount(Number(e.target.value) || 0)}
             className="w-full rounded-xl glass px-4 py-3 text-base font-semibold focus:outline-none focus:ring-2 focus:ring-primary/40"
           />
-          <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+          <p className="text-xs text-success mt-2 flex items-center gap-1 font-semibold">
             <TrendingUp className="w-3 h-3 text-success" />
             {pkg.name} · min ${pkg.min}{pkg.max ? ` · max $${pkg.max.toLocaleString()}` : ""} · {pkg.roi}
           </p>

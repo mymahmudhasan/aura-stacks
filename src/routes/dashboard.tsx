@@ -87,6 +87,7 @@ function Dashboard() {
       const { data: u } = await supabase.auth.getUser();
       const uid = u.user?.id ?? "";
       setAccountId(uid.slice(0, 8).toUpperCase());
+      setUserId(uid);
       const [w, i, d, wlist, custExtra] = await Promise.all([
         getMyWallet(),
         getMyInvestments(),

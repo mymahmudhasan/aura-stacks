@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { RequirePhoneVerified } from "@/components/RequirePhoneVerified";
 import { getMyWallet, getMyInvestments, getMyDeposits, getMyWithdrawals, updateBinanceUid } from "@/lib/wallet.functions";
 import { QuickInvestForm } from "@/components/QuickInvestModal";
+import { WelcomeBonusBanner } from "@/components/WelcomeBonusBanner";
+import { listPlans } from "@/lib/plans.functions";
 
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: async () => {

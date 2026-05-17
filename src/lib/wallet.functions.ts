@@ -154,7 +154,7 @@ export const createInvestment = createServerFn({ method: "POST" })
     const startedAt = new Date();
     const days = data.duration_days ?? 30;
     const endsAt = new Date(startedAt.getTime() + days * 24 * 60 * 60 * 1000);
-    const { data: activated, error: actErr } = await supabase
+    const { data: activated, error: actErr } = await supabaseAdmin
       .from("investments")
       .update({
         status: "active",

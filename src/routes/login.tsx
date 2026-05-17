@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Hexagon, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
@@ -70,6 +70,19 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
     }
     navigate({ to: "/dashboard" });
   };
+
+  // Auto-redirect if already signed in (handles back-button / stale tabs / OAuth return)
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (active && data.session) void routeAfterAuth(data.session.user.id);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      if (session) void routeAfterAuth(session.user.id);
+    });
+    return () => { active = false; sub.subscription.unsubscribe(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

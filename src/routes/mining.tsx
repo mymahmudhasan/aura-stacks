@@ -1,8 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { Cpu, Check, Zap } from "lucide-react";
 import { CTA, GlassCard, PageHero, Section } from "@/components/ui-bits";
 import { InvestButton } from "@/components/InvestButton";
 import { ServiceReferral } from "@/components/ServiceReferral";
+import { listPlans } from "@/lib/plans.functions";
 import miningImg from "@/assets/mining-visual.webp";
 
 export const Route = createFileRoute("/mining")({
@@ -15,14 +17,20 @@ export const Route = createFileRoute("/mining")({
   }),
 });
 
-const plans = [
-  { name: "Starter", min: "$100", max: "$999", daily: "1.2%", duration: "30 days", roi: "36%", popular: false },
-  { name: "Advanced", min: "$1,000", max: "$4,999", daily: "1.6%", duration: "45 days", roi: "72%", popular: true },
-  { name: "Premium", min: "$5,000", max: "$24,999", daily: "2.0%", duration: "60 days", roi: "120%", popular: false },
-  { name: "VIP", min: "$25,000", max: "$250,000", daily: "2.4%", duration: "90 days", roi: "216%", popular: false },
-];
+type DBPlan = {
+  id: string; name: string;
+  min_amount: number | string; max_amount: number | string | null;
+  daily_rate_pct: number | string | null; duration_days: number | null;
+  total_roi_pct: number | string | null; is_popular: boolean; badge: string | null;
+};
+
+const money = (v: number | string | null) => v == null ? "—" : `$${Number(v).toLocaleString()}`;
 
 function Mining() {
+  const [plans, setPlans] = useState<DBPlan[]>([]);
+  useEffect(() => {
+    listPlans({ data: { service: "mining" } }).then((d) => setPlans(d as unknown as DBPlan[])).catch(() => {});
+  }, []);
   return (
     <>
       <PageHero

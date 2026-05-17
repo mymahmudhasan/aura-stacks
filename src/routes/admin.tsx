@@ -947,9 +947,139 @@ function SettingsTab({ onToast }: { onToast: (kind: "ok" | "err", msg: string) =
       </GlassCard>
 
       <GlassCard className="lg:col-span-3 p-6">
+        <DepositAddressesSettings onToast={onToast} />
+      </GlassCard>
+
+      <GlassCard className="lg:col-span-3 p-6">
         <WhatsAppSettings onToast={onToast} />
       </GlassCard>
     </div>
+  );
+}
+
+type AddrField = { key: "usdt_trc20_address" | "usdt_bep20_address" | "usdt_erc20_address" | "binance_pay_id"; label: string; placeholder: string; regex: RegExp; help: string };
+const ADDR_FIELDS: AddrField[] = [
+  { key: "usdt_trc20_address", label: "USDT · TRC20 (Tron)", placeholder: "T...", regex: /^T[a-zA-Z0-9]{33}$/, help: "Starts with T, 34 chars total." },
+  { key: "usdt_bep20_address", label: "USDT · BEP20 (BSC)", placeholder: "0x...", regex: /^0x[a-fA-F0-9]{40}$/, help: "0x + 40 hex chars." },
+  { key: "usdt_erc20_address", label: "USDT · ERC20 (Ethereum)", placeholder: "0x...", regex: /^0x[a-fA-F0-9]{40}$/, help: "0x + 40 hex chars." },
+  { key: "binance_pay_id", label: "Binance Pay ID", placeholder: "123456789", regex: /^[a-zA-Z0-9_-]{3,64}$/, help: "3–64 chars, letters/numbers/_/- only." },
+];
+
+function DepositAddressesSettings({ onToast }: { onToast: (kind: "ok" | "err", msg: string) => void }) {
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [saved, setSaved] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from("site_settings")
+      .select("usdt_trc20_address,usdt_bep20_address,usdt_erc20_address,binance_pay_id")
+      .eq("id", 1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        const init: Record<string, string> = {};
+        for (const f of ADDR_FIELDS) init[f.key] = (data?.[f.key] as string | null) ?? "";
+        setValues(init);
+        setSaved(init);
+        setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  const fieldErrors = ADDR_FIELDS.map((f) => {
+    const v = (values[f.key] ?? "").trim();
+    return v.length > 0 && !f.regex.test(v) ? f.key : null;
+  }).filter(Boolean) as string[];
+  const dirty = ADDR_FIELDS.some((f) => (values[f.key] ?? "").trim() !== (saved[f.key] ?? ""));
+  const canSave = !loading && !saving && dirty && fieldErrors.length === 0;
+
+  const save = async () => {
+    if (!canSave) return;
+    setSaving(true);
+    const patch: Record<string, string | null> = {};
+    for (const f of ADDR_FIELDS) {
+      const v = (values[f.key] ?? "").trim();
+      patch[f.key] = v === "" ? null : v;
+    }
+    const { error } = await supabase.from("site_settings").update(patch as never).eq("id", 1);
+    setSaving(false);
+    if (error) { onToast("err", error.message); return; }
+    const next: Record<string, string> = {};
+    for (const f of ADDR_FIELDS) next[f.key] = patch[f.key] ?? "";
+    setSaved(next);
+    setValues(next);
+    onToast("ok", "Deposit addresses updated.");
+  };
+
+  const copy = async (key: string) => {
+    const v = (values[key] ?? "").trim();
+    if (!v) return;
+    await navigator.clipboard.writeText(v);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey((k) => (k === key ? null : k)), 1500);
+  };
+
+  return (
+    <>
+      <div className="flex items-center gap-2 mb-1">
+        <Wallet className="w-5 h-5 text-gold" />
+        <h2 className="text-lg font-bold">Deposit destination addresses</h2>
+      </div>
+      <p className="text-sm text-muted-foreground mb-5">
+        Where users send funds when making a deposit. Leave a field empty to hide that network from the user deposit page.
+      </p>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        {ADDR_FIELDS.map((f) => {
+          const v = values[f.key] ?? "";
+          const invalid = v.trim().length > 0 && !f.regex.test(v.trim());
+          return (
+            <label key={f.key} className="block">
+              <span className="text-xs uppercase tracking-widest text-muted-foreground">{f.label}</span>
+              <div className={`mt-1.5 flex items-center gap-2 px-3 py-2.5 rounded-xl glass border ${invalid ? "border-destructive" : "border-border focus-within:border-primary"}`}>
+                <input
+                  type="text"
+                  placeholder={f.placeholder}
+                  value={v}
+                  onChange={(e) => setValues((p) => ({ ...p, [f.key]: e.target.value }))}
+                  disabled={loading}
+                  spellCheck={false}
+                  autoComplete="off"
+                  className="flex-1 bg-transparent outline-none font-mono text-xs"
+                />
+                <button
+                  type="button"
+                  onClick={() => copy(f.key)}
+                  disabled={!v.trim()}
+                  className="shrink-0 p-1.5 rounded-md hover:bg-primary/10 disabled:opacity-40"
+                  aria-label="Copy"
+                >
+                  {copiedKey === f.key ? <Check className="w-4 h-4 text-success" /> : <Copy className="w-4 h-4" />}
+                </button>
+              </div>
+              <p className={`text-[11px] mt-1 ${invalid ? "text-destructive" : "text-muted-foreground"}`}>
+                {invalid ? `Invalid format. ${f.help}` : f.help}
+              </p>
+            </label>
+          );
+        })}
+      </div>
+
+      <div className="mt-5 flex justify-end">
+        <button
+          onClick={save}
+          disabled={!canSave}
+          className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium glow-primary disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          {saving ? "Saving…" : "Save addresses"}
+        </button>
+      </div>
+    </>
   );
 }
 

@@ -158,7 +158,7 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
               setLoading(false);
               return;
             }
-            if (!res.redirected) navigate({ to: "/dashboard" });
+            if (!res.redirected) await routeAfterAuth();
           }}
           className="mt-5 w-full px-4 py-3 rounded-xl bg-background border border-border hover:border-primary/60 font-medium inline-flex items-center justify-center gap-2 disabled:opacity-60"
         >

@@ -33,6 +33,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminSmsTestRouteImport } from './routes/admin.sms-test'
 import { Route as AdminResetPasswordRouteImport } from './routes/admin.reset-password'
+import { Route as AdminOperationsRouteImport } from './routes/admin.operations'
 import { Route as AdminLoginRouteImport } from './routes/admin.login'
 
 const WithdrawRoute = WithdrawRouteImport.update({
@@ -155,6 +156,11 @@ const AdminResetPasswordRoute = AdminResetPasswordRouteImport.update({
   path: '/reset-password',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminOperationsRoute = AdminOperationsRouteImport.update({
+  id: '/operations',
+  path: '/operations',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -185,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/wallet': typeof WalletRoute
   '/withdraw': typeof WithdrawRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/operations': typeof AdminOperationsRoute
   '/admin/reset-password': typeof AdminResetPasswordRoute
   '/admin/sms-test': typeof AdminSmsTestRoute
 }
@@ -212,6 +219,7 @@ export interface FileRoutesByTo {
   '/wallet': typeof WalletRoute
   '/withdraw': typeof WithdrawRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/operations': typeof AdminOperationsRoute
   '/admin/reset-password': typeof AdminResetPasswordRoute
   '/admin/sms-test': typeof AdminSmsTestRoute
 }
@@ -240,6 +248,7 @@ export interface FileRoutesById {
   '/wallet': typeof WalletRoute
   '/withdraw': typeof WithdrawRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/operations': typeof AdminOperationsRoute
   '/admin/reset-password': typeof AdminResetPasswordRoute
   '/admin/sms-test': typeof AdminSmsTestRoute
 }
@@ -269,6 +278,7 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/withdraw'
     | '/admin/login'
+    | '/admin/operations'
     | '/admin/reset-password'
     | '/admin/sms-test'
   fileRoutesByTo: FileRoutesByTo
@@ -296,6 +306,7 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/withdraw'
     | '/admin/login'
+    | '/admin/operations'
     | '/admin/reset-password'
     | '/admin/sms-test'
   id:
@@ -323,6 +334,7 @@ export interface FileRouteTypes {
     | '/wallet'
     | '/withdraw'
     | '/admin/login'
+    | '/admin/operations'
     | '/admin/reset-password'
     | '/admin/sms-test'
   fileRoutesById: FileRoutesById
@@ -522,6 +534,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminResetPasswordRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/operations': {
+      id: '/admin/operations'
+      path: '/operations'
+      fullPath: '/admin/operations'
+      preLoaderRoute: typeof AdminOperationsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/login': {
       id: '/admin/login'
       path: '/login'
@@ -534,12 +553,14 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteChildren {
   AdminLoginRoute: typeof AdminLoginRoute
+  AdminOperationsRoute: typeof AdminOperationsRoute
   AdminResetPasswordRoute: typeof AdminResetPasswordRoute
   AdminSmsTestRoute: typeof AdminSmsTestRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
   AdminLoginRoute: AdminLoginRoute,
+  AdminOperationsRoute: AdminOperationsRoute,
   AdminResetPasswordRoute: AdminResetPasswordRoute,
   AdminSmsTestRoute: AdminSmsTestRoute,
 }
@@ -573,3 +594,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

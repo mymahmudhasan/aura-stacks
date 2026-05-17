@@ -53,8 +53,11 @@ function Dashboard() {
   const [deps, setDeps] = useState<Dep[]>([]);
   const [wds, setWds] = useState<Wd[]>([]);
   const [accountId, setAccountId] = useState<string>("");
-  
-
+  const [now, setNow] = useState<number>(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
   const load = useCallback(async (initial = false) => {
     if (initial) setLoading(true); else setRefreshing(true);
     try {

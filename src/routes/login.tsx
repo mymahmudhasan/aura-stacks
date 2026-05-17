@@ -50,6 +50,27 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
     return p.startsWith("+") ? p : p ? `+${p}` : "";
   };
 
+  const routeAfterAuth = async (userId?: string) => {
+    let uid = userId;
+    if (!uid) {
+      const { data } = await supabase.auth.getSession();
+      uid = data.session?.user.id;
+    }
+    if (uid) {
+      const { data: role } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", uid)
+        .eq("role", "admin")
+        .maybeSingle();
+      if (role) {
+        navigate({ to: "/admin" });
+        return;
+      }
+    }
+    navigate({ to: "/dashboard" });
+  };
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -58,9 +79,9 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
     setLoading(true);
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password: form.password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email: cleanEmail, password: form.password });
         if (error) throw error;
-        navigate({ to: "/dashboard" });
+        await routeAfterAuth(data.user?.id);
         return;
       }
 

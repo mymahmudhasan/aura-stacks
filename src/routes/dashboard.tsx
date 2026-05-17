@@ -140,7 +140,7 @@ function Dashboard() {
   // Per-package daily ROI — sourced from active investment_plans rows so admin edits flow through.
   const dailyRateFor = (planName: string): number => planRates[planName] ?? 0.01;
   // Live profit accrual using each package's own daily ROI, ticking every second
-  const invAccrual = (i: Inv): number => {
+  const computeAccrual = (i: Inv): number => {
     const start = i.started_at ? new Date(i.started_at).getTime() : new Date(i.created_at).getTime();
     const end = i.ends_at ? new Date(i.ends_at).getTime() : start + 30 * 86_400_000;
     const tNow = mounted ? now : start;
@@ -148,7 +148,7 @@ function Dashboard() {
     const elapsedDays = elapsedMs / 86_400_000;
     return Number(i.amount) * dailyRateFor(i.plan_name) * elapsedDays;
   };
-  const liveAccrual = activeInvs.reduce((s, i) => s + invAccrual(i), 0);
+  const liveAccrual = activeInvs.reduce((s, i) => s + computeAccrual(i), 0);
   const lifetimeEarnings = txns
     .filter((t) => t.kind === "earning")
     .reduce((s, t) => s + Number(t.amount), 0);
@@ -258,7 +258,7 @@ function Dashboard() {
         const m = Math.floor((remaining % 3_600_000) / 60_000);
         const s = Math.floor((remaining % 60_000) / 1000);
         const matured = remaining === 0;
-        const accrued = invAccrual(featured);
+        const accrued = computeAccrual(featured);
         const dailyPct = dailyRateFor(featured.plan_name) * 100;
         return (
           <div className="mb-6 rounded-2xl p-[1.5px] bg-[image:var(--gradient-aurora)] glow-primary animate-fade-in">

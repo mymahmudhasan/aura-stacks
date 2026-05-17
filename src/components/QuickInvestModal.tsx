@@ -114,7 +114,7 @@ export function QuickInvestModal({ open, onClose }: { open: boolean; onClose: ()
               <button onClick={onClose} className="glass rounded-lg p-2 hover:bg-white/10"><X className="w-4 h-4" /></button>
             </div>
 
-            {/* Service tabs — all highlighted, AI featured */}
+            {/* Service tabs — uniform design, AI marked with Top Pick badge */}
             <div className="grid grid-cols-3 gap-2 mb-5">
               {(Object.keys(SERVICES) as Service[]).map((s) => {
                 const m = SERVICES[s];
@@ -126,22 +126,16 @@ export function QuickInvestModal({ open, onClose }: { open: boolean; onClose: ()
                     onClick={() => pickService(s)}
                     className={`relative rounded-xl p-3 text-left transition hover-scale ${
                       active
-                        ? isAI
-                          ? "border-2 border-primary bg-primary/10 glow-primary"
-                          : "border-2 border-gold/60 bg-gold/10 glow-gold"
-                        : isAI
-                        ? "border border-primary/40 bg-primary/5 hover:border-primary"
+                        ? "border-2 border-primary bg-primary/10 glow-primary"
                         : "border border-white/10 glass hover:border-primary/40"
                     }`}
                   >
                     {isAI && (
-                      <span className="absolute -top-2 -right-2 text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-[image:var(--gradient-gold)] text-gold-foreground font-bold shadow">
-                        Top
+                      <span className="absolute -top-2 -right-2 text-[9px] uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-[image:var(--gradient-gold)] text-gold-foreground font-bold shadow whitespace-nowrap">
+                        Top Pick
                       </span>
                     )}
-                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center mb-2 ${
-                      isAI ? "bg-[image:var(--gradient-primary)] text-primary-foreground" : "bg-primary/15 text-primary"
-                    }`}>
+                    <div className="w-9 h-9 rounded-lg flex items-center justify-center mb-2 bg-[image:var(--gradient-primary)] text-primary-foreground">
                       {m.icon}
                     </div>
                     <p className="text-xs font-bold leading-tight">{m.label}</p>

@@ -83,6 +83,18 @@ function DepositPage() {
       ? /^T[a-zA-Z0-9]{33}$/
       : /^0x[a-fA-F0-9]{40}$/;
 
+  const [senderTouched, setSenderTouched] = useState(false);
+  const trimmedSender = fromAddress.trim();
+  const senderValid = senderRegex.test(trimmedSender);
+  const showSenderError = senderTouched && trimmedSender.length > 0 && !senderValid;
+  const senderErrorText = isBinance
+    ? "Invalid Binance UID. Use 3–64 letters, numbers, _ or -."
+    : network === "TRC20"
+      ? "Invalid TRC20 address. Must start with T and be 34 characters."
+      : `Invalid ${network} address. Must start with 0x and be 42 hex characters.`;
+
+  useEffect(() => { setSenderTouched(false); }, [network]);
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmedSender = fromAddress.trim();

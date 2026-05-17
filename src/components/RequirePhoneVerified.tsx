@@ -12,8 +12,8 @@ type Status =
 export function RequirePhoneVerified({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<Status>({ state: "loading" });
 
-  const load = async () => {
-    setStatus({ state: "loading" });
+  const load = async (showLoader = false) => {
+    if (showLoader) setStatus({ state: "loading" });
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       setStatus({ state: "ok" });
@@ -38,8 +38,13 @@ export function RequirePhoneVerified({ children }: { children: React.ReactNode }
   };
 
   useEffect(() => {
-    load();
-    const { data: sub } = supabase.auth.onAuthStateChange(() => load());
+    load(true);
+    // Only re-check on actual sign-in/out events, NOT token refresh (which fires often)
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") {
+        load(false);
+      }
+    });
     return () => sub.subscription.unsubscribe();
   }, []);
 

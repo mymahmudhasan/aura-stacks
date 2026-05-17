@@ -197,3 +197,20 @@ export const getMyWithdrawals = createServerFn({ method: "GET" })
       .limit(50);
     return data ?? [];
   });
+
+export const updateBinanceUid = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      binance_uid: z.string().trim().min(3).max(64).regex(/^[a-zA-Z0-9_-]+$/),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+    const { error } = await supabase
+      .from("customers")
+      .update({ binance_uid: data.binance_uid })
+      .eq("user_id", userId);
+    if (error) throw new Error(error.message);
+    return { ok: true, binance_uid: data.binance_uid };
+  });

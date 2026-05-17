@@ -113,21 +113,50 @@ function Dashboard() {
   const balance = cust?.balance ?? 0;
   const activeInvs = invs.filter((i) => i.status === "active");
   const investedActive = activeInvs.reduce((s, i) => s + Number(i.amount), 0);
-  // Live profit accrual: 1% per day since each investment started, ticking every second
-  const liveAccrual = activeInvs.reduce((s, i) => {
+  // Per-package daily ROI (derived from QuickInvestModal package definitions)
+  const dailyRateFor = (planName: string): number => {
+    const map: Record<string, number> = {
+      "Quantum Arbitrage": 0.112 / 30,
+      "Neural Momentum": 0.128 / 30,
+      "DeepGrid Scalper": 0.143 / 30,
+      "Mining Starter": 0.012,
+      "Mining Advanced": 0.016,
+      "Mining Premium": 0.020,
+      "Mining VIP": 0.024,
+      "1-Month Flexible": 0.12 / 365,
+      "3-Month Fixed": 0.18 / 365,
+      "6-Month Fixed": 0.26 / 365,
+      "12-Month VIP": 0.38 / 365,
+    };
+    return map[planName] ?? 0.01;
+  };
+  // Live profit accrual using each package's own daily ROI, ticking every second
+  const invAccrual = (i: Inv): number => {
     const start = i.started_at ? new Date(i.started_at).getTime() : new Date(i.created_at).getTime();
-    const elapsedDays = Math.max(0, (now - start) / 86_400_000);
-    return s + Number(i.amount) * 0.01 * elapsedDays;
-  }, 0);
-  // Treat active investments as assets (not a loss); add live accrual so it grows from start
-  const totalProfit = Math.max(
-    0,
-    balance + investedActive + (cust?.total_withdrawn ?? 0) - (cust?.total_deposited ?? 0) + liveAccrual,
-  );
+    const end = i.ends_at ? new Date(i.ends_at).getTime() : start + 30 * 86_400_000;
+    const elapsedMs = Math.max(0, Math.min(now, end) - start);
+    const elapsedDays = elapsedMs / 86_400_000;
+    return Number(i.amount) * dailyRateFor(i.plan_name) * elapsedDays;
+  };
+  const liveAccrual = activeInvs.reduce((s, i) => s + invAccrual(i), 0);
+  const lifetimeEarnings = txns
+    .filter((t) => t.kind === "earning")
+    .reduce((s, t) => s + Number(t.amount), 0);
+  // Portfolio Equity = cash balance + active invested principal + live accrued profit
+  const portfolioEquity = balance + investedActive + liveAccrual;
+  const earningsPlusInvested = lifetimeEarnings + liveAccrual + investedActive;
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const earningsToday = txns
     .filter((t) => t.kind === "earning" && new Date(t.created_at) >= today)
     .reduce((s, t) => s + Number(t.amount), 0) + liveAccrual;
+  // Featured (most recent) active package for the highlighted countdown card
+  const featured = activeInvs
+    .slice()
+    .sort((a, b) => {
+      const ta = a.started_at ? new Date(a.started_at).getTime() : new Date(a.created_at).getTime();
+      const tb = b.started_at ? new Date(b.started_at).getTime() : new Date(b.created_at).getTime();
+      return tb - ta;
+    })[0];
   const pendingWdAmount = wds.filter((w) => w.status === "pending").reduce((s, w) => s + Number(w.amount), 0);
   const pendingWdCount = wds.filter((w) => w.status === "pending").length;
   const pendingDepCount = deps.filter((d) => d.status === "pending").length;
@@ -203,6 +232,65 @@ function Dashboard() {
         </div>
       </div>
 
+      {/* Featured active package — highlighted countdown right under user name/ID */}
+      {featured && (() => {
+        const start = featured.started_at ? new Date(featured.started_at).getTime() : new Date(featured.created_at).getTime();
+        const end = featured.ends_at ? new Date(featured.ends_at).getTime() : start + 30 * 86_400_000;
+        const total = Math.max(1, end - start);
+        const pct = Math.max(0, Math.min(100, Math.round(((now - start) / total) * 100)));
+        const remaining = Math.max(0, end - now);
+        const d = Math.floor(remaining / 86_400_000);
+        const h = Math.floor((remaining % 86_400_000) / 3_600_000);
+        const m = Math.floor((remaining % 3_600_000) / 60_000);
+        const s = Math.floor((remaining % 60_000) / 1000);
+        const matured = remaining === 0;
+        const accrued = invAccrual(featured);
+        const dailyPct = dailyRateFor(featured.plan_name) * 100;
+        return (
+          <div className="mb-6 rounded-2xl p-[1.5px] bg-[image:var(--gradient-aurora)] glow-primary animate-fade-in">
+            <div className="rounded-2xl bg-background/85 backdrop-blur-xl p-4 sm:p-5">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-11 h-11 rounded-xl bg-[image:var(--gradient-primary)] text-primary-foreground flex items-center justify-center shadow-[var(--shadow-glow)] shrink-0">
+                    {serviceIcon[featured.service] ?? <Sparkles className="w-5 h-5" />}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-[image:var(--gradient-gold)] text-gold-foreground font-bold">Active Package</span>
+                      {matured && <span className="text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded bg-success/20 text-success font-bold">Matured</span>}
+                    </div>
+                    <p className="font-extrabold text-base sm:text-lg mt-0.5 truncate">{featured.plan_name}</p>
+                    <p className="text-xs text-muted-foreground capitalize">
+                      {featured.service.replace("_", " ")} · ${Number(featured.amount).toLocaleString()} @ {dailyPct.toFixed(3)}% / day
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-2">
+                  {!matured ? (
+                    <div className="flex items-center gap-1.5 font-mono text-sm">
+                      <Clock className="w-4 h-4 text-primary" />
+                      <span className="px-2 py-1 rounded bg-primary/15 text-primary font-bold">{String(d).padStart(2, "0")}d</span>
+                      <span className="px-2 py-1 rounded bg-primary/15 text-primary font-bold">{String(h).padStart(2, "0")}h</span>
+                      <span className="px-2 py-1 rounded bg-primary/15 text-primary font-bold">{String(m).padStart(2, "0")}m</span>
+                      <span className="px-2 py-1 rounded bg-primary/15 text-primary font-bold">{String(s).padStart(2, "0")}s</span>
+                    </div>
+                  ) : (
+                    <span className="text-sm font-mono text-success font-bold">Ready to claim</span>
+                  )}
+                  <span className="text-xs font-mono text-success font-bold">+${accrued.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} earned</span>
+                </div>
+              </div>
+              <div className="mt-3 h-2 rounded-full bg-white/5 overflow-hidden">
+                <div className="h-full bg-[image:var(--gradient-primary)] transition-all duration-700" style={{ width: `${pct}%` }} />
+              </div>
+              {activeInvs.length > 1 && (
+                <p className="text-[11px] text-muted-foreground mt-2">+{activeInvs.length - 1} more active package{activeInvs.length - 1 === 1 ? "" : "s"} below</p>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
       <div className="mb-6 rounded-2xl border border-primary/30 bg-primary/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-start gap-3">
           <div className="w-9 h-9 rounded-lg bg-[image:var(--gradient-gold)] text-gold-foreground flex items-center justify-center shrink-0">
@@ -216,10 +304,11 @@ function Dashboard() {
         <p className="text-xs font-mono text-primary">UID · {cust?.binance_uid ?? "not set"}</p>
       </div>
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <Stat icon={<Wallet />} label="Total Balance" value={`$${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend={demoType === "demo" ? "Demo" : "Live"} highlight />
-        <Stat icon={<TrendingUp />} label="Total Profit" value={`+$${totalProfit.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend="Live" positive highlight />
+        <Stat icon={<TrendingUp />} label="Portfolio Equity" value={`$${portfolioEquity.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend="Live" positive highlight />
         <Stat icon={<Activity />} label="Earnings Today" value={`$${earningsToday.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend="Today" positive />
+        <Stat icon={<Sparkles />} label="Earnings + Invested" value={`$${earningsPlusInvested.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend="Lifetime" positive />
         <Stat icon={<Clock />} label="Pending Withdrawals" value={`$${pendingWdAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`} trend={`${pendingWdCount} request${pendingWdCount === 1 ? "" : "s"}`} />
       </div>
 

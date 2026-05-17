@@ -1,29 +1,74 @@
-## Issues found
+# Manage investment packages from the admin panel
 
-**1. Stuck on `/login` after sign-in (your screenshot)**
-You are signed in as `protapc9@gmail.com` (a regular demo user, not admin) but the page is `/login`. The login screen never redirects already-authenticated visitors away — there's no auth check on mount, only inside the form's submit handler. So any time a logged-in user lands on `/login` (via the nav, back button, or a stale tab), they see the form forever.
+Goal: let an admin add, edit, reorder, enable/disable, and delete packages for each service (AI Trading, Mining, Staking) directly from `/admin`, and have those packages drive the public pages and the Invest flow.
 
-**2. `/admin` silently signs out non-admins**
-In `src/routes/admin.tsx`, if the visitor is not an admin, the code runs `supabase.auth.signOut()` and pushes them to `/dashboard`. Since they're now logged out, `/dashboard` bounces them to `/login` — which then sticks (see issue 1). That's exactly the loop you hit. It should just redirect, not sign out.
+## 1. Database — new `investment_plans` table
 
-**3. Admin dashboard has no Deposits/Withdrawals tab**
-`/admin` only has tabs: Overview, Customers, Tickets, Payouts, Settings. Deposits and withdrawals live on a separate route `/admin/operations`, but nothing on the admin page links there. RLS is fine (admins have full ALL access via `has_role`), the data is just hidden in the UI. There is 1 pending deposit (protapc2) and 1 pending withdrawal (anutap) in the DB right now — admins just can't reach the screen.
+Create one table that covers all three services (`service` column = `ai_trading | mining | staking`).
 
-## Fix plan
+Columns:
+- `service` — which service this plan belongs to
+- `name` — plan name (e.g. "Mining Starter", "12 Months")
+- `min_amount`, `max_amount` — investment range (USDT)
+- `daily_rate_pct` — daily reward % (used for mining / ai_trading)
+- `duration_days` — lock / contract length
+- `total_roi_pct` — optional pre-computed ROI label
+- `apy_pct` — used by staking
+- `flex` — `Flexible` / `Fixed` (staking)
+- `badge` — optional label like "Most popular", "VIP"
+- `is_popular` — boolean for highlight styling
+- `is_active` — soft-disable without deleting
+- `sort_order` — display order
 
-**A. `src/routes/login.tsx`** — auto-redirect when already signed in
-- On mount, call `supabase.auth.getSession()`. If a session exists, route admins to `/admin` and everyone else to `/dashboard` (reuse the existing `routeAfterAuth` helper).
-- Also subscribe to `onAuthStateChange` so a fresh sign-in (Google redirect back) routes immediately.
+RLS:
+- Public `SELECT` where `is_active = true` (so marketing pages work for logged-out visitors).
+- Admin `ALL` via `has_role(auth.uid(), 'admin')`.
 
-**B. `src/routes/admin.tsx`** — stop force-signing-out non-admins
-- Remove the `supabase.auth.signOut()` call in the non-admin branch; just `navigate({ to: "/dashboard" })`.
-- Add a sixth tab **"Operations"** to the nav that links to `/admin/operations` (or render the existing Operations component inline). Showing it as a top-level admin tab is the simplest fix and matches the other tabs.
-- Surface a small KPI on the Overview tab: pending deposits + pending withdrawals counts, each linking to Operations, so admins immediately see there's something to review.
+Seed: insert the current hardcoded plans from `mining.tsx`, `ai-trading.tsx`, `staking.tsx` so the live site looks identical right after migration.
 
-**C. Quick sanity confirmation after the fix**
-- Sign in as `tshirtkella@gmail.com` (admin) → should land on `/admin`, see "Operations" tab, click it, see the pending deposit from `protapc2` and the pending withdrawal from `anutap`, and be able to Approve / Mark paid.
-- Sign in as `protapc9@gmail.com` (demo user) → should land on `/dashboard` directly, no /login loop.
+## 2. Admin UI — new "Packages" tab
 
-## Out of scope
-- No DB/RLS migrations needed — policies already allow admin full access.
-- No changes to the deposit/withdraw user flows.
+Add a `packages` tab to `src/routes/admin.tsx` next to Customers / Tickets / Payouts / Settings.
+
+Layout:
+- Sub-tabs: AI Trading · Mining · Staking
+- Table of plans for the selected service with inline columns: name, range, daily/APY, duration, badge, active toggle, sort, actions
+- Buttons: **Add plan**, **Edit** (row), **Delete** (row), drag-or-arrow reorder
+- Modal form for add/edit with validation (Zod), Save calls server functions
+
+## 3. Server functions
+
+New file `src/lib/plans.functions.ts`:
+- `listPlans({ service? })` — public read (used by marketing pages too)
+- `adminListPlans()` — admin, includes inactive
+- `createPlan(input)` — admin, inserts row
+- `updatePlan({ id, patch })` — admin
+- `deletePlan({ id })` — admin
+- `reorderPlans({ ids })` — admin, bulk sort_order update
+
+All admin functions use `requireSupabaseAuth` + an `assertAdmin` check via `has_role`, then `supabaseAdmin` for writes.
+
+## 4. Public pages read from DB
+
+Update:
+- `src/routes/mining.tsx` — replace hardcoded `plans` with `useQuery(listPlans({ service: "mining" }))`
+- `src/routes/ai-trading.tsx` — render a Plans section sourced the same way (currently has none — add one)
+- `src/routes/staking.tsx` — replace hardcoded `tiers` with DB-driven plans (`service: "staking"`)
+
+Each plan card keeps the existing visual style and wires `InvestButton` with `planName`, `minAmount`, `service` from the row.
+
+## 5. Files touched
+
+- migration: `investment_plans` table + RLS + seed
+- new: `src/lib/plans.functions.ts`
+- new: `src/components/admin/PackagesTab.tsx` (keeps `admin.tsx` from bloating further)
+- edited: `src/routes/admin.tsx` (register tab)
+- edited: `src/routes/mining.tsx`, `src/routes/ai-trading.tsx`, `src/routes/staking.tsx`
+
+## Out of scope (ask if you want it)
+
+- Per-plan images / icons upload
+- Scheduling (auto-enable a plan at a future date)
+- Promo / discount codes per plan
+
+Approve this plan and I'll implement it end-to-end.

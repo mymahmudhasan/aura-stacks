@@ -196,6 +196,63 @@ export type Database = {
           },
         ]
       }
+      investment_plans: {
+        Row: {
+          apy_pct: number | null
+          badge: string | null
+          created_at: string
+          daily_rate_pct: number | null
+          duration_days: number | null
+          flex: string | null
+          id: string
+          is_active: boolean
+          is_popular: boolean
+          max_amount: number | null
+          min_amount: number
+          name: string
+          service: string
+          sort_order: number
+          total_roi_pct: number | null
+          updated_at: string
+        }
+        Insert: {
+          apy_pct?: number | null
+          badge?: string | null
+          created_at?: string
+          daily_rate_pct?: number | null
+          duration_days?: number | null
+          flex?: string | null
+          id?: string
+          is_active?: boolean
+          is_popular?: boolean
+          max_amount?: number | null
+          min_amount?: number
+          name: string
+          service: string
+          sort_order?: number
+          total_roi_pct?: number | null
+          updated_at?: string
+        }
+        Update: {
+          apy_pct?: number | null
+          badge?: string | null
+          created_at?: string
+          daily_rate_pct?: number | null
+          duration_days?: number | null
+          flex?: string | null
+          id?: string
+          is_active?: boolean
+          is_popular?: boolean
+          max_amount?: number | null
+          min_amount?: number
+          name?: string
+          service?: string
+          sort_order?: number
+          total_roi_pct?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       investments: {
         Row: {
           admin_notes: string | null

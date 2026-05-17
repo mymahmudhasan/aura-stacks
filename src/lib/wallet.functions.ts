@@ -166,7 +166,7 @@ export const createInvestment = createServerFn({ method: "POST" })
       .single();
     if (actErr) {
       // Roll back the pending row so we don't leave orphans
-      await supabase.from("investments").delete().eq("id", row.id);
+      await supabaseAdmin.from("investments").delete().eq("id", row.id);
       throw new Error(actErr.message);
     }
     return activated;

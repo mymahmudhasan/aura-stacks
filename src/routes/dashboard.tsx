@@ -148,14 +148,6 @@ function Dashboard() {
     const elapsedDays = elapsedMs / 86_400_000;
     return Number(i.amount) * dailyRateFor(i.plan_name) * elapsedDays;
   };
-  // Live profit accrual using each package's own daily ROI, ticking every second
-  const invAccrual = (i: Inv): number => {
-    const start = i.started_at ? new Date(i.started_at).getTime() : new Date(i.created_at).getTime();
-    const end = i.ends_at ? new Date(i.ends_at).getTime() : start + 30 * 86_400_000;
-    const elapsedMs = Math.max(0, Math.min(now, end) - start);
-    const elapsedDays = elapsedMs / 86_400_000;
-    return Number(i.amount) * dailyRateFor(i.plan_name) * elapsedDays;
-  };
   const liveAccrual = activeInvs.reduce((s, i) => s + invAccrual(i), 0);
   const lifetimeEarnings = txns
     .filter((t) => t.kind === "earning")

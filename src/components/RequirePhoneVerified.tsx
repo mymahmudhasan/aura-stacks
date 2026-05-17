@@ -109,10 +109,13 @@ function VerifyRequired({
         if (!/^\S+@\S+\.\S+$/.test(email)) throw new Error("Enter a valid email address");
         const { error } = await supabase.auth.signInWithOtp({
           email,
-          options: { shouldCreateUser: false },
+          options: {
+            shouldCreateUser: false,
+            emailRedirectTo: typeof window !== "undefined" ? window.location.href : undefined,
+          },
         });
         if (error) throw error;
-        setInfo(`Email code sent to ${email}.`);
+        setInfo(`Verification link sent to ${email}. Open it on this device to unlock your dashboard.`);
       }
       setSent(true);
     } catch (err) {

@@ -158,21 +158,32 @@ function DepositPage() {
             <div>
               <div className="flex items-center justify-between gap-2">
                 <Label htmlFor="sender">{isBinance ? "Your Binance UID" : "Your sending wallet address"}</Label>
-                {prefilled && <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-success/15 text-success">Saved</span>}
+                {prefilled && senderValid && <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-success/15 text-success">Saved</span>}
               </div>
               <Input
                 id="sender"
                 required
                 value={fromAddress}
-                onChange={(e) => { setFromAddress(e.target.value); setPrefilled(false); }}
+                onChange={(e) => { setFromAddress(e.target.value); setPrefilled(false); setSenderTouched(true); }}
+                onBlur={() => setSenderTouched(true)}
                 placeholder={isBinance ? "e.g. 123456789" : network === "TRC20" ? "T..." : "0x..."}
-                className="mt-1.5 font-mono text-xs"
+                aria-invalid={showSenderError}
+                aria-describedby="sender-help"
+                className={`mt-1.5 font-mono text-xs ${showSenderError ? "border-destructive focus-visible:ring-destructive/40" : senderTouched && senderValid ? "border-success/60" : ""}`}
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                {prefilled ? "Auto-filled from your last deposit. You can change it if needed." : "We'll remember this so next time it's pre-filled."}
+              <p id="sender-help" className={`text-xs mt-1 ${showSenderError ? "text-destructive" : "text-muted-foreground"}`}>
+                {showSenderError
+                  ? senderErrorText
+                  : prefilled
+                    ? "Auto-filled from your last deposit. You can change it if needed."
+                    : isBinance
+                      ? "3–64 characters: letters, numbers, _ or -."
+                      : network === "TRC20"
+                        ? "Tron address: starts with T, 34 characters total."
+                        : `${network} address: starts with 0x, 42 characters total.`}
               </p>
             </div>
-            <button type="submit" disabled={submitting} className="w-full rounded-xl px-4 py-3 font-semibold bg-[image:var(--gradient-gold)] text-gold-foreground glow-gold disabled:opacity-60 inline-flex items-center justify-center gap-2">
+            <button type="submit" disabled={submitting || !senderValid} className="w-full rounded-xl px-4 py-3 font-semibold bg-[image:var(--gradient-gold)] text-gold-foreground glow-gold disabled:opacity-60 inline-flex items-center justify-center gap-2">
               {submitting && <Loader2 className="w-4 h-4 animate-spin" />} Submit deposit
             </button>
             {msg && (

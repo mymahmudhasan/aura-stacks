@@ -53,8 +53,11 @@ function Dashboard() {
   const [deps, setDeps] = useState<Dep[]>([]);
   const [wds, setWds] = useState<Wd[]>([]);
   const [accountId, setAccountId] = useState<string>("");
-  
-
+  const [now, setNow] = useState<number>(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
   const load = useCallback(async (initial = false) => {
     if (initial) setLoading(true); else setRefreshing(true);
     try {
@@ -238,11 +241,17 @@ function Dashboard() {
                 {activeInvs.map((row) => {
                   const start = row.started_at ? new Date(row.started_at).getTime() : new Date(row.created_at).getTime();
                   const end = row.ends_at ? new Date(row.ends_at).getTime() : start + 30 * 24 * 3600 * 1000;
-                  const pct = Math.max(0, Math.min(100, Math.round(((Date.now() - start) / (end - start)) * 100)));
+                  const pct = Math.max(0, Math.min(100, Math.round(((now - start) / (end - start)) * 100)));
+                  const remaining = Math.max(0, end - now);
+                  const d = Math.floor(remaining / 86_400_000);
+                  const h = Math.floor((remaining % 86_400_000) / 3_600_000);
+                  const m = Math.floor((remaining % 3_600_000) / 60_000);
+                  const s = Math.floor((remaining % 60_000) / 1000);
+                  const matured = remaining === 0;
                   const isAI = row.service === "ai_trading";
                   return (
                     <div key={row.id} className={`relative rounded-xl p-4 transition hover-scale ${isAI ? "border border-primary/40 bg-primary/5 glow-primary" : "glass"}`}>
-                      <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center justify-between gap-4 flex-wrap">
                         <div className="flex items-center gap-3">
                           <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isAI ? "bg-[image:var(--gradient-primary)] text-primary-foreground" : "bg-primary/15"}`}>
                             {serviceIcon[row.service] ?? <TrendingUp className="w-4 h-4 text-primary" />}
@@ -251,11 +260,25 @@ function Dashboard() {
                             <div className="flex items-center gap-2">
                               <p className="font-semibold text-sm">{row.plan_name}</p>
                               {isAI && <span className="text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded bg-gold/20 text-gold font-bold">AI</span>}
+                              {matured && <span className="text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded bg-success/20 text-success font-bold">Matured</span>}
                             </div>
                             <p className="text-xs text-muted-foreground capitalize">{row.service.replace("_", " ")} · Invested ${Number(row.amount).toLocaleString()}</p>
                           </div>
                         </div>
-                        <span className={`text-xs font-mono ${isAI ? "text-primary font-bold" : "text-muted-foreground"}`}>{pct}%</span>
+                        <div className="flex items-center gap-3">
+                          {!matured ? (
+                            <div className="flex items-center gap-1.5 font-mono text-xs">
+                              <Clock className="w-3.5 h-3.5 text-primary" />
+                              <span className="px-1.5 py-0.5 rounded bg-primary/15 text-primary font-bold">{String(d).padStart(2, "0")}d</span>
+                              <span className="px-1.5 py-0.5 rounded bg-primary/15 text-primary font-bold">{String(h).padStart(2, "0")}h</span>
+                              <span className="px-1.5 py-0.5 rounded bg-primary/15 text-primary font-bold">{String(m).padStart(2, "0")}m</span>
+                              <span className="px-1.5 py-0.5 rounded bg-primary/15 text-primary font-bold">{String(s).padStart(2, "0")}s</span>
+                            </div>
+                          ) : (
+                            <span className="text-xs font-mono text-success font-bold">Ready to claim</span>
+                          )}
+                          <span className={`text-xs font-mono ${isAI ? "text-primary font-bold" : "text-muted-foreground"}`}>{pct}%</span>
+                        </div>
                       </div>
                       <div className="mt-3 h-2 rounded-full bg-white/5 overflow-hidden">
                         <div className="h-full bg-[image:var(--gradient-primary)] transition-all duration-700" style={{ width: `${pct}%` }} />

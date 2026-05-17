@@ -6,6 +6,7 @@ import stakingImg from "@/assets/staking-visual.webp";
 import synexisLogo from "@/assets/synexis-logo.webp";
 import { CTA, GlassCard, Section, StatPill } from "@/components/ui-bits";
 import { LiveDeposits } from "@/components/LiveDeposits";
+import { LiveEarningsTicker } from "@/components/LiveEarningsTicker";
 
 export const Route = createFileRoute("/")({
   component: Home,

@@ -1,8 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Brain, Bot, LineChart, ShieldCheck, Sparkles, Activity } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Brain, Bot, LineChart, ShieldCheck, Sparkles, Activity, Zap } from "lucide-react";
 import { CTA, GlassCard, PageHero, Section } from "@/components/ui-bits";
+import { InvestButton } from "@/components/InvestButton";
 import { ServiceReferral } from "@/components/ServiceReferral";
 import { LiveForexChart } from "@/components/LiveForexChart";
+import { listPlans } from "@/lib/plans.functions";
 import aiImg from "@/assets/ai-trader-bot.webp";
 
 export const Route = createFileRoute("/ai-trading")({
@@ -14,6 +17,13 @@ export const Route = createFileRoute("/ai-trading")({
     ],
   }),
 });
+
+type DBPlan = {
+  id: string; name: string;
+  min_amount: number | string; max_amount: number | string | null;
+  daily_rate_pct: number | string | null; duration_days: number | null;
+  total_roi_pct: number | string | null; is_popular: boolean; badge: string | null;
+};
 
 function AITrading() {
   return (

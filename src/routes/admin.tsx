@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link, Outlet, useLocation } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Users, Wallet, Search, ShieldCheck, BadgeCheck, Clock, LogOut, Loader2,
@@ -32,6 +32,7 @@ const PAGE_SIZE = 25;
 
 function Admin() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [checking, setChecking] = useState(true);
   const [authorized, setAuthorized] = useState(false);
   const [tab, setTab] = useState<Tab>("overview");
@@ -79,6 +80,7 @@ function Admin() {
     return <div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
   }
   if (!authorized) return null;
+  if (location.pathname !== "/admin") return <Outlet />;
 
   const navItems: { id: Tab; label: string; icon: React.ReactNode; badge?: number }[] = [
     { id: "overview", label: "Overview", icon: <LayoutDashboard className="w-4 h-4" /> },

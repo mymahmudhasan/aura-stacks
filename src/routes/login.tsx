@@ -215,11 +215,6 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
         <p className="text-sm text-center text-muted-foreground mt-5">
           {isLogin ? <>New here? <Link to="/register" className="text-primary">Create an account</Link></> : <>Already a member? <Link to="/login" className="text-primary">Sign in</Link></>}
         </p>
-        {isLogin && (
-          <p className="text-[11px] text-center text-muted-foreground mt-3">
-            <Link to="/admin/login" className="text-primary/80 hover:text-primary">Admin sign in →</Link>
-          </p>
-        )}
       </div>
     </section>
   );

@@ -248,14 +248,10 @@ function Dashboard() {
 
       {(() => {
         const hasDeposit = Number(cust?.total_deposited ?? 0) > 0 || deps.some((d) => d.status === "approved");
-        const hasMining = activeInvs.some((i) => i.service === "mining");
-        const hasStaking = activeInvs.some((i) => i.service === "staking");
-        const hasAi = activeInvs.some((i) => i.service === "ai_trading");
+        const hasInvestment = activeInvs.length > 0;
         const steps = [
           { done: hasDeposit, label: "Make first deposit", to: "/deposit", icon: <ArrowDownLeft className="w-3.5 h-3.5" /> },
-          { done: hasMining, label: "Choose a mining plan", to: "/mining", icon: <Cpu className="w-3.5 h-3.5" /> },
-          { done: hasStaking, label: "Start staking", to: "/staking", icon: <Lock className="w-3.5 h-3.5" /> },
-          { done: hasAi, label: "Enable AI trading", to: "/ai-trading", icon: <Brain className="w-3.5 h-3.5" /> },
+          { done: hasInvestment, label: "Choose an investment package", to: "/mining", icon: <Cpu className="w-3.5 h-3.5" /> },
         ];
         const completed = steps.filter((s) => s.done).length;
         if (completed === steps.length) return null;
@@ -264,15 +260,15 @@ function Dashboard() {
           <div className="mb-6 rounded-2xl border border-primary/20 bg-card/40 backdrop-blur p-4">
             <div className="flex items-center justify-between gap-3 mb-3">
               <div>
-                <p className="text-sm font-semibold">Get started checklist</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{completed} of {steps.length} complete · activate every income stream</p>
+                <p className="text-sm font-semibold">2 steps to get started</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{completed} of {steps.length} complete</p>
               </div>
               <span className="text-xs font-bold text-primary">{pct}%</span>
             </div>
             <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-4">
               <div className="h-full bg-[image:var(--gradient-primary)] transition-all" style={{ width: `${pct}%` }} />
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {steps.map((s) => (
                 <Link
                   key={s.label}

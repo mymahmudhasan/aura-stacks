@@ -8,6 +8,7 @@ import { CTA, GlassCard, Section } from "@/components/ui-bits";
 import { supabase } from "@/integrations/supabase/client";
 import { RequirePhoneVerified } from "@/components/RequirePhoneVerified";
 import { getMyWallet, getMyInvestments, getMyDeposits, getMyWithdrawals } from "@/lib/wallet.functions";
+import { QuickInvestModal } from "@/components/QuickInvestModal";
 
 export const Route = createFileRoute("/dashboard")({
   beforeLoad: async () => {

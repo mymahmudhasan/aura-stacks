@@ -134,6 +134,8 @@ export const createInvestment = createServerFn({ method: "POST" })
     if (balance < data.amount) {
       throw new Error("Insufficient balance. Deposit first, then invest.");
     }
+    // Insert as pending, then activate to fire trg_investment_status
+    // (debits balance + records wallet_transaction atomically in the trigger).
     const { data: row, error } = await supabase
       .from("investments")
       .insert({
@@ -146,7 +148,19 @@ export const createInvestment = createServerFn({ method: "POST" })
       .select()
       .single();
     if (error) throw new Error(error.message);
-    return row;
+
+    const { data: activated, error: actErr } = await supabase
+      .from("investments")
+      .update({ status: "active", started_at: new Date().toISOString() })
+      .eq("id", row.id)
+      .select()
+      .single();
+    if (actErr) {
+      // Roll back the pending row so we don't leave orphans
+      await supabase.from("investments").delete().eq("id", row.id);
+      throw new Error(actErr.message);
+    }
+    return activated;
   });
 
 export const getMyDeposits = createServerFn({ method: "GET" })

@@ -27,6 +27,8 @@ export type Database = {
           email_verified_at: string | null
           full_name: string
           id: string
+          last_sender_address: string | null
+          last_sender_network: string | null
           notes: string | null
           phone: string | null
           phone_verified_at: string | null
@@ -50,6 +52,8 @@ export type Database = {
           email_verified_at?: string | null
           full_name: string
           id?: string
+          last_sender_address?: string | null
+          last_sender_network?: string | null
           notes?: string | null
           phone?: string | null
           phone_verified_at?: string | null
@@ -73,6 +77,8 @@ export type Database = {
           email_verified_at?: string | null
           full_name?: string
           id?: string
+          last_sender_address?: string | null
+          last_sender_network?: string | null
           notes?: string | null
           phone?: string | null
           phone_verified_at?: string | null

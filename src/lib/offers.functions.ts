@@ -3,6 +3,8 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
+type Json = string | number | boolean | null | { [k: string]: Json } | Json[];
+
 export type OfferRow = {
   id: string;
   slug: string;
@@ -11,7 +13,7 @@ export type OfferRow = {
   badge: string | null;
   cta_label: string;
   type: "welcome_boost" | "vip_lock" | "double_rewards" | "referral_bonus";
-  effect: Record<string, unknown>;
+  effect: Json;
   duration_days: number | null;
   min_amount: number | null;
   starts_at: string | null;
@@ -27,8 +29,9 @@ export type UserOfferRow = {
   claimed_at: string;
   expires_at: string | null;
   applied_to_investment_id: string | null;
-  payload: Record<string, unknown>;
+  payload: Json;
 };
+
 
 async function assertAdmin(userId: string) {
   const { data } = await supabaseAdmin

@@ -963,9 +963,86 @@ function SettingsTab({ onToast }: { onToast: (kind: "ok" | "err", msg: string) =
       <GlassCard className="lg:col-span-3 p-6">
         <WhatsAppSettings onToast={onToast} />
       </GlassCard>
+
+      <GlassCard className="lg:col-span-3 p-6">
+        <SupportWidgetsSettings onToast={onToast} />
+      </GlassCard>
     </div>
   );
 }
+
+function SupportWidgetsSettings({ onToast }: { onToast: (kind: "ok" | "err", msg: string) => void }) {
+  const [whatsapp, setWhatsapp] = useState(true);
+  const [liveChat, setLiveChat] = useState(true);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState<null | "whatsapp" | "liveChat">(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from("site_settings")
+      .select("whatsapp_enabled,live_chat_enabled")
+      .eq("id", 1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled || !data) { setLoading(false); return; }
+        setWhatsapp((data as any).whatsapp_enabled !== false);
+        setLiveChat((data as any).live_chat_enabled !== false);
+        setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  const toggle = async (key: "whatsapp" | "liveChat", next: boolean) => {
+    setSaving(key);
+    const col = key === "whatsapp" ? "whatsapp_enabled" : "live_chat_enabled";
+    const { error } = await supabase
+      .from("site_settings")
+      .update({ [col]: next } as never)
+      .eq("id", 1);
+    setSaving(null);
+    if (error) { onToast("err", error.message); return; }
+    if (key === "whatsapp") setWhatsapp(next); else setLiveChat(next);
+    window.dispatchEvent(new CustomEvent("auratrad:widget-flags-changed", {
+      detail: key === "whatsapp" ? { whatsapp: next } : { liveChat: next },
+    }));
+    onToast("ok", `${key === "whatsapp" ? "WhatsApp" : "Live Chat"} widget ${next ? "enabled" : "hidden"}.`);
+  };
+
+  const Row = ({ label, desc, on, k }: { label: string; desc: string; on: boolean; k: "whatsapp" | "liveChat" }) => (
+    <div className="flex items-center justify-between gap-4 p-4 rounded-xl glass">
+      <div className="min-w-0">
+        <p className="text-sm font-semibold">{label}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
+      </div>
+      <button
+        onClick={() => toggle(k, !on)}
+        disabled={loading || saving === k}
+        aria-pressed={on}
+        className={`relative w-12 h-7 rounded-full transition shrink-0 ${on ? "bg-success" : "bg-muted"} disabled:opacity-50`}
+      >
+        <span className={`absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform ${on ? "translate-x-5" : ""}`} />
+      </button>
+    </div>
+  );
+
+  return (
+    <>
+      <div className="flex items-center gap-2 mb-1">
+        <MessageSquare className="w-5 h-5 text-primary" />
+        <h2 className="text-lg font-bold">Support Widgets Visibility</h2>
+      </div>
+      <p className="text-sm text-muted-foreground mb-5">
+        Show or hide the floating WhatsApp and Live Chat buttons on every page.
+      </p>
+      <div className="grid sm:grid-cols-2 gap-3">
+        <Row k="whatsapp" on={whatsapp} label="WhatsApp widget" desc="Floating green WhatsApp button (stacked above Live Chat)." />
+        <Row k="liveChat" on={liveChat} label="Live Chat widget" desc="Floating real-time support chat (bottom-right)." />
+      </div>
+    </>
+  );
+}
+
 
 type AddrField = { key: "usdt_trc20_address" | "usdt_bep20_address" | "usdt_erc20_address" | "binance_pay_id"; label: string; placeholder: string; regex: RegExp; help: string };
 const ADDR_FIELDS: AddrField[] = [

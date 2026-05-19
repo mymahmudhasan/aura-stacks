@@ -622,30 +622,17 @@ function TicketsTab({ onToast, onMutated }: { onToast: (k: "ok" | "err", m: stri
       ) : (
         <div className="space-y-2">
           {rows.map((t) => (
-            <div key={t.id} className="rounded-xl glass p-3.5">
-              <div className="flex items-start justify-between gap-3 flex-wrap">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[10px] font-mono text-primary">{t.ticket_number}</span>
-                    <PriorityPill v={t.priority} />
-                    <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{t.category}</span>
-                  </div>
-                  <p className="font-medium mt-1">{t.subject}</p>
-                  <p className="text-xs text-muted-foreground truncate">{t.full_name} · {t.email}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <select value={t.status} onChange={(e) => updateTicket(t.id, { status: e.target.value as Ticket["status"], resolved_at: e.target.value === "resolved" ? new Date().toISOString() : null })}
-                    className="px-2 py-1.5 rounded-lg bg-input border border-border text-xs">
-                    <option value="open">open</option>
-                    <option value="in_progress">in_progress</option>
-                    <option value="resolved">resolved</option>
-                    <option value="closed">closed</option>
-                  </select>
-                </div>
-              </div>
-              <p className="mt-2 text-xs text-muted-foreground line-clamp-2">{t.message}</p>
-              <p className="mt-2 text-[10px] text-muted-foreground">Opened {new Date(t.created_at).toLocaleString()}</p>
-            </div>
+            <TicketRow
+              key={t.id}
+              t={t}
+              onStatusChange={(status) =>
+                updateTicket(t.id, {
+                  status,
+                  resolved_at: status === "resolved" ? new Date().toISOString() : null,
+                })
+              }
+              onToast={onToast}
+            />
           ))}
         </div>
       )}

@@ -56,12 +56,8 @@ function Home() {
             </div>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <CTA to="/register">Start Free Demo <ArrowRight className="w-4 h-4" /></CTA>
               <CTA to="/ai-trading" variant="ghost">See live performance</CTA>
             </div>
-            <p className="mt-3 text-xs text-muted-foreground">
-              Get a <span className="text-primary font-medium">$10,000 demo balance</span> instantly — no card required. Your account upgrades to a real account the moment you make your first deposit.
-            </p>
             <div className="mt-10 grid grid-cols-3 gap-3 max-w-lg">
               <StatPill label="Avg Win Rate" value="74%" />
               <StatPill label="Max Drawdown" value="2.1%" />

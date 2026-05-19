@@ -446,7 +446,7 @@ function Dashboard() {
         <Stat icon={<Clock />} label="Pending Withdrawals" value={`$${pendingWdAmount.toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 })}`} trend={`${pendingWdCount} request${pendingWdCount === 1 ? "" : "s"}`} />
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-5 mt-5">
+      <div id="active-investments" className="grid lg:grid-cols-3 gap-5 mt-5 scroll-mt-24">
         <div className="lg:col-span-2 relative rounded-2xl p-[1.5px] bg-[image:var(--gradient-aurora)] glow-primary animate-fade-in">
           <div className="absolute -inset-8 bg-[image:var(--gradient-aurora)] opacity-30 blur-3xl -z-10 rounded-full pointer-events-none" />
           <div className="rounded-2xl bg-background/80 backdrop-blur-xl p-5">

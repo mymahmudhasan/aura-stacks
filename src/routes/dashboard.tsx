@@ -16,6 +16,13 @@ export const Route = createFileRoute("/dashboard")({
   beforeLoad: async () => {
     const { data } = await supabase.auth.getSession();
     if (!data.session) throw redirect({ to: "/login" });
+    const { data: role } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", data.session.user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (role) throw redirect({ to: "/admin" });
   },
   component: () => (
     <RequirePhoneVerified>

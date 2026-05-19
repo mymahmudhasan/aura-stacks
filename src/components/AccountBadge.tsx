@@ -1,9 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Sparkles, BadgeCheck, LogOut, User } from "lucide-react";
+import { Sparkles, BadgeCheck, LogOut, User, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
-type Info = { email: string; type: "demo" | "real" } | null;
+type Info = { email: string; type: "demo" | "real"; isAdmin: boolean } | null;
 
 export function AccountBadge({ compact = false }: { compact?: boolean }) {
   const [info, setInfo] = useState<Info>(null);
@@ -17,15 +17,20 @@ export function AccountBadge({ compact = false }: { compact?: boolean }) {
         if (active) setInfo(null);
         return;
       }
-      const { data } = await supabase
-        .from("customers")
-        .select("account_type")
-        .eq("user_id", userId)
-        .maybeSingle();
+      const [{ data: cust }, { data: role }] = await Promise.all([
+        supabase.from("customers").select("account_type").eq("user_id", userId).maybeSingle(),
+        supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userId)
+          .eq("role", "admin")
+          .maybeSingle(),
+      ]);
       if (!active) return;
       setInfo({
         email: email ?? "",
-        type: (data?.account_type as "demo" | "real") ?? "demo",
+        type: (cust?.account_type as "demo" | "real") ?? "demo",
+        isAdmin: !!role,
       });
     };
 
@@ -46,11 +51,13 @@ export function AccountBadge({ compact = false }: { compact?: boolean }) {
   if (!info) return null;
 
   const isDemo = info.type === "demo";
-  const pill = isDemo
-    ? "border-success/40 bg-success/10 text-success"
-    : "border-primary/40 bg-primary/10 text-primary";
-  const Icon = isDemo ? Sparkles : BadgeCheck;
-  const label = isDemo ? "Demo" : "Real";
+  const pill = info.isAdmin
+    ? "border-gold/40 bg-gold/10 text-gold"
+    : isDemo
+      ? "border-success/40 bg-success/10 text-success"
+      : "border-primary/40 bg-primary/10 text-primary";
+  const Icon = info.isAdmin ? ShieldCheck : isDemo ? Sparkles : BadgeCheck;
+  const label = info.isAdmin ? "Admin" : isDemo ? "Demo" : "Real";
 
   return (
     <div className="relative">
@@ -82,21 +89,26 @@ export function AccountBadge({ compact = false }: { compact?: boolean }) {
               className={`mt-2 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${pill}`}
             >
               <Icon className="w-3 h-3" />
-              {isDemo ? "Demo account" : "Real account"}
+              {info.isAdmin ? "Administrator" : isDemo ? "Demo account" : "Real account"}
             </span>
-            {isDemo && (
-              <p className="mt-2 text-[11px] text-muted-foreground leading-relaxed">
-                Deposit any amount to upgrade to a real account automatically.
-              </p>
-            )}
           </div>
-          <Link
-            to="/dashboard"
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-white/5"
-          >
-            <User className="w-4 h-4" /> Dashboard
-          </Link>
+          {info.isAdmin ? (
+            <Link
+              to="/admin"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-white/5"
+            >
+              <ShieldCheck className="w-4 h-4" /> Admin panel
+            </Link>
+          ) : (
+            <Link
+              to="/dashboard"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-white/5"
+            >
+              <User className="w-4 h-4" /> Dashboard
+            </Link>
+          )}
           <button
             onClick={async () => {
               setOpen(false);
@@ -123,3 +135,4 @@ export function useIsSignedIn() {
   }, []);
   return signedIn;
 }
+

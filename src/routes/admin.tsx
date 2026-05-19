@@ -23,7 +23,7 @@ type Customer = Tables<"customers">;
 type Ticket = Tables<"tickets">;
 type Payout = Tables<"payout_runs">;
 
-type Tab = "overview" | "customers" | "tickets" | "payouts" | "packages" | "settings";
+type Tab = "overview" | "customers" | "tickets" | "livechat" | "payouts" | "packages" | "settings";
 type SortDir = "asc" | "desc";
 type Overview = {
   customers_total: number; customers_active: number; customers_pending: number; customers_suspended: number;

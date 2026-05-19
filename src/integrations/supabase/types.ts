@@ -586,6 +586,7 @@ export type Database = {
           id: string
           last_message_at: string
           status: string
+          ticket_id: string | null
           user_id: string | null
         }
         Insert: {
@@ -595,6 +596,7 @@ export type Database = {
           id?: string
           last_message_at?: string
           status?: string
+          ticket_id?: string | null
           user_id?: string | null
         }
         Update: {
@@ -604,9 +606,18 @@ export type Database = {
           id?: string
           last_message_at?: string
           status?: string
+          ticket_id?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "support_conversations_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "tickets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       support_messages: {
         Row: {
@@ -693,6 +704,8 @@ export type Database = {
           message: string
           priority: Database["public"]["Enums"]["ticket_priority"]
           resolved_at: string | null
+          source: string
+          source_conversation_id: string | null
           status: Database["public"]["Enums"]["ticket_status"]
           subject: string
           ticket_number: string
@@ -710,6 +723,8 @@ export type Database = {
           message: string
           priority?: Database["public"]["Enums"]["ticket_priority"]
           resolved_at?: string | null
+          source?: string
+          source_conversation_id?: string | null
           status?: Database["public"]["Enums"]["ticket_status"]
           subject: string
           ticket_number?: string
@@ -727,13 +742,23 @@ export type Database = {
           message?: string
           priority?: Database["public"]["Enums"]["ticket_priority"]
           resolved_at?: string | null
+          source?: string
+          source_conversation_id?: string | null
           status?: Database["public"]["Enums"]["ticket_status"]
           subject?: string
           ticket_number?: string
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tickets_source_conversation_id_fkey"
+            columns: ["source_conversation_id"]
+            isOneToOne: false
+            referencedRelation: "support_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

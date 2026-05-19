@@ -187,6 +187,7 @@ export function SupportChatWidget() {
       .channel(`support:${stored.conversationId}`)
       .on("broadcast", { event: "message" }, (payload) => {
         const msg = payload.payload as Msg;
+        if (msg.sender === "admin") humanRepliedRef.current = true;
         setMessages((prev) =>
           prev.some((m) => m.id === msg.id) ? prev : [...prev, msg],
         );

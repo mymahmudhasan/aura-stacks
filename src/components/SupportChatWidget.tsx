@@ -39,33 +39,25 @@ const PRESETS = [
 const BOT_NAME = "AuraBot";
 const MAX_BOT_REPLIES = 2;
 
-function botReplyFor(text: string): string | null {
+type BotReply = {
+  id: string;
+  keywords: string[] | null;
+  reply: string;
+  is_fallback: boolean;
+  sort_order: number;
+};
+
+function pickBotReply(text: string, rules: BotReply[]): string | null {
   const t = text.toLowerCase();
-  if (/(deposit|withdraw|payout|payment|transfer)/.test(t)) {
-    return "Got it 👍 For deposits/withdrawals: please share your transaction hash (TXID) and the wallet/network used. Deposits credit after network confirmations (BTC ~3, ETH/BNB ~12). Withdrawals are processed within 24h after KYC review. An agent will jump in shortly to verify your case.";
+  const sorted = [...rules].sort((a, b) => a.sort_order - b.sort_order);
+  for (const r of sorted) {
+    if (r.is_fallback) continue;
+    const kws = r.keywords ?? [];
+    if (kws.length === 0) continue;
+    if (kws.some((k) => k && t.includes(k.toLowerCase()))) return r.reply;
   }
-  if (/(bot|ai|trading|signal|strategy)/.test(t)) {
-    return "Thanks! Our AI trading bot runs 24/7 with risk-controlled positions. If it looks paused, it's usually because the market filter detected high volatility and paused entries — this is normal. Please share your account email or plan name so an agent can pull your bot logs.";
-  }
-  if (/(min|stak|plan|package|roi|earn|reward)/.test(t)) {
-    return "Sure — mining & staking plans pay daily into your wallet balance and unlock on maturity. You can view active plans in Dashboard → Plans. Tell me which plan you're asking about (name or amount) and an agent will confirm your exact schedule.";
-  }
-  if (/(human|agent|advisor|person|representative|real)/.test(t)) {
-    return "Connecting you with a human advisor now 🧑‍💼 — usual response time is a few minutes. While you wait, please share the topic in 1-2 sentences so the agent can help faster.";
-  }
-  if (/(kyc|verify|verification|id|passport|document)/.test(t)) {
-    return "For KYC: upload a government ID + selfie under Settings → Verification. Approvals usually take under 1 hour during business time. An agent will confirm your status here.";
-  }
-  if (/(password|login|reset|2fa|otp|sign in|signin|access)/.test(t)) {
-    return "For login/2FA issues: try Forgot Password, and make sure your device time is correct for OTP codes. If still locked out, share your account email and an agent will assist.";
-  }
-  if (/(referr|affiliate|commission|invite)/.test(t)) {
-    return "Affiliate rewards pay instantly when your referral funds a plan. Your referral link is on the Affiliate page. An agent can audit any missing commissions for you.";
-  }
-  if (/(hi|hello|hey|hola|salam|assalam)/.test(t.trim())) {
-    return "Hi! 👋 Quick question so I can route you faster — is this about deposits/withdrawals, your AI bot, a mining/staking plan, or your account login?";
-  }
-  return "Thanks for the details ✍️ — I've logged this and a human agent is being notified now. They'll reply right in this chat within a few minutes.";
+  const fb = sorted.find((r) => r.is_fallback);
+  return fb ? fb.reply : null;
 }
 
 export function SupportChatWidget() {
@@ -88,9 +80,23 @@ export function SupportChatWidget() {
   const recognitionRef = useRef<any>(null);
   const baseTextRef = useRef("");
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [botRules, setBotRules] = useState<BotReply[]>([]);
 
   useEffect(() => {
     setStored(readStored());
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    void supabase
+      .from("support_bot_replies")
+      .select("id,keywords,reply,is_fallback,sort_order")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true })
+      .then(({ data }) => {
+        if (active && data) setBotRules(data as BotReply[]);
+      });
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {
@@ -296,7 +302,7 @@ export function SupportChatWidget() {
           !humanRepliedRef.current &&
           botRepliesRef.current < MAX_BOT_REPLIES
         ) {
-          const reply = botReplyFor(clean);
+          const reply = pickBotReply(clean, botRules);
           if (reply) {
             botRepliesRef.current += 1;
             const botMsg: Msg = {
@@ -318,7 +324,7 @@ export function SupportChatWidget() {
         setBusy(false);
       }
     },
-    [stored],
+    [stored, botRules],
   );
 
   const onSend = useCallback(

@@ -80,9 +80,23 @@ export function SupportChatWidget() {
   const recognitionRef = useRef<any>(null);
   const baseTextRef = useRef("");
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [botRules, setBotRules] = useState<BotReply[]>([]);
 
   useEffect(() => {
     setStored(readStored());
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    void supabase
+      .from("support_bot_replies")
+      .select("id,keywords,reply,is_fallback,sort_order")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true })
+      .then(({ data }) => {
+        if (active && data) setBotRules(data as BotReply[]);
+      });
+    return () => { active = false; };
   }, []);
 
   useEffect(() => {

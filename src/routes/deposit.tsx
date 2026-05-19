@@ -1,11 +1,14 @@
 import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Copy, Check, Loader2, ArrowLeft } from "lucide-react";
+import { Copy, Check, Loader2, ArrowLeft, Wallet, Zap } from "lucide-react";
 import { GlassCard, Section } from "@/components/ui-bits";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { createDeposit, getDepositSettings, getMyDeposits, getMyProfile } from "@/lib/wallet.functions";
+import { createOnChainDeposit, verifyOnChainDeposit } from "@/lib/web3/onchain.functions";
+import { useConnectedWallet, useSendUsdt } from "@/lib/web3/wallet";
+import { ConnectWalletButton } from "@/components/ConnectWalletButton";
 
 export const Route = createFileRoute("/deposit")({
   component: DepositPage,

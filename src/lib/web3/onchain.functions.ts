@@ -119,7 +119,7 @@ export const verifyOnChainDeposit = createServerFn({ method: "POST" })
           if (ok && evt) {
             const to = evt.result?.to;
             const value = Number(evt.result?.value ?? 0) / 10 ** 6;
-            if (to && to.toLowerCase() === expectTo.toLowerCase() && value + 1e-6 >= expectAmount(expectedAmount)) {
+            if (to && to.toLowerCase() === expectTo.toLowerCase() && value + 1e-6 >= expectedAmount) {
               verified = true;
             } else {
               reason = `TRC20 mismatch (to=${to}, value=${value})`;
@@ -177,7 +177,3 @@ export const verifyOnChainDeposit = createServerFn({ method: "POST" })
     }
     return { status: "confirming" as const, reason };
   });
-
-function expectAmount(n: number) {
-  return n;
-}

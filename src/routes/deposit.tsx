@@ -19,19 +19,27 @@ export const Route = createFileRoute("/deposit")({
   },
 });
 
-type Settings = { usdt_trc20_address: string | null; usdt_bep20_address: string | null; usdt_erc20_address: string | null; binance_pay_id: string | null };
+type Settings = {
+  usdt_trc20_address: string | null; usdt_bep20_address: string | null; usdt_erc20_address: string | null; binance_pay_id: string | null;
+  deposit_binance_pay_enabled?: boolean | null;
+  deposit_trc20_enabled?: boolean | null;
+  deposit_bep20_enabled?: boolean | null;
+  deposit_erc20_enabled?: boolean | null;
+  deposit_onchain_wallet_enabled?: boolean | null;
+};
 type Deposit = { id: string; amount: number; currency: string; network: string | null; tx_hash: string | null; status: string; created_at: string; admin_notes: string | null };
 
-const NETWORKS = [
-  { id: "TRC20", label: "USDT · TRC20 (Tron)", key: "usdt_trc20_address" },
-  { id: "BEP20", label: "USDT · BEP20 (BSC)", key: "usdt_bep20_address" },
-  { id: "ERC20", label: "USDT · ERC20 (Ethereum)", key: "usdt_erc20_address" },
-  { id: "BINANCE_PAY", label: "Binance Pay ID", key: "binance_pay_id" },
+const ALL_NETWORKS = [
+  { id: "BINANCE_PAY", label: "Binance Pay ID", key: "binance_pay_id", flag: "deposit_binance_pay_enabled" },
+  { id: "TRC20", label: "USDT · TRC20 (Tron)", key: "usdt_trc20_address", flag: "deposit_trc20_enabled" },
+  { id: "BEP20", label: "USDT · BEP20 (BSC)", key: "usdt_bep20_address", flag: "deposit_bep20_enabled" },
+  { id: "ERC20", label: "USDT · ERC20 (Ethereum)", key: "usdt_erc20_address", flag: "deposit_erc20_enabled" },
 ] as const;
+type NetId = typeof ALL_NETWORKS[number]["id"];
 
 function DepositPage() {
   const [settings, setSettings] = useState<Settings | null>(null);
-  const [network, setNetwork] = useState<typeof NETWORKS[number]["id"]>("TRC20");
+  const [network, setNetwork] = useState<NetId>("BINANCE_PAY");
   const [amount, setAmount] = useState("");
   const [txHash, setTxHash] = useState("");
   const [fromAddress, setFromAddress] = useState("");

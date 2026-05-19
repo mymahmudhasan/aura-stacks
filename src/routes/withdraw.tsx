@@ -31,6 +31,7 @@ function WithdrawPage() {
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [items, setItems] = useState<Withdrawal[]>([]);
+  const [flags, setFlags] = useState<{ binance_uid: boolean; wallet_address: boolean }>({ binance_uid: true, wallet_address: false });
   const wallet = useConnectedWallet();
 
   const refresh = async () => {
@@ -40,6 +41,15 @@ function WithdrawPage() {
     setSavedUid(c?.binance_uid ?? "");
     setSavedWallet(c?.binance_wallet_address ?? "");
     setItems(list as Withdrawal[]);
+    const f = (w as { withdraw_flags?: { binance_uid: boolean; wallet_address: boolean } }).withdraw_flags;
+    if (f) {
+      setFlags(f);
+      // If current selection is disabled, switch to the first enabled
+      if (!f[destinationType]) {
+        if (f.binance_uid) setDestinationType("binance_uid");
+        else if (f.wallet_address) setDestinationType("wallet_address");
+      }
+    }
   };
   useEffect(() => { refresh(); }, []);
 
@@ -49,6 +59,8 @@ function WithdrawPage() {
     const fill = destinationType === "binance_uid" ? savedUid : savedWallet;
     setDestination(fill);
   }, [useSaved, destinationType, savedUid, savedWallet]);
+
+  const enabledTypes = (["binance_uid", "wallet_address"] as const).filter((t) => flags[t]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

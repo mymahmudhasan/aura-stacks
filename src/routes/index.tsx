@@ -154,7 +154,7 @@ function Home() {
               <p className="text-xs text-muted-foreground mt-0.5">All deposits, withdrawals and reward payouts are processed through your verified Binance wallet.</p>
             </div>
           </div>
-          <a href="https://accounts.binance.com/register" target="_blank" rel="noopener noreferrer" className="text-xs font-medium text-primary hover:underline shrink-0">Create Binance account →</a>
+          <a href="https://www.binance.com/referral/earn-together/refer2earn-usdc/claim?hl=en&ref=GRO_28502_YBOIX&utm_source=referral_entrance" target="_blank" rel="noopener noreferrer" className="text-xs font-medium text-primary hover:underline shrink-0">Create Binance account →</a>
         </div>
       </section>
 

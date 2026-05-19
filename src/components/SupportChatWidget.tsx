@@ -36,6 +36,38 @@ const PRESETS = [
   "I want to talk to a human investment advisor",
 ];
 
+const BOT_NAME = "AuraBot";
+const MAX_BOT_REPLIES = 2;
+
+function botReplyFor(text: string): string | null {
+  const t = text.toLowerCase();
+  if (/(deposit|withdraw|payout|payment|transfer)/.test(t)) {
+    return "Got it 👍 For deposits/withdrawals: please share your transaction hash (TXID) and the wallet/network used. Deposits credit after network confirmations (BTC ~3, ETH/BNB ~12). Withdrawals are processed within 24h after KYC review. An agent will jump in shortly to verify your case.";
+  }
+  if (/(bot|ai|trading|signal|strategy)/.test(t)) {
+    return "Thanks! Our AI trading bot runs 24/7 with risk-controlled positions. If it looks paused, it's usually because the market filter detected high volatility and paused entries — this is normal. Please share your account email or plan name so an agent can pull your bot logs.";
+  }
+  if (/(min|stak|plan|package|roi|earn|reward)/.test(t)) {
+    return "Sure — mining & staking plans pay daily into your wallet balance and unlock on maturity. You can view active plans in Dashboard → Plans. Tell me which plan you're asking about (name or amount) and an agent will confirm your exact schedule.";
+  }
+  if (/(human|agent|advisor|person|representative|real)/.test(t)) {
+    return "Connecting you with a human advisor now 🧑‍💼 — usual response time is a few minutes. While you wait, please share the topic in 1-2 sentences so the agent can help faster.";
+  }
+  if (/(kyc|verify|verification|id|passport|document)/.test(t)) {
+    return "For KYC: upload a government ID + selfie under Settings → Verification. Approvals usually take under 1 hour during business time. An agent will confirm your status here.";
+  }
+  if (/(password|login|reset|2fa|otp|sign in|signin|access)/.test(t)) {
+    return "For login/2FA issues: try Forgot Password, and make sure your device time is correct for OTP codes. If still locked out, share your account email and an agent will assist.";
+  }
+  if (/(referr|affiliate|commission|invite)/.test(t)) {
+    return "Affiliate rewards pay instantly when your referral funds a plan. Your referral link is on the Affiliate page. An agent can audit any missing commissions for you.";
+  }
+  if (/(hi|hello|hey|hola|salam|assalam)/.test(t.trim())) {
+    return "Hi! 👋 Quick question so I can route you faster — is this about deposits/withdrawals, your AI bot, a mining/staking plan, or your account login?";
+  }
+  return "Thanks for the details ✍️ — I've logged this and a human agent is being notified now. They'll reply right in this chat within a few minutes.";
+}
+
 export function SupportChatWidget() {
   const [open, setOpen] = useState(false);
   const [stored, setStored] = useState<Stored | null>(null);
@@ -51,6 +83,8 @@ export function SupportChatWidget() {
   const [authUser, setAuthUser] = useState<{ id: string; email: string; name: string } | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const autoStartedRef = useRef(false);
+  const botRepliesRef = useRef(0);
+  const humanRepliedRef = useRef(false);
   const recognitionRef = useRef<any>(null);
   const baseTextRef = useRef("");
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -153,6 +187,7 @@ export function SupportChatWidget() {
       .channel(`support:${stored.conversationId}`)
       .on("broadcast", { event: "message" }, (payload) => {
         const msg = payload.payload as Msg;
+        if (msg.sender === "admin") humanRepliedRef.current = true;
         setMessages((prev) =>
           prev.some((m) => m.id === msg.id) ? prev : [...prev, msg],
         );
@@ -254,6 +289,29 @@ export function SupportChatWidget() {
         setMessages((prev) =>
           prev.some((m) => m.id === (msg as Msg).id) ? prev : [...prev, msg as Msg],
         );
+
+        // Pre-message bot reply (client-side only) for the first couple of
+        // user messages, until a human agent jumps in.
+        if (
+          !humanRepliedRef.current &&
+          botRepliesRef.current < MAX_BOT_REPLIES
+        ) {
+          const reply = botReplyFor(clean);
+          if (reply) {
+            botRepliesRef.current += 1;
+            const botMsg: Msg = {
+              id: `bot-${Date.now()}`,
+              conversation_id: stored.conversationId,
+              sender: "admin",
+              author_name: BOT_NAME,
+              body: reply,
+              created_at: new Date().toISOString(),
+            };
+            setTimeout(() => {
+              setMessages((prev) => [...prev, botMsg]);
+            }, 700);
+          }
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Send failed.");
       } finally {

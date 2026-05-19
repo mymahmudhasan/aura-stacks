@@ -683,8 +683,7 @@ function TicketRow({
         (u.user?.user_metadata as { full_name?: string } | undefined)?.full_name ||
         u.user?.email ||
         "Support";
-      const { replyToTicket: rpc } = { replyToTicket };
-      await rpc({
+      await replyToTicket({
         data: { ticket_id: t.id, body, author_name, author_id: u.user?.id ?? null },
       });
       setReply("");

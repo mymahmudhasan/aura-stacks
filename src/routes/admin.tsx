@@ -55,6 +55,9 @@ function Admin() {
       if (!role) {
         return navigate({ to: "/dashboard" });
       }
+      const { data: prof } = await supabase
+        .from("profiles").select("full_name").eq("id", sess.session.user.id).maybeSingle();
+      if (prof?.full_name) setAdminName(prof.full_name);
       setAuthorized(true);
       setChecking(false);
       void loadOverview();

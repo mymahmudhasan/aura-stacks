@@ -240,3 +240,150 @@ function DepositPage() {
     </Section>
   );
 }
+
+type WalletNet = "TRC20" | "BEP20" | "ERC20";
+
+function WalletPayCard({ settings, defaultNetwork, onDone }: { settings: Settings | null; defaultNetwork: WalletNet; onDone: () => Promise<void> | void }) {
+  const wallet = useConnectedWallet();
+  const sendUsdt = useSendUsdt();
+  const [net, setNet] = useState<WalletNet>(defaultNetwork);
+  const [amt, setAmt] = useState("");
+  const [phase, setPhase] = useState<"idle" | "sending" | "confirming" | "approved" | "error">("idle");
+  const [reason, setReason] = useState<string>("");
+  const [txHash, setTxHash] = useState<string>("");
+
+  useEffect(() => { setNet(defaultNetwork); }, [defaultNetwork]);
+
+  // Auto-pick a network the wallet supports
+  useEffect(() => {
+    if (!wallet) return;
+    if (wallet.kind === "TRON" && net !== "TRC20") setNet("TRC20");
+    if (wallet.kind === "EVM" && net === "TRC20") setNet("BEP20");
+  }, [wallet, net]);
+
+  const destAddress = settings
+    ? net === "TRC20" ? settings.usdt_trc20_address
+    : net === "BEP20" ? settings.usdt_bep20_address
+    : settings.usdt_erc20_address
+    : null;
+
+  const compatible = wallet
+    ? (wallet.kind === "TRON" ? net === "TRC20" : net !== "TRC20")
+    : false;
+
+  const pay = async () => {
+    if (!wallet || !destAddress) return;
+    setReason(""); setPhase("sending");
+    try {
+      const amount = Number(amt);
+      if (!(amount > 0)) throw new Error("Enter an amount");
+      const hash = await sendUsdt(net, destAddress, amount);
+      setTxHash(hash);
+      const dep = await createOnChainDeposit({
+        data: { amount, network: net, tx_hash: hash, from_address: wallet.address },
+      });
+      setPhase("confirming");
+      // poll up to 5 min
+      for (let i = 0; i < 50; i++) {
+        await new Promise((r) => setTimeout(r, 6000));
+        const r = await verifyOnChainDeposit({ data: { deposit_id: dep.id } });
+        if (r.status === "approved") {
+          setPhase("approved");
+          await onDone();
+          return;
+        }
+        if (r.status === "rejected") {
+          setPhase("error");
+          setReason("Deposit rejected by admin.");
+          return;
+        }
+        if ("reason" in r && r.reason) setReason(r.reason);
+      }
+      setReason("Still confirming — refresh later to see final status.");
+    } catch (e) {
+      setPhase("error");
+      setReason(e instanceof Error ? e.message : "Payment failed");
+    }
+  };
+
+  return (
+    <GlassCard glow className="mb-5">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
+            <Zap className="w-3.5 h-3.5 text-gold" /> One-click on-chain deposit
+          </p>
+          <h3 className="font-semibold mt-1">Pay USDT directly from your wallet</h3>
+        </div>
+        {wallet && (
+          <span className="text-[10px] uppercase tracking-widest px-2 py-1 rounded-full bg-success/15 text-success">
+            <Wallet className="w-3 h-3 inline mr-1" />{wallet.chainName}
+          </span>
+        )}
+      </div>
+
+      {!wallet && (
+        <p className="text-sm text-muted-foreground mt-3">
+          Connect MetaMask, WalletConnect, or TronLink (top right) to pay in one click. Otherwise use the manual form below.
+        </p>
+      )}
+
+      {wallet && (
+        <div className="mt-4 grid sm:grid-cols-3 gap-3 items-end">
+          <div className="sm:col-span-1">
+            <Label className="text-xs">Network</Label>
+            <div className="grid grid-cols-3 gap-1 mt-1.5">
+              {(["TRC20", "BEP20", "ERC20"] as const).map((n) => {
+                const ok = wallet.kind === "TRON" ? n === "TRC20" : n !== "TRC20";
+                return (
+                  <button key={n} type="button" disabled={!ok} onClick={() => setNet(n)}
+                    className={`px-2 py-1.5 rounded-lg text-[11px] font-medium transition ${net === n ? "bg-primary text-primary-foreground" : "glass hover:bg-primary/10"} ${!ok ? "opacity-40 cursor-not-allowed" : ""}`}>
+                    {n}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="sm:col-span-1">
+            <Label htmlFor="wc-amt" className="text-xs">Amount (USDT)</Label>
+            <Input id="wc-amt" type="number" min="1" step="0.01" value={amt} onChange={(e) => setAmt(e.target.value)} placeholder="100" className="mt-1.5" />
+          </div>
+          <button
+            type="button"
+            disabled={!compatible || !destAddress || !amt || phase === "sending" || phase === "confirming"}
+            onClick={pay}
+            className="rounded-xl px-4 py-2.5 text-sm font-semibold bg-[image:var(--gradient-gold)] text-gold-foreground glow-gold disabled:opacity-60 inline-flex items-center justify-center gap-2"
+          >
+            {(phase === "sending" || phase === "confirming") && <Loader2 className="w-4 h-4 animate-spin" />}
+            {phase === "sending" ? "Confirm in wallet…" : phase === "confirming" ? "Confirming on-chain…" : `Pay ${amt || "0"} USDT`}
+          </button>
+          {!compatible && wallet && (
+            <p className="text-xs text-gold sm:col-span-3">
+              Your {wallet.kind === "TRON" ? "TronLink" : "EVM"} wallet only supports {wallet.kind === "TRON" ? "TRC20" : "BEP20 / ERC20"}. Pick a compatible network.
+            </p>
+          )}
+          {!destAddress && (
+            <p className="text-xs text-destructive sm:col-span-3">
+              {net} address not configured by admin yet. Use a different network or the manual form.
+            </p>
+          )}
+          {phase === "approved" && (
+            <p className="text-xs text-success sm:col-span-3 flex items-center gap-1.5">
+              <Check className="w-3.5 h-3.5" /> Confirmed! Your balance has been credited.
+            </p>
+          )}
+          {phase === "confirming" && reason && (
+            <p className="text-xs text-muted-foreground sm:col-span-3">Status: {reason}</p>
+          )}
+          {phase === "error" && (
+            <p className="text-xs text-destructive sm:col-span-3">{reason}</p>
+          )}
+          {txHash && (
+            <p className="text-[10px] text-muted-foreground sm:col-span-3 font-mono break-all">tx: {txHash}</p>
+          )}
+        </div>
+      )}
+    </GlassCard>
+  );
+}
+

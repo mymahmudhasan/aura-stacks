@@ -261,6 +261,7 @@ export function Layout() {
       </main>
       <Footer />
       <WhatsAppWidget />
+      <SupportChatWidget />
     </div>
   );
 }

@@ -337,6 +337,7 @@ export function SupportChatWidget() {
                 Start live chat
               </button>
             </form>
+            )
           ) : (
             <>
               <div

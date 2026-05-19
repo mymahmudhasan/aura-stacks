@@ -324,7 +324,7 @@ export function SupportChatWidget() {
         setBusy(false);
       }
     },
-    [stored],
+    [stored, botRules],
   );
 
   const onSend = useCallback(

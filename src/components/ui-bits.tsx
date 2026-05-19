@@ -74,7 +74,7 @@ export function CTA({
   return (
     <Link
       to={to}
-      className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium text-sm transition ${styles} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:scale-[1.03] active:scale-[0.98] hover:shadow-[0_15px_35px_-10px_hsl(var(--primary)/0.6)] ${styles} ${className}`}
     >
       {children}
     </Link>

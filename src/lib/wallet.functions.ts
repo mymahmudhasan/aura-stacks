@@ -53,7 +53,7 @@ export const getDepositSettings = createServerFn({ method: "GET" })
     const { supabase } = context;
     const { data } = await supabase
       .from("site_settings")
-      .select("usdt_trc20_address,usdt_bep20_address,usdt_erc20_address,binance_pay_id")
+      .select("usdt_trc20_address,usdt_bep20_address,usdt_erc20_address,binance_pay_id,deposit_binance_pay_enabled,deposit_trc20_enabled,deposit_bep20_enabled,deposit_erc20_enabled,deposit_onchain_wallet_enabled")
       .eq("id", 1)
       .maybeSingle();
     return data ?? null;

@@ -43,6 +43,7 @@ function Admin() {
   const [recentCustomers, setRecentCustomers] = useState<Customer[]>([]);
   const [recentTickets, setRecentTickets] = useState<Ticket[]>([]);
   const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
+  const [adminName, setAdminName] = useState<string>("Support");
 
   useEffect(() => {
     (async () => {

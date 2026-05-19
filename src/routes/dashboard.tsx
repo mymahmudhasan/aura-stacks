@@ -269,24 +269,45 @@ function Dashboard() {
               <div className="h-full bg-[image:var(--gradient-primary)] transition-all" style={{ width: `${pct}%` }} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {steps.map((s) => (
-                <Link
-                  key={s.label}
-                  to={s.to}
-                  className={`rounded-xl border px-3 py-2.5 flex items-center gap-2 text-xs transition ${
-                    s.done
-                      ? "border-success/30 bg-success/10 text-success"
-                      : "border-border bg-background/40 hover:bg-primary/10 hover:border-primary/30"
-                  }`}
-                >
-                  <span className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
-                    s.done ? "bg-success text-success-foreground" : "border border-border text-muted-foreground"
-                  }`}>
-                    {s.done ? <Check className="w-3 h-3" /> : s.icon}
-                  </span>
-                  <span className={`font-medium truncate ${s.done ? "line-through opacity-80" : ""}`}>{s.label}</span>
-                </Link>
-              ))}
+              {steps.map((s) => {
+                const isAnchor = s.to.startsWith("#");
+                const className = `rounded-xl border px-3 py-2.5 flex items-center gap-2 text-xs transition ${
+                  s.done
+                    ? "border-success/30 bg-success/10 text-success"
+                    : "border-border bg-background/40 hover:bg-primary/10 hover:border-primary/30"
+                }`;
+                const inner = (
+                  <>
+                    <span className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
+                      s.done ? "bg-success text-success-foreground" : "border border-border text-muted-foreground"
+                    }`}>
+                      {s.done ? <Check className="w-3 h-3" /> : s.icon}
+                    </span>
+                    <span className={`font-medium truncate ${s.done ? "line-through opacity-80" : ""}`}>{s.label}</span>
+                  </>
+                );
+                if (isAnchor) {
+                  return (
+                    <a
+                      key={s.label}
+                      href={s.to}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        const el = document.getElementById(s.to.slice(1));
+                        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }}
+                      className={className}
+                    >
+                      {inner}
+                    </a>
+                  );
+                }
+                return (
+                  <Link key={s.label} to={s.to} className={className}>
+                    {inner}
+                  </Link>
+                );
+              })}
             </div>
           </div>
         );

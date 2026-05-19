@@ -376,7 +376,7 @@ const features = [
 
 function NumberedService({ n, img, icon, title, desc, href, stat }: { n: string; img: string; icon: React.ReactNode; title: string; desc: string; href: string; stat: string }) {
   return (
-    <Link to={href} className="group relative block rounded-2xl overflow-hidden glass hover:border-primary/40 transition">
+    <Link to={href} className="group relative block rounded-2xl overflow-hidden glass border border-border/40 hover:border-primary/60 transition-all duration-500 ease-out hover:-translate-y-2 hover:shadow-[0_25px_60px_-15px_hsl(var(--primary)/0.55)] hover:[box-shadow:0_0_0_1px_hsl(var(--primary)/0.4),0_25px_60px_-15px_hsl(var(--primary)/0.55)]">
       <div className="relative h-44 overflow-hidden">
         <img src={img} alt={title} loading="lazy" className="w-full h-full object-cover opacity-70 group-hover:opacity-100 group-hover:scale-105 transition duration-700" />
         <div className="absolute inset-0 bg-gradient-to-t from-card via-card/40 to-transparent" />

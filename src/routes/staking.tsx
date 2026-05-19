@@ -1,17 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { Lock, TrendingUp, Timer, Layers, Gift, Zap, Sparkles, Flame, BadgePercent, Crown } from "lucide-react";
-import { CTA, GlassCard, PageHero, Section } from "@/components/ui-bits";
+import { Lock, TrendingUp, Timer, Layers } from "lucide-react";
+import { GlassCard, PageHero, Section } from "@/components/ui-bits";
 import { InvestButton } from "@/components/InvestButton";
 import { ServiceReferral } from "@/components/ServiceReferral";
 import { StakingTimeline } from "@/components/StakingTimeline";
 import { StakingPool } from "@/components/StakingPool";
 import { PlansEmpty, PlansError, PlansLoading } from "@/components/PlansState";
+import { OffersGrid } from "@/components/Offers";
 import { listPlans } from "@/lib/plans.functions";
 import stakingImg from "@/assets/staking-visual.webp";
 import vaultImg from "@/assets/staking-vault.webp";
 import poolImg from "@/assets/staking-pool.webp";
 import rewardsImg from "@/assets/staking-rewards.webp";
+
 
 export const Route = createFileRoute("/staking")({
   component: Staking,

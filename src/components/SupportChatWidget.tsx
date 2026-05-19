@@ -289,6 +289,29 @@ export function SupportChatWidget() {
         setMessages((prev) =>
           prev.some((m) => m.id === (msg as Msg).id) ? prev : [...prev, msg as Msg],
         );
+
+        // Pre-message bot reply (client-side only) for the first couple of
+        // user messages, until a human agent jumps in.
+        if (
+          !humanRepliedRef.current &&
+          botRepliesRef.current < MAX_BOT_REPLIES
+        ) {
+          const reply = botReplyFor(clean);
+          if (reply) {
+            botRepliesRef.current += 1;
+            const botMsg: Msg = {
+              id: `bot-${Date.now()}`,
+              conversation_id: stored.conversationId,
+              sender: "admin",
+              author_name: BOT_NAME,
+              body: reply,
+              created_at: new Date().toISOString(),
+            };
+            setTimeout(() => {
+              setMessages((prev) => [...prev, botMsg]);
+            }, 700);
+          }
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : "Send failed.");
       } finally {

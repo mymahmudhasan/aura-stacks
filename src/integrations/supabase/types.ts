@@ -572,6 +572,71 @@ export type Database = {
         }
         Relationships: []
       }
+      support_conversations: {
+        Row: {
+          created_at: string
+          guest_email: string | null
+          guest_name: string
+          id: string
+          last_message_at: string
+          status: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          guest_email?: string | null
+          guest_name: string
+          id?: string
+          last_message_at?: string
+          status?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          guest_email?: string | null
+          guest_name?: string
+          id?: string
+          last_message_at?: string
+          status?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      support_messages: {
+        Row: {
+          author_name: string
+          body: string
+          conversation_id: string
+          created_at: string
+          id: string
+          sender: string
+        }
+        Insert: {
+          author_name: string
+          body: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          sender: string
+        }
+        Update: {
+          author_name?: string
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          sender?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "support_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ticket_messages: {
         Row: {
           author_id: string | null

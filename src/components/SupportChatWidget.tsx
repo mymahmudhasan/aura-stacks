@@ -301,6 +301,11 @@ export function SupportChatWidget() {
           </div>
 
           {!stored ? (
+            authUser || !authChecked ? (
+              <div className="p-8 flex items-center justify-center bg-card/30">
+                <Loader2 className="w-5 h-5 animate-spin text-primary" />
+              </div>
+            ) : (
             <form onSubmit={onStart} className="p-4 space-y-3 bg-card/30">
               <p className="text-xs text-muted-foreground">
                 Start a chat with a real agent. Replies appear here instantly.

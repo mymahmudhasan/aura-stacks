@@ -85,7 +85,11 @@ function DepositPage() {
     }
   }, [network, savedSender]);
 
-  const address = settings?.[NETWORKS.find((n) => n.id === network)!.key] ?? "";
+  const enabledNetworks = ALL_NETWORKS.filter((n) => settings?.[n.flag] !== false && (n.id === "BINANCE_PAY" ? true : settings?.[n.flag] === true));
+  // Binance Pay defaults to enabled (!= false); others must be explicitly true
+  const onchainEnabled = settings?.deposit_onchain_wallet_enabled === true;
+  const activeNet = ALL_NETWORKS.find((n) => n.id === network);
+  const address = (activeNet ? (settings?.[activeNet.key] as string | null | undefined) : null) ?? "";
 
   const isBinance = network === "BINANCE_PAY";
   const senderRegex = isBinance

@@ -578,6 +578,39 @@ export type Database = {
         }
         Relationships: []
       }
+      support_bot_replies: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          is_fallback: boolean
+          keywords: string[]
+          reply: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_fallback?: boolean
+          keywords?: string[]
+          reply: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_fallback?: boolean
+          keywords?: string[]
+          reply?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       support_conversations: {
         Row: {
           created_at: string

@@ -1,11 +1,13 @@
 import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { Loader2, ArrowLeft, Wallet } from "lucide-react";
 import { GlassCard, Section } from "@/components/ui-bits";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { getMyWallet, getMyWithdrawals, requestWithdrawal } from "@/lib/wallet.functions";
+import { useConnectedWallet } from "@/lib/web3/wallet";
+import { ConnectWalletButton } from "@/components/ConnectWalletButton";
 
 export const Route = createFileRoute("/withdraw")({
   component: WithdrawPage,
@@ -29,6 +31,7 @@ function WithdrawPage() {
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [items, setItems] = useState<Withdrawal[]>([]);
+  const wallet = useConnectedWallet();
 
   const refresh = async () => {
     const [w, list] = await Promise.all([getMyWallet(), getMyWithdrawals()]);
@@ -72,8 +75,35 @@ function WithdrawPage() {
   return (
     <Section className="!py-12 max-w-4xl">
       <Link to="/wallet" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-4"><ArrowLeft className="w-4 h-4" /> Back to wallet</Link>
-      <h1 className="text-2xl md:text-3xl font-bold mb-2">Withdraw funds</h1>
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-2">
+        <h1 className="text-2xl md:text-3xl font-bold">Withdraw funds</h1>
+        <ConnectWalletButton />
+      </div>
       <p className="text-muted-foreground mb-6">Available balance: <span className="gradient-text font-bold">${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></p>
+
+      {wallet && (
+        <GlassCard className="mb-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-sm">
+              <Wallet className="w-4 h-4 text-success" />
+              <span>Send payout to your connected <strong>{wallet.chainName}</strong> wallet</span>
+              <code className="text-xs font-mono text-muted-foreground">{wallet.address.slice(0, 6)}…{wallet.address.slice(-6)}</code>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setDestinationType("wallet_address");
+                setUseSaved(false);
+                setDestination(wallet.address);
+              }}
+              className="text-xs px-3 py-1.5 rounded-lg bg-primary text-primary-foreground"
+            >
+              Use this wallet
+            </button>
+          </div>
+        </GlassCard>
+      )}
+
 
       <GlassCard>
         <form onSubmit={submit} className="space-y-4">

@@ -1,15 +1,14 @@
 ## Goal
-The Live Market chart section is too tall because `LiveForexChart` forces huge viewport-based heights (`h-[85vh] min-h-[800px]` up to `min-h-[1200px]`). The wrapping section grows with it. Make the chart a reasonable fixed height so the section auto-fits.
+Make the LiveForexChart tall enough to display the full TradingView toolbar and all indicator features without cramping.
 
 ## Change
-Single file: `src/components/LiveForexChart.tsx`
+In `src/components/LiveForexChart.tsx` (line 85), replace the container height:
 
-Replace the chart container height classes:
+- From: `h-[480px] md:h-[560px] lg:h-[620px]`
+- To: `h-[640px] md:h-[760px] lg:h-[860px]`
 
-- Before: `className="tradingview-widget-container w-full h-[85vh] min-h-[800px] sm:h-[90vh] sm:min-h-[950px] md:h-[92vh] md:min-h-[1100px] lg:h-[90vh] lg:min-h-[1200px]"`
-- After: `className="tradingview-widget-container w-full h-[480px] md:h-[560px] lg:h-[620px]"`
-
-This gives the chart a sensible bounded height; the surrounding section (header + chart + footer) will then size naturally to match. No other files need to change — the parent section in `src/routes/index.tsx` already uses auto height and just wraps the chart.
+This gives enough vertical room for the top toolbar, side drawing tools, main candle area, EMA/RSI sub-panels, and the bottom timeframe bar to all render fully.
 
 ## Out of scope
-No changes to colors, layout, or other sections.
+- No changes to colors, layout, surrounding section, or chart configuration.
+- Section height stays auto — it grows naturally with the new chart height.

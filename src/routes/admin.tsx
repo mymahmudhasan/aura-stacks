@@ -13,6 +13,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import { usePoolSettings, DEFAULT_POOL_SETTINGS } from "@/hooks/use-pool-settings";
 import { PackagesTab } from "@/components/admin/PackagesTab";
 import { AdminLiveChatTab } from "@/components/admin/AdminLiveChatTab";
+import { replyToTicket } from "@/lib/support.functions";
 
 export const Route = createFileRoute("/admin")({
   component: Admin,
@@ -682,8 +683,8 @@ function TicketRow({
         (u.user?.user_metadata as { full_name?: string } | undefined)?.full_name ||
         u.user?.email ||
         "Support";
-      const { replyToTicket } = await import("@/lib/support.functions");
-      await replyToTicket({
+      const { replyToTicket: rpc } = { replyToTicket };
+      await rpc({
         data: { ticket_id: t.id, body, author_name, author_id: u.user?.id ?? null },
       });
       setReply("");

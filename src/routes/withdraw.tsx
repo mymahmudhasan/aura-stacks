@@ -31,6 +31,7 @@ function WithdrawPage() {
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [items, setItems] = useState<Withdrawal[]>([]);
+  const [flags, setFlags] = useState<{ binance_uid: boolean; wallet_address: boolean }>({ binance_uid: true, wallet_address: false });
   const wallet = useConnectedWallet();
 
   const refresh = async () => {
@@ -40,6 +41,15 @@ function WithdrawPage() {
     setSavedUid(c?.binance_uid ?? "");
     setSavedWallet(c?.binance_wallet_address ?? "");
     setItems(list as Withdrawal[]);
+    const f = (w as { withdraw_flags?: { binance_uid: boolean; wallet_address: boolean } }).withdraw_flags;
+    if (f) {
+      setFlags(f);
+      // If current selection is disabled, switch to the first enabled
+      if (!f[destinationType]) {
+        if (f.binance_uid) setDestinationType("binance_uid");
+        else if (f.wallet_address) setDestinationType("wallet_address");
+      }
+    }
   };
   useEffect(() => { refresh(); }, []);
 
@@ -49,6 +59,8 @@ function WithdrawPage() {
     const fill = destinationType === "binance_uid" ? savedUid : savedWallet;
     setDestination(fill);
   }, [useSaved, destinationType, savedUid, savedWallet]);
+
+  const enabledTypes = (["binance_uid", "wallet_address"] as const).filter((t) => flags[t]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,7 +93,7 @@ function WithdrawPage() {
       </div>
       <p className="text-muted-foreground mb-6">Available balance: <span className="gradient-text font-bold">${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></p>
 
-      {wallet && (
+      {wallet && flags.wallet_address && (
         <GlassCard className="mb-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2 text-sm">
@@ -110,14 +122,18 @@ function WithdrawPage() {
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
               <Label>Destination type</Label>
-              <div className="grid grid-cols-2 gap-2 mt-1.5">
-                {(["binance_uid", "wallet_address"] as const).map((t) => (
-                  <button key={t} type="button" onClick={() => setDestinationType(t)}
-                    className={`px-3 py-2 rounded-lg text-xs font-medium transition ${destinationType === t ? "bg-primary text-primary-foreground glow-primary" : "glass hover:bg-primary/10"}`}>
-                    {t === "binance_uid" ? "Binance UID" : "USDT Address"}
-                  </button>
-                ))}
-              </div>
+              {enabledTypes.length === 0 ? (
+                <p className="text-sm text-muted-foreground mt-1.5">Withdrawals are temporarily unavailable. Please contact support.</p>
+              ) : (
+                <div className={`grid gap-2 mt-1.5 ${enabledTypes.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
+                  {enabledTypes.map((t) => (
+                    <button key={t} type="button" onClick={() => setDestinationType(t)}
+                      className={`px-3 py-2 rounded-lg text-xs font-medium transition ${destinationType === t ? "bg-primary text-primary-foreground glow-primary" : "glass hover:bg-primary/10"}`}>
+                      {t === "binance_uid" ? "Binance UID" : "USDT Address"}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <div>
               <Label htmlFor="amount">Amount (USDT)</Label>

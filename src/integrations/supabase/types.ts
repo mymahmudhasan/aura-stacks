@@ -656,6 +656,11 @@ export type Database = {
       site_settings: {
         Row: {
           binance_pay_id: string | null
+          deposit_bep20_enabled: boolean
+          deposit_binance_pay_enabled: boolean
+          deposit_erc20_enabled: boolean
+          deposit_onchain_wallet_enabled: boolean
+          deposit_trc20_enabled: boolean
           id: number
           live_chat_enabled: boolean
           updated_at: string
@@ -664,9 +669,16 @@ export type Database = {
           usdt_trc20_address: string | null
           whatsapp_enabled: boolean
           whatsapp_number: string
+          withdraw_binance_uid_enabled: boolean
+          withdraw_wallet_address_enabled: boolean
         }
         Insert: {
           binance_pay_id?: string | null
+          deposit_bep20_enabled?: boolean
+          deposit_binance_pay_enabled?: boolean
+          deposit_erc20_enabled?: boolean
+          deposit_onchain_wallet_enabled?: boolean
+          deposit_trc20_enabled?: boolean
           id?: number
           live_chat_enabled?: boolean
           updated_at?: string
@@ -675,9 +687,16 @@ export type Database = {
           usdt_trc20_address?: string | null
           whatsapp_enabled?: boolean
           whatsapp_number?: string
+          withdraw_binance_uid_enabled?: boolean
+          withdraw_wallet_address_enabled?: boolean
         }
         Update: {
           binance_pay_id?: string | null
+          deposit_bep20_enabled?: boolean
+          deposit_binance_pay_enabled?: boolean
+          deposit_erc20_enabled?: boolean
+          deposit_onchain_wallet_enabled?: boolean
+          deposit_trc20_enabled?: boolean
           id?: number
           live_chat_enabled?: boolean
           updated_at?: string
@@ -686,6 +705,8 @@ export type Database = {
           usdt_trc20_address?: string | null
           whatsapp_enabled?: boolean
           whatsapp_number?: string
+          withdraw_binance_uid_enabled?: boolean
+          withdraw_wallet_address_enabled?: boolean
         }
         Relationships: []
       }

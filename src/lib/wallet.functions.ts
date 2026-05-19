@@ -7,10 +7,10 @@ export const getMyWallet = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const [customer, txns] = await Promise.all([
+    const [customer, txns, flags] = await Promise.all([
       supabase
         .from("customers")
-        .select("balance,total_deposited,total_withdrawn,currency:preferred_coin,full_name,binance_uid")
+        .select("balance,total_deposited,total_withdrawn,currency:preferred_coin,full_name,binance_uid,binance_wallet_address")
         .eq("user_id", userId)
         .maybeSingle(),
       supabase
@@ -19,10 +19,19 @@ export const getMyWallet = createServerFn({ method: "GET" })
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(50),
+      supabase
+        .from("site_settings")
+        .select("withdraw_binance_uid_enabled,withdraw_wallet_address_enabled")
+        .eq("id", 1)
+        .maybeSingle(),
     ]);
     return {
       customer: customer.data,
       transactions: txns.data ?? [],
+      withdraw_flags: {
+        binance_uid: (flags.data as { withdraw_binance_uid_enabled?: boolean } | null)?.withdraw_binance_uid_enabled !== false,
+        wallet_address: (flags.data as { withdraw_wallet_address_enabled?: boolean } | null)?.withdraw_wallet_address_enabled === true,
+      },
     };
   });
 
@@ -44,7 +53,7 @@ export const getDepositSettings = createServerFn({ method: "GET" })
     const { supabase } = context;
     const { data } = await supabase
       .from("site_settings")
-      .select("usdt_trc20_address,usdt_bep20_address,usdt_erc20_address,binance_pay_id")
+      .select("usdt_trc20_address,usdt_bep20_address,usdt_erc20_address,binance_pay_id,deposit_binance_pay_enabled,deposit_trc20_enabled,deposit_bep20_enabled,deposit_erc20_enabled,deposit_onchain_wallet_enabled")
       .eq("id", 1)
       .maybeSingle();
     return data ?? null;
@@ -82,6 +91,21 @@ export const createDeposit = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+
+    // Enforce admin-controlled method toggles
+    const { data: flags } = await supabase
+      .from("site_settings")
+      .select("deposit_binance_pay_enabled,deposit_trc20_enabled,deposit_bep20_enabled,deposit_erc20_enabled")
+      .eq("id", 1)
+      .maybeSingle();
+    const f = flags as Record<string, boolean | null> | null;
+    const enabled =
+      (data.network === "BINANCE_PAY" && f?.deposit_binance_pay_enabled !== false) ||
+      (data.network === "TRC20" && f?.deposit_trc20_enabled === true) ||
+      (data.network === "BEP20" && f?.deposit_bep20_enabled === true) ||
+      (data.network === "ERC20" && f?.deposit_erc20_enabled === true);
+    if (!enabled) throw new Error("This deposit method is currently disabled. Please use Binance Pay or contact support.");
+
     const { data: row, error } = await supabase
       .from("deposits")
       .insert({
@@ -119,6 +143,19 @@ export const requestWithdrawal = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+
+    // Enforce admin-controlled withdrawal method toggles
+    const { data: flags } = await supabase
+      .from("site_settings")
+      .select("withdraw_binance_uid_enabled,withdraw_wallet_address_enabled")
+      .eq("id", 1)
+      .maybeSingle();
+    const f = flags as Record<string, boolean | null> | null;
+    const enabled =
+      (data.destination_type === "binance_uid" && f?.withdraw_binance_uid_enabled !== false) ||
+      (data.destination_type === "wallet_address" && f?.withdraw_wallet_address_enabled === true);
+    if (!enabled) throw new Error("This withdrawal method is currently disabled. Please withdraw to your Binance UID or contact support.");
+
     const { data: cust } = await supabase
       .from("customers")
       .select("balance")

@@ -19,19 +19,27 @@ export const Route = createFileRoute("/deposit")({
   },
 });
 
-type Settings = { usdt_trc20_address: string | null; usdt_bep20_address: string | null; usdt_erc20_address: string | null; binance_pay_id: string | null };
+type Settings = {
+  usdt_trc20_address: string | null; usdt_bep20_address: string | null; usdt_erc20_address: string | null; binance_pay_id: string | null;
+  deposit_binance_pay_enabled?: boolean | null;
+  deposit_trc20_enabled?: boolean | null;
+  deposit_bep20_enabled?: boolean | null;
+  deposit_erc20_enabled?: boolean | null;
+  deposit_onchain_wallet_enabled?: boolean | null;
+};
 type Deposit = { id: string; amount: number; currency: string; network: string | null; tx_hash: string | null; status: string; created_at: string; admin_notes: string | null };
 
-const NETWORKS = [
-  { id: "TRC20", label: "USDT · TRC20 (Tron)", key: "usdt_trc20_address" },
-  { id: "BEP20", label: "USDT · BEP20 (BSC)", key: "usdt_bep20_address" },
-  { id: "ERC20", label: "USDT · ERC20 (Ethereum)", key: "usdt_erc20_address" },
-  { id: "BINANCE_PAY", label: "Binance Pay ID", key: "binance_pay_id" },
+const ALL_NETWORKS = [
+  { id: "BINANCE_PAY", label: "Binance Pay ID", key: "binance_pay_id", flag: "deposit_binance_pay_enabled" },
+  { id: "TRC20", label: "USDT · TRC20 (Tron)", key: "usdt_trc20_address", flag: "deposit_trc20_enabled" },
+  { id: "BEP20", label: "USDT · BEP20 (BSC)", key: "usdt_bep20_address", flag: "deposit_bep20_enabled" },
+  { id: "ERC20", label: "USDT · ERC20 (Ethereum)", key: "usdt_erc20_address", flag: "deposit_erc20_enabled" },
 ] as const;
+type NetId = typeof ALL_NETWORKS[number]["id"];
 
 function DepositPage() {
   const [settings, setSettings] = useState<Settings | null>(null);
-  const [network, setNetwork] = useState<typeof NETWORKS[number]["id"]>("TRC20");
+  const [network, setNetwork] = useState<NetId>("BINANCE_PAY");
   const [amount, setAmount] = useState("");
   const [txHash, setTxHash] = useState("");
   const [fromAddress, setFromAddress] = useState("");
@@ -47,13 +55,21 @@ function DepositPage() {
   useEffect(() => {
     (async () => {
       const [s, p] = await Promise.all([getDepositSettings(), getMyProfile()]);
-      setSettings(s as Settings | null);
+      const settingsData = s as Settings | null;
+      setSettings(settingsData);
       const prof = p as { last_sender_address: string | null; last_sender_network: string | null; binance_uid: string | null } | null;
       setSavedSender({
         address: prof?.last_sender_address ?? null,
         network: prof?.last_sender_network ?? null,
         binance_uid: prof?.binance_uid ?? null,
       });
+      // Default-select first enabled network
+      const firstEnabled = ALL_NETWORKS.find((n) =>
+        n.id === "BINANCE_PAY"
+          ? settingsData?.deposit_binance_pay_enabled !== false
+          : settingsData?.[n.flag] === true,
+      );
+      if (firstEnabled) setNetwork(firstEnabled.id);
       await refresh();
     })();
   }, []);
@@ -77,7 +93,11 @@ function DepositPage() {
     }
   }, [network, savedSender]);
 
-  const address = settings?.[NETWORKS.find((n) => n.id === network)!.key] ?? "";
+  const enabledNetworks = ALL_NETWORKS.filter((n) => settings?.[n.flag] !== false && (n.id === "BINANCE_PAY" ? true : settings?.[n.flag] === true));
+  // Binance Pay defaults to enabled (!= false); others must be explicitly true
+  const onchainEnabled = settings?.deposit_onchain_wallet_enabled === true;
+  const activeNet = ALL_NETWORKS.find((n) => n.id === network);
+  const address = (activeNet ? (settings?.[activeNet.key] as string | null | undefined) : null) ?? "";
 
   const isBinance = network === "BINANCE_PAY";
   const senderRegex = isBinance
@@ -138,24 +158,30 @@ function DepositPage() {
       </div>
       <p className="text-muted-foreground mb-6">Pay in one click with your connected wallet, or send manually and submit the transaction hash.</p>
 
-      <WalletPayCard
-        settings={settings}
-        defaultNetwork={network === "BINANCE_PAY" ? "TRC20" : network}
-        onDone={refresh}
-      />
+      {onchainEnabled && (
+        <WalletPayCard
+          settings={settings}
+          defaultNetwork={network === "BINANCE_PAY" ? "TRC20" : (network as "TRC20" | "BEP20" | "ERC20")}
+          onDone={refresh}
+        />
+      )}
 
       <div className="grid md:grid-cols-2 gap-5">
 
         <GlassCard>
           <Label className="text-xs uppercase tracking-widest text-muted-foreground">Network</Label>
-          <div className="grid grid-cols-2 gap-2 mt-2">
-            {NETWORKS.map((n) => (
-              <button key={n.id} type="button" onClick={() => setNetwork(n.id)}
-                className={`px-3 py-2 rounded-lg text-xs font-medium transition ${network === n.id ? "bg-primary text-primary-foreground glow-primary" : "glass hover:bg-primary/10"}`}>
-                {n.label}
-              </button>
-            ))}
-          </div>
+          {enabledNetworks.length === 0 ? (
+            <p className="text-sm text-muted-foreground mt-3">Deposits are temporarily unavailable. Please contact support.</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              {enabledNetworks.map((n) => (
+                <button key={n.id} type="button" onClick={() => setNetwork(n.id)}
+                  className={`px-3 py-2 rounded-lg text-xs font-medium transition ${network === n.id ? "bg-primary text-primary-foreground glow-primary" : "glass hover:bg-primary/10"}`}>
+                  {n.label}
+                </button>
+              ))}
+            </div>
+          )}
 
           <div className="mt-5">
             <Label className="text-xs uppercase tracking-widest text-muted-foreground">Send to</Label>

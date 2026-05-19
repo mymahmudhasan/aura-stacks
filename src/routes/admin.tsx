@@ -1076,6 +1076,10 @@ function SettingsTab({ onToast }: { onToast: (kind: "ok" | "err", msg: string) =
       </GlassCard>
 
       <GlassCard className="lg:col-span-3 p-6">
+        <PaymentMethodsSettings onToast={onToast} />
+      </GlassCard>
+
+      <GlassCard className="lg:col-span-3 p-6">
         <DepositAddressesSettings onToast={onToast} />
       </GlassCard>
 
@@ -1382,6 +1386,122 @@ function WhatsAppSettings({ onToast }: { onToast: (kind: "ok" | "err", msg: stri
           <span className="font-mono text-foreground">{saved ? `+${saved}` : "— not set —"}</span>
         </p>
       )}
+    </>
+  );
+}
+
+function PaymentMethodsSettings({ onToast }: { onToast: (kind: "ok" | "err", msg: string) => void }) {
+  type FlagKey =
+    | "deposit_binance_pay_enabled"
+    | "deposit_trc20_enabled"
+    | "deposit_bep20_enabled"
+    | "deposit_erc20_enabled"
+    | "deposit_onchain_wallet_enabled"
+    | "withdraw_binance_uid_enabled"
+    | "withdraw_wallet_address_enabled";
+
+  const DEPOSIT_FLAGS: { key: FlagKey; label: string; desc: string }[] = [
+    { key: "deposit_binance_pay_enabled", label: "Binance Pay", desc: "Users send USDT via Binance Pay ID. Recommended primary method." },
+    { key: "deposit_trc20_enabled", label: "USDT · TRC20 (Tron)", desc: "Manual on-chain deposit on Tron." },
+    { key: "deposit_bep20_enabled", label: "USDT · BEP20 (BSC)", desc: "Manual on-chain deposit on BNB Chain." },
+    { key: "deposit_erc20_enabled", label: "USDT · ERC20 (Ethereum)", desc: "Manual on-chain deposit on Ethereum." },
+    { key: "deposit_onchain_wallet_enabled", label: "One-click wallet pay", desc: "Show the connected-wallet (MetaMask / TronLink) instant-pay card." },
+  ];
+  const WITHDRAW_FLAGS: { key: FlagKey; label: string; desc: string }[] = [
+    { key: "withdraw_binance_uid_enabled", label: "Withdraw to Binance UID", desc: "Payouts sent to a Binance UID. Recommended primary method." },
+    { key: "withdraw_wallet_address_enabled", label: "Withdraw to external wallet", desc: "Allow payouts to a user-supplied USDT wallet address." },
+  ];
+
+  const [flags, setFlags] = useState<Record<FlagKey, boolean>>({
+    deposit_binance_pay_enabled: true,
+    deposit_trc20_enabled: false,
+    deposit_bep20_enabled: false,
+    deposit_erc20_enabled: false,
+    deposit_onchain_wallet_enabled: false,
+    withdraw_binance_uid_enabled: true,
+    withdraw_wallet_address_enabled: false,
+  });
+  const [loading, setLoading] = useState(true);
+  const [savingKey, setSavingKey] = useState<FlagKey | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    supabase
+      .from("site_settings")
+      .select("deposit_binance_pay_enabled,deposit_trc20_enabled,deposit_bep20_enabled,deposit_erc20_enabled,deposit_onchain_wallet_enabled,withdraw_binance_uid_enabled,withdraw_wallet_address_enabled")
+      .eq("id", 1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (cancelled || !data) { setLoading(false); return; }
+        const d = data as Record<string, boolean | null>;
+        setFlags((prev) => {
+          const next = { ...prev };
+          for (const k of Object.keys(prev) as FlagKey[]) {
+            if (typeof d[k] === "boolean") next[k] = d[k] as boolean;
+          }
+          return next;
+        });
+        setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
+
+  const toggle = async (key: FlagKey, next: boolean) => {
+    setSavingKey(key);
+    const { error } = await supabase
+      .from("site_settings")
+      .update({ [key]: next } as never)
+      .eq("id", 1);
+    setSavingKey(null);
+    if (error) { onToast("err", error.message); return; }
+    setFlags((p) => ({ ...p, [key]: next }));
+    onToast("ok", `${key.replace(/_/g, " ")} ${next ? "enabled" : "disabled"}.`);
+  };
+
+  const Row = ({ k, label, desc }: { k: FlagKey; label: string; desc: string }) => {
+    const on = flags[k];
+    return (
+      <div className="flex items-center justify-between gap-4 p-4 rounded-xl glass">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold">{label}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
+        </div>
+        <button
+          onClick={() => toggle(k, !on)}
+          disabled={loading || savingKey === k}
+          aria-pressed={on}
+          className={`relative w-12 h-7 rounded-full transition shrink-0 ${on ? "bg-success" : "bg-muted"} disabled:opacity-50`}
+        >
+          <span className={`absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white shadow transition-transform ${on ? "translate-x-5" : ""}`} />
+        </button>
+      </div>
+    );
+  };
+
+  return (
+    <>
+      <div className="flex items-center gap-2 mb-1">
+        <Wallet className="w-5 h-5 text-primary" />
+        <h2 className="text-lg font-bold">Payment methods</h2>
+      </div>
+      <p className="text-sm text-muted-foreground mb-5">
+        Disabled methods are hidden from users on the deposit and withdraw pages, and server-side requests for them are blocked.
+      </p>
+
+      <div className="space-y-4">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Deposit methods</p>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {DEPOSIT_FLAGS.map((f) => <Row key={f.key} k={f.key} label={f.label} desc={f.desc} />)}
+          </div>
+        </div>
+        <div>
+          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2">Withdrawal methods</p>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {WITHDRAW_FLAGS.map((f) => <Row key={f.key} k={f.key} label={f.label} desc={f.desc} />)}
+          </div>
+        </div>
+      </div>
     </>
   );
 }

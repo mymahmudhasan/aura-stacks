@@ -1,37 +1,54 @@
-# Plan — Admin: Deposit destination addresses
+# Plan — Live chat redesign + position swap + admin show/hide
 
-## Goal
-Let admins configure the wallet addresses / Binance Pay ID where users send deposits, directly from the admin panel. These values already live in `site_settings` (`usdt_trc20_address`, `usdt_bep20_address`, `usdt_erc20_address`, `binance_pay_id`) and are read by `getDepositSettings` for the user-facing deposit page. Today they can only be edited via the database — there is no UI.
+## Problems observed
+1. **Post-name live chat UI is plain.** After a guest enters their name, the widget shows only an empty thread + input. The user wants the polished WhatsApp-style interface (welcome bubble, preset topic buttons, mic + send, header with avatar/online dot) — see uploaded screenshot.
+2. **Positions are wrong.** WhatsApp widget is bottom-right, live chat is bottom-left. The user wants **live chat at WhatsApp's exact bottom-right spot**, and **WhatsApp moved above it** (stacked vertically on the right).
+3. **No admin control.** Both widgets are hard-mounted in `Layout.tsx`. The user wants to show/hide each from the admin panel.
 
-## Scope
-Add a single new admin card next to the existing **WhatsApp Support Number** card on the admin Settings tab.
+## Changes
 
-### UI: `DepositAddressesSettings` (new component in `src/routes/admin.tsx`)
-- Four inputs:
-  1. USDT · TRC20 (Tron) address
-  2. USDT · BEP20 (BSC) address
-  3. USDT · ERC20 (Ethereum) address
-  4. Binance Pay ID
-- Per-field format validation (matches what `createDeposit` already enforces for the *sender* side, so deposits the user submits will pass validation):
-  - TRC20: `^T[a-zA-Z0-9]{33}$`
-  - BEP20 / ERC20: `^0x[a-fA-F0-9]{40}$`
-  - Binance Pay ID: `^[a-zA-Z0-9_-]{3,64}$`
-- Empty value = "not configured" (allowed; the deposit page already shows "Not configured — contact support" when empty).
-- Single **Save** button, disabled until something is dirty and all non-empty fields pass validation.
-- Copy-to-clipboard button per field for admin convenience.
+### 1. Database (migration)
+Add two flags to `site_settings`:
+- `live_chat_enabled boolean not null default true`
+- `whatsapp_enabled boolean not null default true`
 
-### Data layer
-- No schema change needed; `site_settings` row id=1 already has the columns and RLS already restricts updates to admins (`has_role(auth.uid(), 'admin')`).
-- Use the existing browser `supabase` client (same pattern as `WhatsAppSettings`) — admin's session passes RLS.
-- On load: `select usdt_trc20_address,usdt_bep20_address,usdt_erc20_address,binance_pay_id from site_settings where id=1`.
-- On save: `update site_settings set ... where id=1`, converting empty strings to `null`.
+(Already publicly readable; admin-only update via existing RLS.)
 
-### Wiring
-- Mount inside the existing Settings tab grid, immediately above or below the `WhatsAppSettings` card, reusing `GlassCard` and the existing `onToast` helper for success/error messages.
+### 2. `SupportChatWidget.tsx` — full visual rebuild of the chat panel
+After the guest submits name/email, replace the current bare thread with a WhatsApp-style layout (matches uploaded reference):
+- Header: round avatar with headset icon, "AuraTrad.Ai Support", green "Online · replies in minutes", close X.
+- Welcome bubble: "👋 Hi there! I'm here to help with deposits, withdrawals, AI bot issues or any account question. Pick a topic, type, or tap the mic to speak."
+- Four preset topic buttons (same labels as WhatsApp widget) — clicking sends that text as the first user message in the live thread (not WhatsApp).
+- Once a real conversation has messages, presets collapse and the thread renders as today.
+- Input row: text input + mic button (Web Speech API, same logic as WhatsApp widget) + circular green send button.
+- Footer: "Live chat with a real agent" (replaces WhatsApp-only footer).
+- Keep all existing realtime, localStorage, unread-badge behavior.
+
+### 3. Position swap (`Layout.tsx`)
+- **Live chat launcher** → `bottom-5 right-5` (was bottom-left).
+- **WhatsApp launcher** → `bottom-24 right-5` (stacked above live chat).
+- Open panels anchor to the right and stack so they don't collide (live-chat panel `bottom-24 right-5`, WhatsApp panel `bottom-44 right-5`).
+- Remove the left-side positioning from `SupportChatWidget` and the bottom-right hardcode from `WhatsAppWidget` — move position into props or wrapper divs so `Layout.tsx` controls placement.
+
+### 4. Admin show/hide controls
+Add a new **"Support widgets"** card to the admin Settings tab (`src/routes/admin.tsx`), next to WhatsApp number / deposit addresses:
+- Two switches: "Show WhatsApp widget" / "Show Live Chat widget".
+- Persists to `site_settings.whatsapp_enabled` / `live_chat_enabled` via the browser `supabase` client (admin RLS).
+
+### 5. Frontend gating (`Layout.tsx`)
+- Fetch `whatsapp_enabled, live_chat_enabled` from `site_settings` on mount (single query, cached in state).
+- Conditionally render `<WhatsAppWidget />` and `<SupportChatWidget />`.
+- Listen for a `novatrad:widget-flags-changed` custom event (dispatched by the admin toggle) so changes apply without reload for the admin's own session.
 
 ## Files touched
-- `src/routes/admin.tsx` — add `DepositAddressesSettings` component and mount it on the Settings tab.
+- `supabase/migrations/<ts>_widget_flags.sql` — add the two boolean columns.
+- `src/components/SupportChatWidget.tsx` — rebuild chat UI post-name; accept optional position prop.
+- `src/components/WhatsAppWidget.tsx` — accept position prop (defaults preserved) so Layout can stack it above live chat.
+- `src/components/Layout.tsx` — load flags, conditional render, set positions (live-chat bottom-right, WhatsApp above).
+- `src/routes/admin.tsx` — new "Support widgets" card with two switches.
+- `src/integrations/supabase/types.ts` — auto-updated by migration.
 
 ## Out of scope
-- No changes to `wallet.functions.ts`, `deposit.tsx`, or RLS — the rest of the stack already consumes these fields.
-- No multi-network add/remove (set of four is fixed by current schema).
+- No change to backend support functions (`startSupportChat`, `sendSupportMessage`).
+- No change to WhatsApp deep-link / number config.
+- No mobile-specific layout overhaul beyond the new stacked-right positioning.

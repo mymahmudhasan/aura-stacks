@@ -546,28 +546,34 @@ export type Database = {
         Row: {
           binance_pay_id: string | null
           id: number
+          live_chat_enabled: boolean
           updated_at: string
           usdt_bep20_address: string | null
           usdt_erc20_address: string | null
           usdt_trc20_address: string | null
+          whatsapp_enabled: boolean
           whatsapp_number: string
         }
         Insert: {
           binance_pay_id?: string | null
           id?: number
+          live_chat_enabled?: boolean
           updated_at?: string
           usdt_bep20_address?: string | null
           usdt_erc20_address?: string | null
           usdt_trc20_address?: string | null
+          whatsapp_enabled?: boolean
           whatsapp_number?: string
         }
         Update: {
           binance_pay_id?: string | null
           id?: number
+          live_chat_enabled?: boolean
           updated_at?: string
           usdt_bep20_address?: string | null
           usdt_erc20_address?: string | null
           usdt_trc20_address?: string | null
+          whatsapp_enabled?: boolean
           whatsapp_number?: string
         }
         Relationships: []

@@ -48,6 +48,9 @@ export function SupportChatWidget() {
   const [unread, setUnread] = useState(0);
   const [listening, setListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
+  const [authUser, setAuthUser] = useState<{ id: string; email: string; name: string } | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+  const autoStartedRef = useRef(false);
   const recognitionRef = useRef<any>(null);
   const baseTextRef = useRef("");
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -55,6 +58,76 @@ export function SupportChatWidget() {
   useEffect(() => {
     setStored(readStored());
   }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    const load = async (uid: string | null, mail: string | null) => {
+      if (!uid) {
+        if (active) {
+          setAuthUser(null);
+          setAuthChecked(true);
+        }
+        return;
+      }
+      const { data: cust } = await supabase
+        .from("customers")
+        .select("full_name")
+        .eq("user_id", uid)
+        .maybeSingle();
+      if (!active) return;
+      const display =
+        (cust?.full_name && cust.full_name.trim()) ||
+        (mail ? mail.split("@")[0] : "Member");
+      setAuthUser({ id: uid, email: mail ?? "", name: display });
+      setAuthChecked(true);
+    };
+
+    supabase.auth.getUser().then(({ data }) => {
+      void load(data.user?.id ?? null, data.user?.email ?? null);
+    });
+
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_OUT") {
+        try { localStorage.removeItem(LS_KEY); } catch { /* noop */ }
+        autoStartedRef.current = false;
+        setStored(null);
+        setMessages([]);
+      }
+      void load(session?.user?.id ?? null, session?.user?.email ?? null);
+    });
+
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
+
+  // Auto-start a conversation for signed-in users so they never see the form.
+  useEffect(() => {
+    if (!authChecked || !authUser || stored || autoStartedRef.current) return;
+    autoStartedRef.current = true;
+    (async () => {
+      try {
+        const { id } = await startSupportChat({
+          data: {
+            guest_name: authUser.name,
+            guest_email: authUser.email || null,
+            user_id: authUser.id,
+          },
+        });
+        const next: Stored = {
+          conversationId: id,
+          name: authUser.name,
+          email: authUser.email || null,
+        };
+        try { localStorage.setItem(LS_KEY, JSON.stringify(next)); } catch { /* noop */ }
+        setStored(next);
+      } catch {
+        autoStartedRef.current = false;
+      }
+    })();
+  }, [authChecked, authUser, stored]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;

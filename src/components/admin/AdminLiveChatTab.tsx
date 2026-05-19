@@ -16,7 +16,16 @@ export function AdminLiveChatTab({ adminName }: { adminName: string }) {
   const [body, setBody] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [ticket, setTicket] = useState<Pick<Ticket, "id" | "ticket_number"> | null>(null);
+  const [adminId, setAdminId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const ensureTicketFn = useServerFn(ensureChatTicket);
+  const replyFn = useServerFn(replyToTicket);
+
+  useEffect(() => {
+    void supabase.auth.getUser().then(({ data }) => setAdminId(data.user?.id ?? null));
+  }, []);
+
 
   const loadConvs = useCallback(async () => {
     const { data } = await supabase

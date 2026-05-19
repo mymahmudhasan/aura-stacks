@@ -220,7 +220,8 @@ export const adminUpdateOffer = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
     const { error } = await supabaseAdmin
-      .from("offers").update(data.patch).eq("id", data.id);
+      .from("offers").update(data.patch as never).eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+

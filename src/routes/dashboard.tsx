@@ -182,6 +182,7 @@ function Dashboard() {
   return (
     <Section className="!py-10">
       {userId && <WelcomeBonusBanner userId={userId} />}
+      <OffersBanner />
       {demoType === "demo" && (
         <div className="mb-6 rounded-2xl border border-success/30 bg-success/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-start gap-3">

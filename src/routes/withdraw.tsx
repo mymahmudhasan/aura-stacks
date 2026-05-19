@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { getMyWallet, getMyWithdrawals, requestWithdrawal } from "@/lib/wallet.functions";
 import { useConnectedWallet } from "@/lib/web3/wallet";
-import { ConnectWalletButton } from "@/components/ConnectWalletButton";
+
 
 export const Route = createFileRoute("/withdraw")({
   component: WithdrawPage,

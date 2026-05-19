@@ -213,25 +213,28 @@ function Home() {
         title={<>Other ways to <span className="gradient-text">grow your crypto</span></>}
         subtitle="Beyond AI trading, AuraTrad.Ai offers two additional passive-income streams."
       >
-        <div className="grid md:grid-cols-2 gap-5">
-          <NumberedService
-            n="01"
-            img={miningImg}
-            icon={<Cpu className="w-5 h-5" />}
-            title="Smart Mining"
-            desc="Invest in next-gen mining infrastructure and earn daily crypto rewards distributed automatically to your Binance wallet."
-            href="/mining"
-            stat="Up to 2.4% daily"
-          />
-          <NumberedService
-            n="02"
-            img={stakingImg}
-            icon={<Lock className="w-5 h-5" />}
-            title="Binance-Style Staking"
-            desc="Lock your assets for 1, 3, 6 or 12 months and watch your portfolio compound with flexible APY tiers."
-            href="/staking"
-            stat="Up to 38% APY"
-          />
+        <div className="relative rounded-3xl p-[2px] bg-[image:var(--gradient-aurora)] glow-primary">
+          <div className="absolute -inset-4 bg-[image:var(--gradient-aurora)] opacity-30 blur-3xl -z-10 rounded-3xl" />
+          <div className="rounded-[22px] bg-background/80 p-4 md:p-6 grid md:grid-cols-2 gap-5">
+            <NumberedService
+              n="01"
+              img={miningImg}
+              icon={<Cpu className="w-5 h-5" />}
+              title="Smart Mining"
+              desc="Invest in next-gen mining infrastructure and earn daily crypto rewards distributed automatically to your Binance wallet."
+              href="/mining"
+              stat="Up to 2.4% daily"
+            />
+            <NumberedService
+              n="02"
+              img={stakingImg}
+              icon={<Lock className="w-5 h-5" />}
+              title="Binance-Style Staking"
+              desc="Lock your assets for 1, 3, 6 or 12 months and watch your portfolio compound with flexible APY tiers."
+              href="/staking"
+              stat="Up to 38% APY"
+            />
+          </div>
         </div>
       </Section>
 

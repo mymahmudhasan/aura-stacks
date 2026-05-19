@@ -143,6 +143,19 @@ export const requestWithdrawal = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+
+    // Enforce admin-controlled withdrawal method toggles
+    const { data: flags } = await supabase
+      .from("site_settings")
+      .select("withdraw_binance_uid_enabled,withdraw_wallet_address_enabled")
+      .eq("id", 1)
+      .maybeSingle();
+    const f = flags as Record<string, boolean | null> | null;
+    const enabled =
+      (data.destination_type === "binance_uid" && f?.withdraw_binance_uid_enabled !== false) ||
+      (data.destination_type === "wallet_address" && f?.withdraw_wallet_address_enabled === true);
+    if (!enabled) throw new Error("This withdrawal method is currently disabled. Please withdraw to your Binance UID or contact support.");
+
     const { data: cust } = await supabase
       .from("customers")
       .select("balance")

@@ -302,7 +302,7 @@ export function SupportChatWidget() {
           !humanRepliedRef.current &&
           botRepliesRef.current < MAX_BOT_REPLIES
         ) {
-          const reply = botReplyFor(clean);
+          const reply = pickBotReply(clean, botRules);
           if (reply) {
             botRepliesRef.current += 1;
             const botMsg: Msg = {

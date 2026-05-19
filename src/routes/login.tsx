@@ -222,7 +222,7 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
         )}
         {!isLogin && (
           <p className="text-[11px] text-center text-muted-foreground mt-3">
-            Don't have a Binance account? <a href="https://accounts.binance.com/register" target="_blank" rel="noopener noreferrer" className="text-primary">Create one →</a>
+            Don't have a Binance account? <a href="https://www.binance.com/referral/earn-together/refer2earn-usdc/claim?hl=en&ref=GRO_28502_YBOIX&utm_source=referral_entrance" target="_blank" rel="noopener noreferrer" className="text-primary">Create one →</a>
           </p>
         )}
         <p className="text-sm text-center text-muted-foreground mt-5">

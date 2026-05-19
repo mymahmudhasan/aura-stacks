@@ -4,6 +4,7 @@ import { Loader2, Send, MessageSquareText, CheckCircle2, RefreshCw, Ticket as Ti
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { ensureChatTicket, replyToTicket } from "@/lib/support.functions";
+import { BotRepliesPanel } from "./BotRepliesPanel";
 
 type Conversation = Tables<"support_conversations">;
 type Message = Tables<"support_messages">;

@@ -228,14 +228,21 @@ export function AdminLiveChatTab({ adminName }: { adminName: string }) {
                   {new Date(selected.created_at).toLocaleString()}
                 </p>
               </div>
-              {selected.status === "open" && (
-                <button
-                  onClick={closeConv}
-                  className="text-[11px] px-2.5 py-1.5 rounded-lg glass hover:border-success/40 inline-flex items-center gap-1.5"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5 text-success" /> Close
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                {ticket && (
+                  <span className="text-[11px] px-2 py-1 rounded-lg bg-primary/10 border border-primary/30 text-primary inline-flex items-center gap-1.5">
+                    <TicketIcon className="w-3 h-3" /> {ticket.ticket_number}
+                  </span>
+                )}
+                {selected.status === "open" && (
+                  <button
+                    onClick={closeConv}
+                    className="text-[11px] px-2.5 py-1.5 rounded-lg glass hover:border-success/40 inline-flex items-center gap-1.5"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5 text-success" /> Close
+                  </button>
+                )}
+              </div>
             </div>
             <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
               {messages.length === 0 ? (

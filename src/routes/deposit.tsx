@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { createDeposit, getDepositSettings, getMyDeposits, getMyProfile } from "@/lib/wallet.functions";
 import { createOnChainDeposit, verifyOnChainDeposit } from "@/lib/web3/onchain.functions";
 import { useConnectedWallet, useSendUsdt } from "@/lib/web3/wallet";
-import { ConnectWalletButton } from "@/components/ConnectWalletButton";
 
 export const Route = createFileRoute("/deposit")({
   component: DepositPage,

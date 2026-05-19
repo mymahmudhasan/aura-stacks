@@ -149,6 +149,13 @@ export const getSupportConversation = createServerFn({ method: "POST" })
     return row;
   });
 
+export const ensureChatTicket = createServerFn({ method: "POST" })
+  .inputValidator((i) => z.object({ conversation_id: Id }).parse(i))
+  .handler(async ({ data }) => {
+    const ticketId = await ensureTicketForConversation(data.conversation_id);
+    return { ticket_id: ticketId };
+  });
+
 /* ----- Admin: ticket thread + reply ----- */
 
 export const getTicketThread = createServerFn({ method: "POST" })

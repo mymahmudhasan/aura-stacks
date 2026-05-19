@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Loader2, Send, MessageSquareText, CheckCircle2, RefreshCw } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { Loader2, Send, MessageSquareText, CheckCircle2, RefreshCw, Ticket as TicketIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { ensureChatTicket, replyToTicket } from "@/lib/support.functions";
 
 type Conversation = Tables<"support_conversations">;
 type Message = Tables<"support_messages">;
+type Ticket = Tables<"tickets">;
 
 export function AdminLiveChatTab({ adminName }: { adminName: string }) {
   const [convs, setConvs] = useState<Conversation[]>([]);
@@ -13,7 +16,16 @@ export function AdminLiveChatTab({ adminName }: { adminName: string }) {
   const [body, setBody] = useState("");
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [ticket, setTicket] = useState<Pick<Ticket, "id" | "ticket_number"> | null>(null);
+  const [adminId, setAdminId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const ensureTicketFn = useServerFn(ensureChatTicket);
+  const replyFn = useServerFn(replyToTicket);
+
+  useEffect(() => {
+    void supabase.auth.getUser().then(({ data }) => setAdminId(data.user?.id ?? null));
+  }, []);
+
 
   const loadConvs = useCallback(async () => {
     const { data } = await supabase
@@ -52,11 +64,25 @@ export function AdminLiveChatTab({ adminName }: { adminName: string }) {
   useEffect(() => {
     if (!selectedId) {
       setMessages([]);
+      setTicket(null);
       return;
     }
     void loadMessages(selectedId);
 
-    // Listen for postgres inserts (user messages persisted from server fn)
+    void (async () => {
+      try {
+        const { ticket_id } = await ensureTicketFn({ data: { conversation_id: selectedId } });
+        const { data: t } = await supabase
+          .from("tickets")
+          .select("id,ticket_number")
+          .eq("id", ticket_id)
+          .maybeSingle();
+        if (t) setTicket(t as { id: string; ticket_number: string });
+      } catch {
+        setTicket(null);
+      }
+    })();
+
     const pgChannel = supabase
       .channel(`admin-msgs:${selectedId}`)
       .on(
@@ -77,7 +103,7 @@ export function AdminLiveChatTab({ adminName }: { adminName: string }) {
     return () => {
       supabase.removeChannel(pgChannel);
     };
-  }, [selectedId, loadMessages]);
+  }, [selectedId, loadMessages, ensureTicketFn]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -92,38 +118,27 @@ export function AdminLiveChatTab({ adminName }: { adminName: string }) {
       setSending(true);
       setBody("");
       try {
-        const { data: msg, error } = await supabase
-          .from("support_messages")
-          .insert({
-            conversation_id: selectedId,
-            sender: "admin",
-            author_name: adminName || "Support",
-            body: text,
-          })
-          .select("*")
-          .single();
-        if (error) throw error;
-        setMessages((prev) =>
-          prev.some((m) => m.id === (msg as Message).id) ? prev : [...prev, msg as Message],
-        );
-        // Broadcast so the user widget receives it instantly.
-        const channel = supabase.channel(`support:${selectedId}`);
-        await new Promise<void>((resolve) => {
-          channel.subscribe((status) => {
-            if (status === "SUBSCRIBED") resolve();
-          });
-          setTimeout(resolve, 1500);
+        const { ticket_id } = await ensureTicketFn({
+          data: { conversation_id: selectedId },
         });
-        await channel.send({ type: "broadcast", event: "message", payload: msg });
-        await supabase.removeChannel(channel);
+        await replyFn({
+          data: {
+            ticket_id,
+            body: text,
+            author_name: adminName || "Support",
+            author_id: adminId ?? null,
+          },
+        });
+        // postgres_changes listener will append the new message
       } catch {
-        /* ignore */
+        setBody(text);
       } finally {
         setSending(false);
       }
     },
-    [body, selectedId, adminName],
+    [body, selectedId, adminName, adminId, ensureTicketFn, replyFn],
   );
+
 
   const closeConv = useCallback(async () => {
     if (!selectedId) return;
@@ -213,14 +228,21 @@ export function AdminLiveChatTab({ adminName }: { adminName: string }) {
                   {new Date(selected.created_at).toLocaleString()}
                 </p>
               </div>
-              {selected.status === "open" && (
-                <button
-                  onClick={closeConv}
-                  className="text-[11px] px-2.5 py-1.5 rounded-lg glass hover:border-success/40 inline-flex items-center gap-1.5"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5 text-success" /> Close
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                {ticket && (
+                  <span className="text-[11px] px-2 py-1 rounded-lg bg-primary/10 border border-primary/30 text-primary inline-flex items-center gap-1.5">
+                    <TicketIcon className="w-3 h-3" /> {ticket.ticket_number}
+                  </span>
+                )}
+                {selected.status === "open" && (
+                  <button
+                    onClick={closeConv}
+                    className="text-[11px] px-2.5 py-1.5 rounded-lg glass hover:border-success/40 inline-flex items-center gap-1.5"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5 text-success" /> Close
+                  </button>
+                )}
+              </div>
             </div>
             <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
               {messages.length === 0 ? (

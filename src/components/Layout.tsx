@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Menu, X, ShieldCheck, BadgeCheck, Award, Lock, Globe2, Cpu, Phone } from "lucide-react";
 import logo from "@/assets/novatrad-logo.webp";
 import { WhatsAppWidget } from "@/components/WhatsAppWidget";
+import { SupportChatWidget } from "@/components/SupportChatWidget";
 import { AccountBadge, useIsSignedIn } from "@/components/AccountBadge";
 
 const nav = [
@@ -260,6 +261,7 @@ export function Layout() {
       </main>
       <Footer />
       <WhatsAppWidget />
+      <SupportChatWidget />
     </div>
   );
 }

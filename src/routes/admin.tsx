@@ -5,12 +5,14 @@ import {
   Phone, Globe2, LayoutDashboard, MessageSquare, BanknoteArrowUp, Copy, Check,
   Download, RefreshCw, Save, X, Filter, TrendingUp, AlertCircle,
   ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ArrowUpDown, Settings, Trophy, Package,
+  Headphones,
 } from "lucide-react";
 import { GlassCard } from "@/components/ui-bits";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { usePoolSettings, DEFAULT_POOL_SETTINGS } from "@/hooks/use-pool-settings";
 import { PackagesTab } from "@/components/admin/PackagesTab";
+import { AdminLiveChatTab } from "@/components/admin/AdminLiveChatTab";
 
 export const Route = createFileRoute("/admin")({
   component: Admin,
@@ -21,7 +23,7 @@ type Customer = Tables<"customers">;
 type Ticket = Tables<"tickets">;
 type Payout = Tables<"payout_runs">;
 
-type Tab = "overview" | "customers" | "tickets" | "payouts" | "packages" | "settings";
+type Tab = "overview" | "customers" | "tickets" | "livechat" | "payouts" | "packages" | "settings";
 type SortDir = "asc" | "desc";
 type Overview = {
   customers_total: number; customers_active: number; customers_pending: number; customers_suspended: number;
@@ -41,6 +43,7 @@ function Admin() {
   const [recentCustomers, setRecentCustomers] = useState<Customer[]>([]);
   const [recentTickets, setRecentTickets] = useState<Ticket[]>([]);
   const [toast, setToast] = useState<{ kind: "ok" | "err"; msg: string } | null>(null);
+  const [adminName, setAdminName] = useState<string>("Support");
 
   useEffect(() => {
     (async () => {
@@ -52,6 +55,9 @@ function Admin() {
       if (!role) {
         return navigate({ to: "/dashboard" });
       }
+      const { data: prof } = await supabase
+        .from("profiles").select("full_name").eq("id", sess.session.user.id).maybeSingle();
+      if (prof?.full_name) setAdminName(prof.full_name);
       setAuthorized(true);
       setChecking(false);
       void loadOverview();
@@ -87,6 +93,7 @@ function Admin() {
     { id: "overview", label: "Overview", icon: <LayoutDashboard className="w-4 h-4" /> },
     { id: "customers", label: "Customers", icon: <Users className="w-4 h-4" />, badge: overview?.customers_pending || undefined },
     { id: "tickets", label: "Tickets", icon: <MessageSquare className="w-4 h-4" />, badge: overview?.open_tickets || undefined },
+    { id: "livechat", label: "Live Chat", icon: <Headphones className="w-4 h-4" /> },
     { id: "payouts", label: "Payouts", icon: <BanknoteArrowUp className="w-4 h-4" /> },
     { id: "packages", label: "Packages", icon: <Package className="w-4 h-4" /> },
     { id: "settings", label: "Settings", icon: <Settings className="w-4 h-4" /> },
@@ -141,7 +148,10 @@ function Admin() {
       {tab === "overview" && <OverviewTab ov={overview} recentCustomers={recentCustomers} recentTickets={recentTickets} onJump={setTab} />}
       {tab === "customers" && <CustomersTab onToast={showToast} onMutated={loadOverview} />}
       {tab === "tickets" && <TicketsTab onToast={showToast} onMutated={loadOverview} />}
+      {tab === "livechat" && <AdminLiveChatTab adminName={adminName} />}
       {tab === "payouts" && <PayoutsTab />}
+      {tab === "packages" && <PackagesTab onToast={showToast} />}
+      {tab === "settings" && <SettingsTab onToast={showToast} />}
       {tab === "packages" && <PackagesTab onToast={showToast} />}
       {tab === "settings" && <SettingsTab onToast={showToast} />}
 

@@ -55,13 +55,21 @@ function DepositPage() {
   useEffect(() => {
     (async () => {
       const [s, p] = await Promise.all([getDepositSettings(), getMyProfile()]);
-      setSettings(s as Settings | null);
+      const settingsData = s as Settings | null;
+      setSettings(settingsData);
       const prof = p as { last_sender_address: string | null; last_sender_network: string | null; binance_uid: string | null } | null;
       setSavedSender({
         address: prof?.last_sender_address ?? null,
         network: prof?.last_sender_network ?? null,
         binance_uid: prof?.binance_uid ?? null,
       });
+      // Default-select first enabled network
+      const firstEnabled = ALL_NETWORKS.find((n) =>
+        n.id === "BINANCE_PAY"
+          ? settingsData?.deposit_binance_pay_enabled !== false
+          : settingsData?.[n.flag] === true,
+      );
+      if (firstEnabled) setNetwork(firstEnabled.id);
       await refresh();
     })();
   }, []);

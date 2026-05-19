@@ -213,9 +213,9 @@ function Home() {
         title={<>Other ways to <span className="gradient-text">grow your crypto</span></>}
         subtitle="Beyond AI trading, AuraTrad.Ai offers two additional passive-income streams."
       >
-        <div className="relative rounded-3xl p-[2px] bg-[image:var(--gradient-aurora)] glow-primary">
-          <div className="absolute -inset-4 bg-[image:var(--gradient-aurora)] opacity-30 blur-3xl -z-10 rounded-3xl" />
-          <div className="rounded-[22px] bg-background/80 p-4 md:p-6 grid md:grid-cols-2 gap-5">
+        <div className="relative rounded-3xl p-[3px] bg-[image:var(--gradient-gold)] glow-gold animate-pulse-slow">
+          <div className="absolute -inset-6 bg-[image:var(--gradient-gold)] opacity-40 blur-3xl -z-10 rounded-3xl" />
+          <div className="rounded-[22px] bg-background/90 p-4 md:p-6 grid md:grid-cols-2 gap-5 ring-1 ring-gold/30">
             <NumberedService
               n="01"
               img={miningImg}

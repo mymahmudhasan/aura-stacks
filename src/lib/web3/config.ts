@@ -45,6 +45,7 @@ export const ERC20_ABI = [
   },
 ] as const;
 
+// Public WalletConnect (Reown) Project ID — safe to ship in client bundle.
 export const WC_PROJECT_ID =
   (import.meta.env?.VITE_WALLETCONNECT_PROJECT_ID as string | undefined) ||
-  "demo-project-id-replace-me";
+  "38b99f5c-b24d-48c8-903a-a90951f52076";

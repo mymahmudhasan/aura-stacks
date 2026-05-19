@@ -1,0 +1,287 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Headphones, Send, X, MessageCircle, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  startSupportChat,
+  sendSupportMessage,
+  getSupportMessages,
+} from "@/lib/support.functions";
+
+type Msg = {
+  id: string;
+  conversation_id: string;
+  sender: "user" | "admin";
+  author_name: string;
+  body: string;
+  created_at: string;
+};
+
+const LS_KEY = "auratrad.support.chat";
+
+type Stored = { conversationId: string; name: string; email: string | null };
+
+function readStored(): Stored | null {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    return raw ? (JSON.parse(raw) as Stored) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function SupportChatWidget() {
+  const [open, setOpen] = useState(false);
+  const [stored, setStored] = useState<Stored | null>(null);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [body, setBody] = useState("");
+  const [messages, setMessages] = useState<Msg[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [unread, setUnread] = useState(0);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    setStored(readStored());
+  }, []);
+
+  useEffect(() => {
+    if (!stored) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const rows = await getSupportMessages({
+          data: { conversation_id: stored.conversationId },
+        });
+        if (!cancelled) setMessages(rows as Msg[]);
+      } catch {
+        /* ignore */
+      }
+    })();
+
+    const channel = supabase
+      .channel(`support:${stored.conversationId}`)
+      .on("broadcast", { event: "message" }, (payload) => {
+        const msg = payload.payload as Msg;
+        setMessages((prev) =>
+          prev.some((m) => m.id === msg.id) ? prev : [...prev, msg],
+        );
+        if (msg.sender === "admin" && !open) setUnread((n) => n + 1);
+      })
+      .subscribe();
+
+    return () => {
+      cancelled = true;
+      supabase.removeChannel(channel);
+    };
+  }, [stored, open]);
+
+  useEffect(() => {
+    if (open) setUnread(0);
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+  }, [messages, open]);
+
+  const onStart = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      setError(null);
+      const trimmedName = name.trim();
+      const trimmedEmail = email.trim();
+      if (trimmedName.length < 1) return setError("Please enter your name.");
+      if (trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail))
+        return setError("Please enter a valid email.");
+
+      setBusy(true);
+      try {
+        const { data: sess } = await supabase.auth.getSession();
+        const { id } = await startSupportChat({
+          data: {
+            guest_name: trimmedName,
+            guest_email: trimmedEmail || null,
+            user_id: sess.session?.user.id ?? null,
+          },
+        });
+        const next: Stored = {
+          conversationId: id,
+          name: trimmedName,
+          email: trimmedEmail || null,
+        };
+        localStorage.setItem(LS_KEY, JSON.stringify(next));
+        setStored(next);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Could not start chat.");
+      } finally {
+        setBusy(false);
+      }
+    },
+    [name, email],
+  );
+
+  const onSend = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!stored) return;
+      const text = body.trim();
+      if (!text) return;
+      setBusy(true);
+      setBody("");
+      try {
+        const msg = await sendSupportMessage({
+          data: {
+            conversation_id: stored.conversationId,
+            body: text,
+            author_name: stored.name,
+          },
+        });
+        setMessages((prev) =>
+          prev.some((m) => m.id === (msg as Msg).id) ? prev : [...prev, msg as Msg],
+        );
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Send failed.");
+      } finally {
+        setBusy(false);
+      }
+    },
+    [body, stored],
+  );
+
+  return (
+    <>
+      {open && (
+        <div className="fixed bottom-24 left-5 z-[60] w-[340px] max-w-[calc(100vw-2.5rem)] glass-strong rounded-2xl border border-primary/30 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
+          <div className="flex items-center justify-between px-4 py-3 bg-primary/15 border-b border-primary/30">
+            <div className="flex items-center gap-2.5">
+              <div className="relative">
+                <div className="w-9 h-9 rounded-full bg-primary/30 text-primary flex items-center justify-center">
+                  <Headphones className="w-5 h-5" />
+                </div>
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-success border-2 border-background animate-pulse" />
+              </div>
+              <div className="leading-tight">
+                <p className="text-sm font-semibold">Live Support</p>
+                <p className="text-[11px] text-success">Online · real-time chat</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setOpen(false)}
+              aria-label="Close chat"
+              className="text-muted-foreground hover:text-foreground p-1"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {!stored ? (
+            <form onSubmit={onStart} className="p-4 space-y-3 bg-card/30">
+              <p className="text-xs text-muted-foreground">
+                Start a chat with a real agent. Replies appear here instantly.
+              </p>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your name"
+                required
+                maxLength={80}
+                className="w-full px-3 py-2 rounded-lg bg-input/50 border border-border focus:border-primary outline-none text-xs"
+              />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Email (optional, for follow-up)"
+                maxLength={160}
+                className="w-full px-3 py-2 rounded-lg bg-input/50 border border-border focus:border-primary outline-none text-xs"
+              />
+              {error && <p className="text-[11px] text-destructive">{error}</p>}
+              <button
+                type="submit"
+                disabled={busy}
+                className="w-full px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90 transition disabled:opacity-50 inline-flex items-center justify-center gap-2"
+              >
+                {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MessageCircle className="w-3.5 h-3.5" />}
+                Start live chat
+              </button>
+            </form>
+          ) : (
+            <>
+              <div
+                ref={scrollRef}
+                className="px-4 py-3 space-y-2 bg-card/30 h-[320px] overflow-y-auto"
+              >
+                {messages.length === 0 && (
+                  <p className="text-[11px] text-muted-foreground text-center py-6">
+                    Say hi 👋 — an agent will reply shortly.
+                  </p>
+                )}
+                {messages.map((m) => (
+                  <div
+                    key={m.id}
+                    className={`flex ${m.sender === "user" ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`max-w-[80%] px-3 py-2 rounded-xl text-xs leading-relaxed ${
+                        m.sender === "user"
+                          ? "bg-primary text-primary-foreground rounded-br-sm"
+                          : "bg-white/5 border border-border rounded-bl-sm"
+                      }`}
+                    >
+                      {m.sender === "admin" && (
+                        <p className="text-[10px] font-semibold text-primary mb-0.5">
+                          {m.author_name || "Support"}
+                        </p>
+                      )}
+                      <p className="whitespace-pre-wrap break-words">{m.body}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <form onSubmit={onSend} className="flex items-center gap-2 p-3 border-t border-border bg-card/50">
+                <input
+                  type="text"
+                  value={body}
+                  onChange={(e) => setBody(e.target.value)}
+                  placeholder="Type a message…"
+                  maxLength={4000}
+                  className="flex-1 px-3 py-2 rounded-lg bg-input/50 border border-border focus:border-primary outline-none text-xs"
+                />
+                <button
+                  type="submit"
+                  disabled={busy || !body.trim()}
+                  aria-label="Send"
+                  className="w-9 h-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:opacity-90 transition shrink-0 disabled:opacity-50"
+                >
+                  {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                </button>
+              </form>
+              {error && <p className="px-3 pb-2 text-[10px] text-destructive">{error}</p>}
+            </>
+          )}
+        </div>
+      )}
+
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Open live support chat"
+        className="fixed bottom-5 left-5 z-[60] group"
+      >
+        <span className="absolute inset-0 rounded-full bg-primary/40 blur-xl group-hover:bg-primary/60 transition" />
+        <span className="absolute inset-0 rounded-full bg-primary/30 animate-ping" />
+        <span className="relative w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-2xl border-2 border-primary/40 hover:scale-105 transition">
+          {open ? <X className="w-6 h-6" /> : <Headphones className="w-7 h-7" />}
+        </span>
+        {!open && unread > 0 && (
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-destructive text-white text-[10px] font-bold flex items-center justify-center border-2 border-background">
+            {unread}
+          </span>
+        )}
+        {!open && (
+          <span className="hidden md:flex absolute left-16 top-1/2 -translate-y-1/2 whitespace-nowrap glass-strong border border-primary/30 px-3 py-1.5 rounded-full text-xs font-medium items-center gap-1.5 shadow-lg">
+            <MessageCircle className="w-3.5 h-3.5 text-primary" />
+            Live chat — real agent
+          </span>
+        )}
+      </button>
+    </>
+  );
+}

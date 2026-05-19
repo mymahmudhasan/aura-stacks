@@ -64,11 +64,25 @@ export function AdminLiveChatTab({ adminName }: { adminName: string }) {
   useEffect(() => {
     if (!selectedId) {
       setMessages([]);
+      setTicket(null);
       return;
     }
     void loadMessages(selectedId);
 
-    // Listen for postgres inserts (user messages persisted from server fn)
+    void (async () => {
+      try {
+        const { ticket_id } = await ensureTicketFn({ data: { conversation_id: selectedId } });
+        const { data: t } = await supabase
+          .from("tickets")
+          .select("id,ticket_number")
+          .eq("id", ticket_id)
+          .maybeSingle();
+        if (t) setTicket(t as { id: string; ticket_number: string });
+      } catch {
+        setTicket(null);
+      }
+    })();
+
     const pgChannel = supabase
       .channel(`admin-msgs:${selectedId}`)
       .on(
@@ -89,7 +103,7 @@ export function AdminLiveChatTab({ adminName }: { adminName: string }) {
     return () => {
       supabase.removeChannel(pgChannel);
     };
-  }, [selectedId, loadMessages]);
+  }, [selectedId, loadMessages, ensureTicketFn]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
@@ -104,38 +118,27 @@ export function AdminLiveChatTab({ adminName }: { adminName: string }) {
       setSending(true);
       setBody("");
       try {
-        const { data: msg, error } = await supabase
-          .from("support_messages")
-          .insert({
-            conversation_id: selectedId,
-            sender: "admin",
-            author_name: adminName || "Support",
-            body: text,
-          })
-          .select("*")
-          .single();
-        if (error) throw error;
-        setMessages((prev) =>
-          prev.some((m) => m.id === (msg as Message).id) ? prev : [...prev, msg as Message],
-        );
-        // Broadcast so the user widget receives it instantly.
-        const channel = supabase.channel(`support:${selectedId}`);
-        await new Promise<void>((resolve) => {
-          channel.subscribe((status) => {
-            if (status === "SUBSCRIBED") resolve();
-          });
-          setTimeout(resolve, 1500);
+        const { ticket_id } = await ensureTicketFn({
+          data: { conversation_id: selectedId },
         });
-        await channel.send({ type: "broadcast", event: "message", payload: msg });
-        await supabase.removeChannel(channel);
+        await replyFn({
+          data: {
+            ticket_id,
+            body: text,
+            author_name: adminName || "Support",
+            author_id: adminId ?? null,
+          },
+        });
+        // postgres_changes listener will append the new message
       } catch {
-        /* ignore */
+        setBody(text);
       } finally {
         setSending(false);
       }
     },
-    [body, selectedId, adminName],
+    [body, selectedId, adminName, adminId, ensureTicketFn, replyFn],
   );
+
 
   const closeConv = useCallback(async () => {
     if (!selectedId) return;

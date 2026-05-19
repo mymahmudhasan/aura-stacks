@@ -143,18 +143,27 @@ function Home() {
       </section>
 
       {/* BINANCE REQUIREMENT NOTICE */}
-      <section className="border-y border-primary/30 bg-primary/5">
-        <div className="mx-auto max-w-7xl px-5 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="flex items-start sm:items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-[image:var(--gradient-gold)] text-gold-foreground flex items-center justify-center shrink-0">
-              <Cable className="w-4 h-4" />
+      <section className="relative mx-auto max-w-7xl px-5 py-6">
+        <div className="relative rounded-2xl border-2 border-gold/60 bg-[image:var(--gradient-gold)]/10 p-5 overflow-hidden glow-gold">
+          <div className="absolute inset-0 bg-[image:var(--gradient-gold)] opacity-10 pointer-events-none" />
+          <div className="absolute -top-px left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold to-transparent" />
+          <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-start sm:items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-[image:var(--gradient-gold)] text-gold-foreground flex items-center justify-center shrink-0 shadow-[var(--shadow-glow)] animate-pulse">
+                <Cable className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-gold mb-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-gold animate-pulse" /> Required
+                </p>
+                <p className="text-sm md:text-base font-bold">A Binance account is required to join AuraTrad.Ai.</p>
+                <p className="text-xs md:text-sm text-muted-foreground mt-1">All deposits, withdrawals and reward payouts are processed through your verified Binance wallet.</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-semibold">A Binance account is required to join AuraTrad.Ai.</p>
-              <p className="text-xs text-muted-foreground mt-0.5">All deposits, withdrawals and reward payouts are processed through your verified Binance wallet.</p>
-            </div>
+            <a href="https://www.binance.com/referral/earn-together/refer2earn-usdc/claim?hl=en&ref=GRO_28502_YBOIX&utm_source=referral_entrance" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[image:var(--gradient-gold)] text-gold-foreground text-xs font-bold glow-gold hover:opacity-90 transition shrink-0">
+              Create Binance account →
+            </a>
           </div>
-          <a href="https://www.binance.com/referral/earn-together/refer2earn-usdc/claim?hl=en&ref=GRO_28502_YBOIX&utm_source=referral_entrance" target="_blank" rel="noopener noreferrer" className="text-xs font-medium text-primary hover:underline shrink-0">Create Binance account →</a>
         </div>
       </section>
 

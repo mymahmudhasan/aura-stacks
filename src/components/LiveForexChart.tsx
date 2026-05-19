@@ -82,8 +82,7 @@ export function LiveForexChart() {
       </div>
       <div
         ref={containerRef}
-        className="tradingview-widget-container w-full"
-        style={{ height: "560px" }}
+        className="tradingview-widget-container w-full h-[480px] sm:h-[600px] md:h-[720px] lg:h-[820px]"
       />
       <p className="text-[10px] text-muted-foreground text-center py-2 border-t border-border/40">
         Market data by TradingView · 15-min candles · EMA &amp; RSI overlays

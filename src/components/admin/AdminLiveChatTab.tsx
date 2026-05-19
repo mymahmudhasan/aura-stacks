@@ -153,7 +153,9 @@ export function AdminLiveChatTab({ adminName }: { adminName: string }) {
   );
 
   return (
-    <div className="grid lg:grid-cols-[320px_1fr] gap-4 min-h-[60vh]">
+    <div className="space-y-3">
+      <BotRepliesPanel />
+      <div className="grid lg:grid-cols-[320px_1fr] gap-4 min-h-[60vh]">
       {/* Conversation list */}
       <div className="glass rounded-2xl p-3 max-h-[70vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-2 px-1">

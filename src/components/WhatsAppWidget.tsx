@@ -104,7 +104,7 @@ export function WhatsAppWidget() {
     <>
       {/* Floating chat panel */}
       {open && (
-        <div className="fixed bottom-24 right-5 z-[60] w-[340px] max-w-[calc(100vw-2.5rem)] glass-strong rounded-2xl border border-success/30 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
+        <div className="fixed bottom-44 right-5 z-[60] w-[340px] max-w-[calc(100vw-2.5rem)] glass-strong rounded-2xl border border-success/30 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-success/15 border-b border-success/30">
             <div className="flex items-center gap-2.5">
@@ -208,7 +208,7 @@ export function WhatsAppWidget() {
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label="Chat with us on WhatsApp"
-        className="fixed bottom-5 right-5 z-[60] group"
+        className="fixed bottom-24 right-5 z-[60] group"
       >
         <span className="absolute inset-0 rounded-full bg-success/40 blur-xl group-hover:bg-success/60 transition" />
         <span className="absolute inset-0 rounded-full bg-success/30 animate-ping" />

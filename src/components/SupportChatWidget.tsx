@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Headphones, Send, X, MessageCircle, Loader2 } from "lucide-react";
+import { Headphones, Send, X, MessageCircle, Loader2, Mic, MicOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   startSupportChat,
@@ -29,6 +29,13 @@ function readStored(): Stored | null {
   }
 }
 
+const PRESETS = [
+  "I need help with my deposit / withdrawal",
+  "My AI bot status — can you check?",
+  "Question about mining or staking plans",
+  "I want to talk to a human investment advisor",
+];
+
 export function SupportChatWidget() {
   const [open, setOpen] = useState(false);
   const [stored, setStored] = useState<Stored | null>(null);
@@ -39,10 +46,20 @@ export function SupportChatWidget() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [unread, setUnread] = useState(0);
+  const [listening, setListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
+  const recognitionRef = useRef<any>(null);
+  const baseTextRef = useRef("");
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setStored(readStored());
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    setSpeechSupported(!!SR);
   }, []);
 
   useEffect(() => {
@@ -81,6 +98,35 @@ export function SupportChatWidget() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, open]);
 
+  const stopListening = () => {
+    try { recognitionRef.current?.stop(); } catch { /* noop */ }
+    setListening(false);
+  };
+
+  const startListening = () => {
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) return;
+    if (listening) { stopListening(); return; }
+    const rec = new SR();
+    rec.lang = navigator.language || "en-US";
+    rec.interimResults = true;
+    rec.continuous = false;
+    baseTextRef.current = body ? body.trimEnd() + " " : "";
+    rec.onresult = (event: any) => {
+      let transcript = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      setBody(baseTextRef.current + transcript);
+    };
+    rec.onerror = () => setListening(false);
+    rec.onend = () => setListening(false);
+    recognitionRef.current = rec;
+    try { rec.start(); setListening(true); } catch { setListening(false); }
+  };
+
+  useEffect(() => () => { try { recognitionRef.current?.stop(); } catch { /* noop */ } }, []);
+
   const onStart = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -117,19 +163,18 @@ export function SupportChatWidget() {
     [name, email],
   );
 
-  const onSend = useCallback(
-    async (e: React.FormEvent) => {
-      e.preventDefault();
+  const sendText = useCallback(
+    async (text: string) => {
       if (!stored) return;
-      const text = body.trim();
-      if (!text) return;
+      const clean = text.trim();
+      if (!clean) return;
       setBusy(true);
-      setBody("");
+      setError(null);
       try {
         const msg = await sendSupportMessage({
           data: {
             conversation_id: stored.conversationId,
-            body: text,
+            body: clean,
             author_name: stored.name,
           },
         });
@@ -142,13 +187,24 @@ export function SupportChatWidget() {
         setBusy(false);
       }
     },
-    [body, stored],
+    [stored],
+  );
+
+  const onSend = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+      stopListening();
+      const text = body;
+      setBody("");
+      await sendText(text);
+    },
+    [body, sendText],
   );
 
   return (
     <>
       {open && (
-        <div className="fixed bottom-24 left-5 z-[60] w-[340px] max-w-[calc(100vw-2.5rem)] glass-strong rounded-2xl border border-primary/30 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
+        <div className="fixed bottom-24 right-5 z-[60] w-[340px] max-w-[calc(100vw-2.5rem)] glass-strong rounded-2xl border border-primary/30 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
           <div className="flex items-center justify-between px-4 py-3 bg-primary/15 border-b border-primary/30">
             <div className="flex items-center gap-2.5">
               <div className="relative">
@@ -158,8 +214,8 @@ export function SupportChatWidget() {
                 <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-success border-2 border-background animate-pulse" />
               </div>
               <div className="leading-tight">
-                <p className="text-sm font-semibold">Live Support</p>
-                <p className="text-[11px] text-success">Online · real-time chat</p>
+                <p className="text-sm font-semibold">AuraTrad.Ai Support</p>
+                <p className="text-[11px] text-success">Online · replies in minutes</p>
               </div>
             </div>
             <button
@@ -207,13 +263,30 @@ export function SupportChatWidget() {
             <>
               <div
                 ref={scrollRef}
-                className="px-4 py-3 space-y-2 bg-card/30 h-[320px] overflow-y-auto"
+                className="px-4 py-3 space-y-3 bg-card/30 max-h-[360px] overflow-y-auto"
               >
+                <div className="rounded-xl rounded-tl-sm bg-white/5 px-3 py-2.5 text-xs text-foreground/90 leading-relaxed">
+                  👋 Hi {stored.name.split(" ")[0]}! I'm here to help with
+                  deposits, withdrawals, AI bot issues or any account question.
+                  Pick a topic, type, or tap the mic to speak — a real agent
+                  will reply right here.
+                </div>
+
                 {messages.length === 0 && (
-                  <p className="text-[11px] text-muted-foreground text-center py-6">
-                    Say hi 👋 — an agent will reply shortly.
-                  </p>
+                  <div className="space-y-1.5">
+                    {PRESETS.map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => sendText(p)}
+                        disabled={busy}
+                        className="w-full text-left text-xs px-3 py-2 rounded-lg glass hover:border-primary/40 transition disabled:opacity-50"
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
                 )}
+
                 {messages.map((m) => (
                   <div
                     key={m.id}
@@ -241,20 +314,37 @@ export function SupportChatWidget() {
                   type="text"
                   value={body}
                   onChange={(e) => setBody(e.target.value)}
-                  placeholder="Type a message…"
+                  placeholder={listening ? "Listening…" : "Type or tap mic to speak…"}
                   maxLength={4000}
                   className="flex-1 px-3 py-2 rounded-lg bg-input/50 border border-border focus:border-primary outline-none text-xs"
                 />
+                {speechSupported ? (
+                  <button
+                    type="button"
+                    onClick={startListening}
+                    aria-label={listening ? "Stop voice input" : "Start voice input"}
+                    className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition ${
+                      listening
+                        ? "bg-destructive text-white animate-pulse ring-2 ring-destructive/40"
+                        : "glass hover:border-primary/40 text-foreground"
+                    }`}
+                  >
+                    {listening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                  </button>
+                ) : null}
                 <button
                   type="submit"
                   disabled={busy || !body.trim()}
                   aria-label="Send"
-                  className="w-9 h-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:opacity-90 transition shrink-0 disabled:opacity-50"
+                  className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:opacity-90 transition shrink-0 disabled:opacity-50"
                 >
                   {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                 </button>
               </form>
-              {error && <p className="px-3 pb-2 text-[10px] text-destructive">{error}</p>}
+              <p className="text-[10px] text-muted-foreground text-center pb-2">
+                {listening ? "🎙️ Listening — speak now" : "Live chat with a real agent"}
+              </p>
+              {error && <p className="px-3 pb-2 text-[10px] text-destructive text-center">{error}</p>}
             </>
           )}
         </div>
@@ -263,7 +353,7 @@ export function SupportChatWidget() {
       <button
         onClick={() => setOpen((v) => !v)}
         aria-label="Open live support chat"
-        className="fixed bottom-5 left-5 z-[60] group"
+        className="fixed bottom-5 right-5 z-[60] group"
       >
         <span className="absolute inset-0 rounded-full bg-primary/40 blur-xl group-hover:bg-primary/60 transition" />
         <span className="absolute inset-0 rounded-full bg-primary/30 animate-ping" />
@@ -276,7 +366,7 @@ export function SupportChatWidget() {
           </span>
         )}
         {!open && (
-          <span className="hidden md:flex absolute left-16 top-1/2 -translate-y-1/2 whitespace-nowrap glass-strong border border-primary/30 px-3 py-1.5 rounded-full text-xs font-medium items-center gap-1.5 shadow-lg">
+          <span className="hidden md:flex absolute right-16 top-1/2 -translate-y-1/2 whitespace-nowrap glass-strong border border-primary/30 px-3 py-1.5 rounded-full text-xs font-medium items-center gap-1.5 shadow-lg">
             <MessageCircle className="w-3.5 h-3.5 text-primary" />
             Live chat — real agent
           </span>

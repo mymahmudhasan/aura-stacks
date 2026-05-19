@@ -252,7 +252,43 @@ export function Footer() {
   );
 }
 
+import { useEffect as _useEffect } from "react";
+import { supabase as _supabase } from "@/integrations/supabase/client";
+
+const WIDGET_FLAGS_EVENT = "auratrad:widget-flags-changed";
+
+function useWidgetFlags() {
+  const [flags, setFlags] = useState({ whatsapp: true, liveChat: true });
+  _useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      const { data } = await _supabase
+        .from("site_settings")
+        .select("whatsapp_enabled,live_chat_enabled")
+        .eq("id", 1)
+        .maybeSingle();
+      if (cancelled || !data) return;
+      setFlags({
+        whatsapp: (data as any).whatsapp_enabled !== false,
+        liveChat: (data as any).live_chat_enabled !== false,
+      });
+    };
+    load();
+    const onChange = (e: Event) => {
+      const detail = (e as CustomEvent<{ whatsapp?: boolean; liveChat?: boolean }>).detail;
+      if (detail) setFlags((p) => ({ ...p, ...detail }));
+    };
+    window.addEventListener(WIDGET_FLAGS_EVENT, onChange);
+    return () => {
+      cancelled = true;
+      window.removeEventListener(WIDGET_FLAGS_EVENT, onChange);
+    };
+  }, []);
+  return flags;
+}
+
 export function Layout() {
+  const flags = useWidgetFlags();
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -260,8 +296,9 @@ export function Layout() {
         <Outlet />
       </main>
       <Footer />
-      <WhatsAppWidget />
-      <SupportChatWidget />
+      {flags.whatsapp && <WhatsAppWidget />}
+      {flags.liveChat && <SupportChatWidget />}
     </div>
   );
 }
+

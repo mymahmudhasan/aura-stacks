@@ -251,7 +251,7 @@ function Dashboard() {
         const hasInvestment = activeInvs.length > 0;
         const steps = [
           { done: hasDeposit, label: "Make first deposit", to: "/deposit", icon: <ArrowDownLeft className="w-3.5 h-3.5" /> },
-          { done: hasInvestment, label: "Choose an investment package", to: "/mining", icon: <Cpu className="w-3.5 h-3.5" /> },
+          { done: hasInvestment, label: "Choose an investment package", to: "#active-investments", icon: <Cpu className="w-3.5 h-3.5" /> },
         ];
         const completed = steps.filter((s) => s.done).length;
         if (completed === steps.length) return null;
@@ -269,24 +269,45 @@ function Dashboard() {
               <div className="h-full bg-[image:var(--gradient-primary)] transition-all" style={{ width: `${pct}%` }} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {steps.map((s) => (
-                <Link
-                  key={s.label}
-                  to={s.to}
-                  className={`rounded-xl border px-3 py-2.5 flex items-center gap-2 text-xs transition ${
-                    s.done
-                      ? "border-success/30 bg-success/10 text-success"
-                      : "border-border bg-background/40 hover:bg-primary/10 hover:border-primary/30"
-                  }`}
-                >
-                  <span className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
-                    s.done ? "bg-success text-success-foreground" : "border border-border text-muted-foreground"
-                  }`}>
-                    {s.done ? <Check className="w-3 h-3" /> : s.icon}
-                  </span>
-                  <span className={`font-medium truncate ${s.done ? "line-through opacity-80" : ""}`}>{s.label}</span>
-                </Link>
-              ))}
+              {steps.map((s) => {
+                const isAnchor = s.to.startsWith("#");
+                const className = `rounded-xl border px-3 py-2.5 flex items-center gap-2 text-xs transition ${
+                  s.done
+                    ? "border-success/30 bg-success/10 text-success"
+                    : "border-border bg-background/40 hover:bg-primary/10 hover:border-primary/30"
+                }`;
+                const inner = (
+                  <>
+                    <span className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
+                      s.done ? "bg-success text-success-foreground" : "border border-border text-muted-foreground"
+                    }`}>
+                      {s.done ? <Check className="w-3 h-3" /> : s.icon}
+                    </span>
+                    <span className={`font-medium truncate ${s.done ? "line-through opacity-80" : ""}`}>{s.label}</span>
+                  </>
+                );
+                if (isAnchor) {
+                  return (
+                    <a
+                      key={s.label}
+                      href={s.to}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        const el = document.getElementById(s.to.slice(1));
+                        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                      }}
+                      className={className}
+                    >
+                      {inner}
+                    </a>
+                  );
+                }
+                return (
+                  <Link key={s.label} to={s.to} className={className}>
+                    {inner}
+                  </Link>
+                );
+              })}
             </div>
           </div>
         );
@@ -425,7 +446,7 @@ function Dashboard() {
         <Stat icon={<Clock />} label="Pending Withdrawals" value={`$${pendingWdAmount.toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 })}`} trend={`${pendingWdCount} request${pendingWdCount === 1 ? "" : "s"}`} />
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-5 mt-5">
+      <div id="active-investments" className="grid lg:grid-cols-3 gap-5 mt-5 scroll-mt-24">
         <div className="lg:col-span-2 relative rounded-2xl p-[1.5px] bg-[image:var(--gradient-aurora)] glow-primary animate-fade-in">
           <div className="absolute -inset-8 bg-[image:var(--gradient-aurora)] opacity-30 blur-3xl -z-10 rounded-full pointer-events-none" />
           <div className="rounded-2xl bg-background/80 backdrop-blur-xl p-5">

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { getMyWallet, getMyWithdrawals, requestWithdrawal } from "@/lib/wallet.functions";
 import { useConnectedWallet } from "@/lib/web3/wallet";
-import { ConnectWalletButton } from "@/components/ConnectWalletButton";
+
 
 export const Route = createFileRoute("/withdraw")({
   component: WithdrawPage,
@@ -87,10 +87,7 @@ function WithdrawPage() {
   return (
     <Section className="!py-12 max-w-4xl">
       <Link to="/wallet" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-4"><ArrowLeft className="w-4 h-4" /> Back to wallet</Link>
-      <div className="flex flex-wrap items-start justify-between gap-3 mb-2">
-        <h1 className="text-2xl md:text-3xl font-bold">Withdraw funds</h1>
-        <ConnectWalletButton />
-      </div>
+      <h1 className="text-2xl md:text-3xl font-bold mb-2">Withdraw funds</h1>
       <p className="text-muted-foreground mb-6">Available balance: <span className="gradient-text font-bold">${balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></p>
 
       {wallet && flags.wallet_address && (

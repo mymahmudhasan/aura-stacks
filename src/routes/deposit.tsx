@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { createDeposit, getDepositSettings, getMyDeposits, getMyProfile } from "@/lib/wallet.functions";
 import { createOnChainDeposit, verifyOnChainDeposit } from "@/lib/web3/onchain.functions";
 import { useConnectedWallet, useSendUsdt } from "@/lib/web3/wallet";
-import { ConnectWalletButton } from "@/components/ConnectWalletButton";
 
 export const Route = createFileRoute("/deposit")({
   component: DepositPage,
@@ -152,11 +151,8 @@ function DepositPage() {
   return (
     <Section className="!py-12 max-w-4xl">
       <Link to="/wallet" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-4"><ArrowLeft className="w-4 h-4" /> Back to wallet</Link>
-      <div className="flex flex-wrap items-start justify-between gap-3 mb-2">
-        <h1 className="text-2xl md:text-3xl font-bold">Deposit funds</h1>
-        <ConnectWalletButton />
-      </div>
-      <p className="text-muted-foreground mb-6">Pay in one click with your connected wallet, or send manually and submit the transaction hash.</p>
+      <h1 className="text-2xl md:text-3xl font-bold mb-2">Deposit funds</h1>
+      <p className="text-muted-foreground mb-6">Send USDT to the address below and submit your transaction hash for confirmation.</p>
 
       {onchainEnabled && (
         <WalletPayCard
@@ -169,18 +165,25 @@ function DepositPage() {
       <div className="grid md:grid-cols-2 gap-5">
 
         <GlassCard>
-          <Label className="text-xs uppercase tracking-widest text-muted-foreground">Network</Label>
           {enabledNetworks.length === 0 ? (
-            <p className="text-sm text-muted-foreground mt-3">Deposits are temporarily unavailable. Please contact support.</p>
+            <>
+              <Label className="text-xs uppercase tracking-widest text-muted-foreground">Network</Label>
+              <p className="text-sm text-muted-foreground mt-3">Deposits are temporarily unavailable. Please contact support.</p>
+            </>
+          ) : enabledNetworks.length > 1 ? (
+            <>
+              <Label className="text-xs uppercase tracking-widest text-muted-foreground">Network</Label>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                {enabledNetworks.map((n) => (
+                  <button key={n.id} type="button" onClick={() => setNetwork(n.id)}
+                    className={`px-3 py-2 rounded-lg text-xs font-medium transition ${network === n.id ? "bg-primary text-primary-foreground glow-primary" : "glass hover:bg-primary/10"}`}>
+                    {n.label}
+                  </button>
+                ))}
+              </div>
+            </>
           ) : (
-            <div className="grid grid-cols-2 gap-2 mt-2">
-              {enabledNetworks.map((n) => (
-                <button key={n.id} type="button" onClick={() => setNetwork(n.id)}
-                  className={`px-3 py-2 rounded-lg text-xs font-medium transition ${network === n.id ? "bg-primary text-primary-foreground glow-primary" : "glass hover:bg-primary/10"}`}>
-                  {n.label}
-                </button>
-              ))}
-            </div>
+            <Label className="text-xs uppercase tracking-widest text-muted-foreground">{activeNet?.label ?? "Payment method"}</Label>
           )}
 
           <div className="mt-5">

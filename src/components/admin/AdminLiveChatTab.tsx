@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Loader2, Send, MessageSquareText, CheckCircle2, RefreshCw } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { Loader2, Send, MessageSquareText, CheckCircle2, RefreshCw, Ticket as TicketIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { ensureChatTicket, replyToTicket } from "@/lib/support.functions";
 
 type Conversation = Tables<"support_conversations">;
 type Message = Tables<"support_messages">;
+type Ticket = Tables<"tickets">;
 
 export function AdminLiveChatTab({ adminName }: { adminName: string }) {
   const [convs, setConvs] = useState<Conversation[]>([]);

@@ -251,7 +251,7 @@ function Dashboard() {
         const hasInvestment = activeInvs.length > 0;
         const steps = [
           { done: hasDeposit, label: "Make first deposit", to: "/deposit", icon: <ArrowDownLeft className="w-3.5 h-3.5" /> },
-          { done: hasInvestment, label: "Choose an investment package", to: "/mining", icon: <Cpu className="w-3.5 h-3.5" /> },
+          { done: hasInvestment, label: "Choose an investment package", to: "#active-investments", icon: <Cpu className="w-3.5 h-3.5" /> },
         ];
         const completed = steps.filter((s) => s.done).length;
         if (completed === steps.length) return null;

@@ -9,6 +9,7 @@ import {
 
 import appCss from "../styles.css?url";
 import { Layout } from "@/components/Layout";
+import { Web3Provider } from "@/components/Web3Provider";
 
 function NotFoundComponent() {
   return (
@@ -95,7 +96,9 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <Layout />
+      <Web3Provider>
+        <Layout />
+      </Web3Provider>
     </QueryClientProvider>
   );
 }

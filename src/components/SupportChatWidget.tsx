@@ -83,6 +83,8 @@ export function SupportChatWidget() {
   const [authUser, setAuthUser] = useState<{ id: string; email: string; name: string } | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const autoStartedRef = useRef(false);
+  const botRepliesRef = useRef(0);
+  const humanRepliedRef = useRef(false);
   const recognitionRef = useRef<any>(null);
   const baseTextRef = useRef("");
   const scrollRef = useRef<HTMLDivElement | null>(null);

@@ -91,6 +91,21 @@ export const createDeposit = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
+
+    // Enforce admin-controlled method toggles
+    const { data: flags } = await supabase
+      .from("site_settings")
+      .select("deposit_binance_pay_enabled,deposit_trc20_enabled,deposit_bep20_enabled,deposit_erc20_enabled")
+      .eq("id", 1)
+      .maybeSingle();
+    const f = flags as Record<string, boolean | null> | null;
+    const enabled =
+      (data.network === "BINANCE_PAY" && f?.deposit_binance_pay_enabled !== false) ||
+      (data.network === "TRC20" && f?.deposit_trc20_enabled === true) ||
+      (data.network === "BEP20" && f?.deposit_bep20_enabled === true) ||
+      (data.network === "ERC20" && f?.deposit_erc20_enabled === true);
+    if (!enabled) throw new Error("This deposit method is currently disabled. Please use Binance Pay or contact support.");
+
     const { data: row, error } = await supabase
       .from("deposits")
       .insert({

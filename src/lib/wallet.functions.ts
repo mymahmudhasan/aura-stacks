@@ -7,10 +7,10 @@ export const getMyWallet = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabase, userId } = context;
-    const [customer, txns] = await Promise.all([
+    const [customer, txns, flags] = await Promise.all([
       supabase
         .from("customers")
-        .select("balance,total_deposited,total_withdrawn,currency:preferred_coin,full_name,binance_uid")
+        .select("balance,total_deposited,total_withdrawn,currency:preferred_coin,full_name,binance_uid,binance_wallet_address")
         .eq("user_id", userId)
         .maybeSingle(),
       supabase
@@ -19,10 +19,19 @@ export const getMyWallet = createServerFn({ method: "GET" })
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(50),
+      supabase
+        .from("site_settings")
+        .select("withdraw_binance_uid_enabled,withdraw_wallet_address_enabled")
+        .eq("id", 1)
+        .maybeSingle(),
     ]);
     return {
       customer: customer.data,
       transactions: txns.data ?? [],
+      withdraw_flags: {
+        binance_uid: (flags.data as { withdraw_binance_uid_enabled?: boolean } | null)?.withdraw_binance_uid_enabled !== false,
+        wallet_address: (flags.data as { withdraw_wallet_address_enabled?: boolean } | null)?.withdraw_wallet_address_enabled === true,
+      },
     };
   });
 

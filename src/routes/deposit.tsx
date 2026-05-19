@@ -150,24 +150,30 @@ function DepositPage() {
       </div>
       <p className="text-muted-foreground mb-6">Pay in one click with your connected wallet, or send manually and submit the transaction hash.</p>
 
-      <WalletPayCard
-        settings={settings}
-        defaultNetwork={network === "BINANCE_PAY" ? "TRC20" : network}
-        onDone={refresh}
-      />
+      {onchainEnabled && (
+        <WalletPayCard
+          settings={settings}
+          defaultNetwork={network === "BINANCE_PAY" ? "TRC20" : (network as "TRC20" | "BEP20" | "ERC20")}
+          onDone={refresh}
+        />
+      )}
 
       <div className="grid md:grid-cols-2 gap-5">
 
         <GlassCard>
           <Label className="text-xs uppercase tracking-widest text-muted-foreground">Network</Label>
-          <div className="grid grid-cols-2 gap-2 mt-2">
-            {NETWORKS.map((n) => (
-              <button key={n.id} type="button" onClick={() => setNetwork(n.id)}
-                className={`px-3 py-2 rounded-lg text-xs font-medium transition ${network === n.id ? "bg-primary text-primary-foreground glow-primary" : "glass hover:bg-primary/10"}`}>
-                {n.label}
-              </button>
-            ))}
-          </div>
+          {enabledNetworks.length === 0 ? (
+            <p className="text-sm text-muted-foreground mt-3">Deposits are temporarily unavailable. Please contact support.</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              {enabledNetworks.map((n) => (
+                <button key={n.id} type="button" onClick={() => setNetwork(n.id)}
+                  className={`px-3 py-2 rounded-lg text-xs font-medium transition ${network === n.id ? "bg-primary text-primary-foreground glow-primary" : "glass hover:bg-primary/10"}`}>
+                  {n.label}
+                </button>
+              ))}
+            </div>
+          )}
 
           <div className="mt-5">
             <Label className="text-xs uppercase tracking-widest text-muted-foreground">Send to</Label>

@@ -152,8 +152,6 @@ function Admin() {
       {tab === "payouts" && <PayoutsTab />}
       {tab === "packages" && <PackagesTab onToast={showToast} />}
       {tab === "settings" && <SettingsTab onToast={showToast} />}
-      {tab === "packages" && <PackagesTab onToast={showToast} />}
-      {tab === "settings" && <SettingsTab onToast={showToast} />}
 
       {toast && (
         <div className={`fixed bottom-5 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-xl text-sm font-medium shadow-2xl border backdrop-blur ${

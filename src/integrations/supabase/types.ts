@@ -321,6 +321,63 @@ export type Database = {
           },
         ]
       }
+      offers: {
+        Row: {
+          badge: string | null
+          created_at: string
+          cta_label: string
+          description: string
+          duration_days: number | null
+          effect: Json
+          ends_at: string | null
+          id: string
+          is_active: boolean
+          min_amount: number | null
+          slug: string
+          sort_order: number
+          starts_at: string | null
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          badge?: string | null
+          created_at?: string
+          cta_label?: string
+          description: string
+          duration_days?: number | null
+          effect?: Json
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          min_amount?: number | null
+          slug: string
+          sort_order?: number
+          starts_at?: string | null
+          title: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          badge?: string | null
+          created_at?: string
+          cta_label?: string
+          description?: string
+          duration_days?: number | null
+          effect?: Json
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean
+          min_amount?: number | null
+          slug?: string
+          sort_order?: number
+          starts_at?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payment_providers: {
         Row: {
           api_key: string | null
@@ -461,6 +518,60 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      referral_bonuses: {
+        Row: {
+          admin_notes: string | null
+          amount: number
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          currency: string
+          id: string
+          paid_at: string | null
+          referred_handle: string | null
+          referred_user_id: string | null
+          referrer_id: string
+          status: string
+          transaction_id: string | null
+          trigger_investment_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          paid_at?: string | null
+          referred_handle?: string | null
+          referred_user_id?: string | null
+          referrer_id: string
+          status?: string
+          transaction_id?: string | null
+          trigger_investment_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          paid_at?: string | null
+          referred_handle?: string | null
+          referred_user_id?: string | null
+          referrer_id?: string
+          status?: string
+          transaction_id?: string | null
+          trigger_investment_id?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -790,6 +901,53 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "support_conversations"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_offers: {
+        Row: {
+          applied_to_investment_id: string | null
+          claimed_at: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          offer_slug: string
+          payload: Json
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          applied_to_investment_id?: string | null
+          claimed_at?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          offer_slug: string
+          payload?: Json
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          applied_to_investment_id?: string | null
+          claimed_at?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          offer_slug?: string
+          payload?: Json
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_offers_offer_slug_fkey"
+            columns: ["offer_slug"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["slug"]
           },
         ]
       }

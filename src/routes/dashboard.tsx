@@ -10,6 +10,7 @@ import { RequirePhoneVerified } from "@/components/RequirePhoneVerified";
 import { getMyWallet, getMyInvestments, getMyDeposits, getMyWithdrawals, updateBinanceUid } from "@/lib/wallet.functions";
 import { QuickInvestForm } from "@/components/QuickInvestModal";
 import { WelcomeBonusBanner } from "@/components/WelcomeBonusBanner";
+import { OffersBanner } from "@/components/Offers";
 import { listPlans } from "@/lib/plans.functions";
 
 export const Route = createFileRoute("/dashboard")({
@@ -181,6 +182,7 @@ function Dashboard() {
   return (
     <Section className="!py-10">
       {userId && <WelcomeBonusBanner userId={userId} />}
+      <OffersBanner />
       {demoType === "demo" && (
         <div className="mb-6 rounded-2xl border border-success/30 bg-success/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-start gap-3">

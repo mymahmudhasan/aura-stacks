@@ -1,17 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
-import { Lock, TrendingUp, Timer, Layers, Gift, Zap, Sparkles, Flame, BadgePercent, Crown } from "lucide-react";
-import { CTA, GlassCard, PageHero, Section } from "@/components/ui-bits";
+import { Lock, TrendingUp, Timer, Layers } from "lucide-react";
+import { GlassCard, PageHero, Section } from "@/components/ui-bits";
 import { InvestButton } from "@/components/InvestButton";
 import { ServiceReferral } from "@/components/ServiceReferral";
 import { StakingTimeline } from "@/components/StakingTimeline";
 import { StakingPool } from "@/components/StakingPool";
 import { PlansEmpty, PlansError, PlansLoading } from "@/components/PlansState";
+import { OffersGrid } from "@/components/Offers";
 import { listPlans } from "@/lib/plans.functions";
 import stakingImg from "@/assets/staking-visual.webp";
 import vaultImg from "@/assets/staking-vault.webp";
 import poolImg from "@/assets/staking-pool.webp";
 import rewardsImg from "@/assets/staking-rewards.webp";
+
 
 export const Route = createFileRoute("/staking")({
   component: Staking,
@@ -29,41 +31,6 @@ type DBPlan = {
   duration_days: number | null; flex: string | null;
   is_popular: boolean; badge: string | null;
 };
-
-const offers = [
-  {
-    icon: <Sparkles className="w-5 h-5" />,
-    badge: "New investor",
-    title: "+3% Welcome APY Boost",
-    desc: "First-time stakers get an extra 3% APY for the first 30 days on any plan. Auto-applied at first stake.",
-    accent: "primary" as const,
-    cta: "Claim boost",
-  },
-  {
-    icon: <Crown className="w-5 h-5" />,
-    badge: "VIP · 12 month",
-    title: "Lock $5,000+ → 42% APY",
-    desc: "Premium tier upgrade with priority withdrawals, dedicated manager and free monthly compounding.",
-    accent: "gold" as const,
-    cta: "Go VIP",
-  },
-  {
-    icon: <Flame className="w-5 h-5" />,
-    badge: "Limited · 7 days",
-    title: "Double Daily Rewards",
-    desc: "Stake any USDT plan this week and receive 2× daily payouts for the first 14 days. Stackable with welcome boost.",
-    accent: "primary" as const,
-    cta: "Activate offer",
-  },
-  {
-    icon: <Gift className="w-5 h-5" />,
-    badge: "Refer & earn",
-    title: "$25 Bonus per Friend",
-    desc: "Get $25 USDT credited instantly when a referred friend stakes $500+. Unlimited referrals.",
-    accent: "gold" as const,
-    cta: "Get my link",
-  },
-];
 
 function Staking() {
   const [tiers, setTiers] = useState<DBPlan[]>([]);
@@ -131,31 +98,11 @@ function Staking() {
         </div>
       </Section>
 
-      {/* Limited offers */}
-      <Section eyebrow="Live offers" title={<>Limited-time <span className="gradient-text">staking offers</span></>} subtitle="Stack these promos with any plan to maximize your APY. Offers refresh weekly.">
-        <div className="grid sm:grid-cols-2 gap-5">
-          {offers.map((o) => (
-            <div key={o.title} className={`relative rounded-2xl p-6 overflow-hidden ${o.accent === "gold" ? "glass-strong border-gold/30" : "glass"}`}>
-              <div className={`absolute -top-16 -right-16 w-48 h-48 rounded-full blur-3xl opacity-30 ${o.accent === "gold" ? "bg-[image:var(--gradient-gold)]" : "bg-primary"}`} />
-              <div className="relative flex items-start gap-4">
-                <div className={`shrink-0 w-12 h-12 rounded-xl flex items-center justify-center ${o.accent === "gold" ? "bg-[image:var(--gradient-gold)] text-gold-foreground" : "bg-primary/15 text-primary"}`}>
-                  {o.icon}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <span className={`inline-flex items-center gap-1 text-[10px] uppercase tracking-widest px-2 py-1 rounded-full ${o.accent === "gold" ? "bg-gold/15 text-gold border border-gold/20" : "bg-primary/15 text-primary border border-primary/20"}`}>
-                    <BadgePercent className="w-3 h-3" /> {o.badge}
-                  </span>
-                  <h3 className="text-lg md:text-xl font-bold mt-2">{o.title}</h3>
-                  <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{o.desc}</p>
-                  <CTA to="/register" variant={o.accent === "gold" ? "gold" : "primary"} className="mt-4">
-                    <Zap className="w-4 h-4" /> {o.cta}
-                  </CTA>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+      {/* Live functional offers */}
+      <Section eyebrow="Live offers" title={<>Limited-time <span className="gradient-text">staking offers</span></>} subtitle="Claim, activate and stack these real promos. Boost effects apply automatically to your eligible stakes.">
+        <OffersGrid />
       </Section>
+
 
       <Section
         eyebrow="Daily reward pool"

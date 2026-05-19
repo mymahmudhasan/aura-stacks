@@ -148,7 +148,10 @@ function Admin() {
       {tab === "overview" && <OverviewTab ov={overview} recentCustomers={recentCustomers} recentTickets={recentTickets} onJump={setTab} />}
       {tab === "customers" && <CustomersTab onToast={showToast} onMutated={loadOverview} />}
       {tab === "tickets" && <TicketsTab onToast={showToast} onMutated={loadOverview} />}
+      {tab === "livechat" && <AdminLiveChatTab adminName={adminName} />}
       {tab === "payouts" && <PayoutsTab />}
+      {tab === "packages" && <PackagesTab onToast={showToast} />}
+      {tab === "settings" && <SettingsTab onToast={showToast} />}
       {tab === "packages" && <PackagesTab onToast={showToast} />}
       {tab === "settings" && <SettingsTab onToast={showToast} />}
 

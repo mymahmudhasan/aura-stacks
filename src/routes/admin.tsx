@@ -93,6 +93,7 @@ function Admin() {
     { id: "overview", label: "Overview", icon: <LayoutDashboard className="w-4 h-4" /> },
     { id: "customers", label: "Customers", icon: <Users className="w-4 h-4" />, badge: overview?.customers_pending || undefined },
     { id: "tickets", label: "Tickets", icon: <MessageSquare className="w-4 h-4" />, badge: overview?.open_tickets || undefined },
+    { id: "livechat", label: "Live Chat", icon: <Headphones className="w-4 h-4" /> },
     { id: "payouts", label: "Payouts", icon: <BanknoteArrowUp className="w-4 h-4" /> },
     { id: "packages", label: "Packages", icon: <Package className="w-4 h-4" /> },
     { id: "settings", label: "Settings", icon: <Settings className="w-4 h-4" /> },

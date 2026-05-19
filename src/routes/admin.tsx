@@ -642,7 +642,141 @@ function TicketsTab({ onToast, onMutated }: { onToast: (k: "ok" | "err", m: stri
   );
 }
 
-/* ---------------- Payouts ---------------- */
+function TicketRow({
+  t,
+  onStatusChange,
+  onToast,
+}: {
+  t: Ticket;
+  onStatusChange: (status: Ticket["status"]) => void;
+  onToast: (k: "ok" | "err", m: string) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [thread, setThread] = useState<Array<{ id: string; author_name: string; is_staff: boolean; body: string; created_at: string }>>([]);
+  const [loadingThread, setLoadingThread] = useState(false);
+  const [reply, setReply] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const loadThread = useCallback(async () => {
+    setLoadingThread(true);
+    const { data } = await supabase
+      .from("ticket_messages")
+      .select("id,author_name,is_staff,body,created_at")
+      .eq("ticket_id", t.id)
+      .order("created_at", { ascending: true });
+    setThread(data ?? []);
+    setLoadingThread(false);
+  }, [t.id]);
+
+  useEffect(() => {
+    if (expanded) void loadThread();
+  }, [expanded, loadThread]);
+
+  const sendReply = async () => {
+    const body = reply.trim();
+    if (!body) return;
+    setSending(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      const author_name =
+        (u.user?.user_metadata as { full_name?: string } | undefined)?.full_name ||
+        u.user?.email ||
+        "Support";
+      const { replyToTicket } = await import("@/lib/support.functions");
+      await replyToTicket({
+        data: { ticket_id: t.id, body, author_name, author_id: u.user?.id ?? null },
+      });
+      setReply("");
+      await loadThread();
+      onStatusChange("in_progress");
+      onToast("ok", "Reply sent");
+    } catch (err) {
+      onToast("err", err instanceof Error ? err.message : "Reply failed");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="rounded-xl glass p-3.5">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[10px] font-mono text-primary">{t.ticket_number}</span>
+            <PriorityPill v={t.priority} />
+            <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{t.category}</span>
+            {(t as Ticket & { source?: string }).source === "live_chat" && (
+              <span className="text-[10px] uppercase tracking-widest text-primary bg-primary/10 px-1.5 py-0.5 rounded">live chat</span>
+            )}
+          </div>
+          <p className="font-medium mt-1">{t.subject}</p>
+          <p className="text-xs text-muted-foreground truncate">{t.full_name} · {t.email}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <select
+            value={t.status}
+            onChange={(e) => onStatusChange(e.target.value as Ticket["status"])}
+            className="px-2 py-1.5 rounded-lg bg-input border border-border text-xs"
+          >
+            <option value="open">open</option>
+            <option value="in_progress">in_progress</option>
+            <option value="resolved">resolved</option>
+            <option value="closed">closed</option>
+          </select>
+          <button
+            onClick={() => setExpanded((v) => !v)}
+            className="text-[11px] px-2 py-1.5 rounded-lg glass hover:border-primary/40"
+          >
+            {expanded ? "Hide" : "Open"}
+          </button>
+        </div>
+      </div>
+      <p className="mt-2 text-xs text-muted-foreground line-clamp-2">{t.message}</p>
+      <p className="mt-2 text-[10px] text-muted-foreground">Opened {new Date(t.created_at).toLocaleString()}</p>
+
+      {expanded && (
+        <div className="mt-3 border-t border-border/50 pt-3 space-y-2">
+          {loadingThread ? (
+            <div className="py-4 flex justify-center"><Loader2 className="w-4 h-4 animate-spin text-primary" /></div>
+          ) : thread.length === 0 ? (
+            <p className="text-[11px] text-muted-foreground text-center py-2">No replies yet.</p>
+          ) : (
+            <div className="space-y-2 max-h-72 overflow-y-auto">
+              {thread.map((m) => (
+                <div key={m.id} className={`flex ${m.is_staff ? "justify-end" : "justify-start"}`}>
+                  <div className={`max-w-[80%] px-3 py-2 rounded-xl text-xs ${m.is_staff ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-white/5 border border-border rounded-bl-sm"}`}>
+                    <p className="text-[10px] font-semibold opacity-80 mb-0.5">{m.author_name}</p>
+                    <p className="whitespace-pre-wrap break-words">{m.body}</p>
+                    <p className="text-[9px] opacity-60 mt-1">{new Date(m.created_at).toLocaleString()}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="flex items-center gap-2 pt-2">
+            <input
+              type="text"
+              value={reply}
+              onChange={(e) => setReply(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void sendReply(); } }}
+              placeholder="Reply as admin…"
+              maxLength={4000}
+              className="flex-1 px-3 py-2 rounded-lg bg-input/50 border border-border focus:border-primary outline-none text-xs"
+            />
+            <button
+              onClick={() => void sendReply()}
+              disabled={sending || !reply.trim()}
+              className="px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium disabled:opacity-50 inline-flex items-center gap-1.5"
+            >
+              {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Send reply"}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 type PayoutSortKey = "ran_at" | "amount";
 

@@ -250,9 +250,12 @@ function Dashboard() {
               <p className="font-extrabold gradient-text text-4xl sm:text-5xl mt-1 leading-none tabular-nums">
                 {fmtUsd(portfolioEquity, 6)}
               </p>
-              <p className="text-xs text-success font-semibold mt-2 tabular-nums">
-                +{fmtUsd(earningsToday, 6)} today
-              </p>
+              <div className="mt-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-success/10 border border-success/30 shadow-[0_0_20px_-4px_hsl(var(--success)/0.5)] animate-pulse">
+                <span className="w-1.5 h-1.5 rounded-full bg-success animate-ping" />
+                <span className="text-sm font-extrabold text-success tabular-nums tracking-tight">
+                  +{fmtUsd(earningsToday, 6)} today
+                </span>
+              </div>
             </div>
             <div className="flex flex-wrap gap-2">
               <Link to="/deposit" className="rounded-xl px-4 py-2.5 text-sm font-semibold inline-flex items-center gap-2 bg-[image:var(--gradient-gold)] text-gold-foreground glow-gold hover:opacity-90 transition">

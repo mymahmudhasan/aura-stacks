@@ -154,6 +154,10 @@ function DepositPage() {
       <h1 className="text-2xl md:text-3xl font-bold mb-2">Deposit funds</h1>
       <p className="text-muted-foreground mb-6">Send USDT to the address below and submit your transaction hash for confirmation.</p>
 
+      <HowToFindGuide network={network} />
+
+
+
       {onchainEnabled && (
         <WalletPayCard
           settings={settings}

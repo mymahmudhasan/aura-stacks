@@ -290,7 +290,7 @@ function useWidgetFlags() {
 export function Layout() {
   const flags = useWidgetFlags();
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col overflow-x-hidden">
       <Header />
       <main className="flex-1">
         <Outlet />

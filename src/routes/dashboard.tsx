@@ -248,7 +248,7 @@ function Dashboard() {
                 Portfolio Equity · Live
               </div>
               <p className="font-extrabold gradient-text text-4xl sm:text-5xl mt-1 leading-none tabular-nums">
-                {fmtUsd(portfolioEquity, 2)}
+                {fmtUsd(portfolioEquity, 6)}
               </p>
               <p className="text-xs text-success font-semibold mt-2 tabular-nums">
                 +{fmtUsd(earningsToday, 6)} today

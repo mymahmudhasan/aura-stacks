@@ -11,7 +11,7 @@ import { RequirePhoneVerified } from "@/components/RequirePhoneVerified";
 import { getMyWallet, getMyInvestments, getMyDeposits, getMyWithdrawals, updateBinanceUid } from "@/lib/wallet.functions";
 import { QuickInvestForm } from "@/components/QuickInvestModal";
 import { WelcomeBonusBanner } from "@/components/WelcomeBonusBanner";
-import { OffersBanner } from "@/components/Offers";
+import { OffersBanner, useOffersData } from "@/components/Offers";
 import { listPlans } from "@/lib/plans.functions";
 
 export const Route = createFileRoute("/dashboard")({

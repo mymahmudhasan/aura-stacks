@@ -15,6 +15,7 @@ import { OffersBanner } from "@/components/Offers";
 import { listPlans } from "@/lib/plans.functions";
 
 export const Route = createFileRoute("/dashboard")({
+  ssr: false,
   beforeLoad: async () => {
     const { data } = await supabase.auth.getSession();
     if (!data.session) throw redirect({ to: "/login" });

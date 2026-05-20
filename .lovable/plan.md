@@ -1,47 +1,53 @@
-## Goal
-Verify every link works, audit UI/UX of all pages (including user + admin dashboards), and fix issues as I go.
+# Wipe demo data — keep only admin `tshirtkella@gmail.com`
 
-## Link audit (already done in exploration)
-All 23 distinct `<Link to="...">` targets in the codebase resolve to existing route files — no broken internal links:
-`/`, `/about`, `/admin`, `/admin/operations`, `/affiliate`, `/ai-trading`, `/contact`, `/dashboard`, `/deposit`, `/faq`, `/forgot-password`, `/login`, `/mining`, `/privacy`, `/referrals`, `/register`, `/settings`, `/staking`, `/support`, `/terms`, `/transactions`, `/wallet`, `/withdraw`.
+Goal: remove every other user and all transactional/demo data from the database, leaving a clean production-ready backend with only one admin account.
 
-Still to verify at runtime: 404s, console errors, broken buttons / dead actions, anchor links.
+## Users currently in the system
 
-## Pass 1 — Public pages (live in browser, desktop + mobile)
-For each of: `/`, `/mining`, `/staking`, `/ai-trading`, `/affiliate`, `/about`, `/faq`, `/support`, `/contact`, `/terms`, `/privacy`, `/login`, `/register`, `/forgot-password`.
+| Email | Role | Keep? |
+|---|---|---|
+| tshirtkella@gmail.com | admin + user | KEEP (sole admin) |
+| admin@novatrad.ai | admin + user | delete |
+| protapc2@gmail.com | admin + user | delete |
+| protapc9@gmail.com | user | delete |
+| protapc17@gmail.com | user | delete |
+| anutapchandradas.2000@gmail.com | user | delete |
+| bappyd549@gmail.com | user | delete |
+| mymahmudhasan2000@gmail.com | user | delete |
 
-For each page I will:
-- Load it, screenshot desktop (1280) + mobile (390)
-- Check console + network for errors
-- Click every visible link / CTA, verify it goes somewhere sensible
-- Note UI issues: horizontal scroll, overflow, clipped text, broken images, contrast, alignment, mobile layout breaks, dead buttons
+After cleanup: 1 user (`tshirtkella@gmail.com`) with `admin` role only.
 
-Known issue already spotted at 889px viewport: home page has horizontal scroll (ticker / hero overflow).
+## What gets wiped (all rows, not just for deleted users)
 
-## Pass 2 — User dashboard (auth-gated)
-Routes: `/dashboard`, `/wallet`, `/deposit`, `/withdraw`, `/transactions`, `/settings`, `/referrals`.
+Transactional / demo content — full table truncate:
+- `wallet_transactions`, `deposits`, `withdrawals`
+- `investments`, `investment_earnings`
+- `referrals`, `referral_earnings`, `referral_bonuses`
+- `welcome_bonuses`, `user_offers`, `payout_runs`
+- `support_messages`, `support_conversations`
+- `ticket_messages`, `tickets`
+- `phone_otp_codes`
 
-Approach:
-- If you can log me in (just sign into the preview in the browser, then tell me), I'll test these live click-by-click.
-- Otherwise I'll do a static review: read each route file, trace every button's handler, verify server-fn calls, check loading/error/empty states, check mobile layout via code.
+Kept intact:
+- `investment_plans`, `offers`, `payment_providers`, `payout_config`, `site_settings`, `support_bot_replies` (configuration, not user data)
+- `profiles`, `customers`, `user_roles` rows for tshirtkella only
+- Admin's `customers` row reset: balance/deposited/withdrawn = 0, account_type = `real`, status = `active`
 
-## Pass 3 — Admin dashboard
-Routes: `/admin` (1516 lines, many tabs), `/admin/operations`, `/admin.reset-password`, `/admin.sms-test`.
+## Auth users
 
-Same approach — live click-through if you're logged in as admin, otherwise static review of each tab + action.
+`auth.users` rows for the 7 deleted accounts will be removed via a `SECURITY DEFINER` cleanup function (the migration runner cannot delete from `auth` directly). Deleting from `auth.users` cascades to the public tables that reference `user_id`.
 
-## Pass 4 — Fixes
-I'll fix everything I find in priority order:
-1. Broken links / runtime errors / dead buttons (functional bugs)
-2. Mobile layout breaks, horizontal scroll, overflow
-3. Contrast / clipped text / spacing
-4. Polish (alignment, hover states, empty states)
+## Steps
 
-Each fix is a small targeted edit — no rewrites of working code.
+1. Run a migration that:
+   - Truncates the transactional tables listed above.
+   - Deletes `user_roles`, `customers`, `profiles` for all non-admin users.
+   - Defines + executes a one-shot SECURITY DEFINER function that deletes the 7 unwanted rows from `auth.users`, then drops the function.
+   - Resets the admin's `customers` row to zeroed real-account state.
+2. Verify counts: 1 row each in `profiles`, `customers`, `user_roles`; 0 rows in transactional tables.
 
-## Deliverable
-- A short findings list per page (what was wrong, what I fixed)
-- Any items I couldn't fix without your input (e.g. business-logic questions) flagged separately
+## Notes
 
-## One thing I need from you
-The preview browser I use is a separate session from yours — it's not logged in. To live-test `/dashboard` and `/admin`, please **sign in once in the preview window on your side** (any account for dashboard, admin account for admin pages). If you'd rather skip that, say so and I'll do those two passes as static code review only.
+- This is destructive and irreversible. All historical demo deposits/investments/tickets are gone.
+- The admin keeps their existing password and session — no re-login needed.
+- The published landing-page "live ticker" will show no active investments until real users sign up and invest.

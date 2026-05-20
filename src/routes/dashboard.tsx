@@ -457,6 +457,16 @@ function Dashboard() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-[image:var(--gradient-gold)] text-gold-foreground font-bold">Active</span>
                       {matured && <span className="text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded bg-success/20 text-success font-bold">Matured</span>}
+                      {activeOffers.map(({ o }) => (
+                        <span
+                          key={o.slug}
+                          className="inline-flex items-center gap-1 text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30 font-bold"
+                          title={o.title}
+                        >
+                          <Sparkles className="w-3 h-3" />
+                          {o.badge ?? o.title}
+                        </span>
+                      ))}
                     </div>
                     <p className="font-extrabold text-base sm:text-lg mt-0.5 truncate">{featured.plan_name}</p>
                     <div className="text-xs mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">

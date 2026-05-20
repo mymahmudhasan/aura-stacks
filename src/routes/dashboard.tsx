@@ -76,6 +76,7 @@ function Dashboard() {
   const [uidSaving, setUidSaving] = useState(false);
   const [uidMsg, setUidMsg] = useState<string | null>(null);
   const [notifOpen, setNotifOpen] = useState(false);
+  const { offers: allOffers, claimsBySlug } = useOffersData();
   useEffect(() => { setMounted(true); }, []);
   useEffect(() => {
     if (!mounted) return;

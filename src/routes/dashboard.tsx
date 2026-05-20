@@ -1,10 +1,11 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import {
   Wallet, TrendingUp, Activity, Clock, ArrowDownLeft, ArrowUpRight,
-  Cpu, Lock, Brain, Bell, Users, Share2, Sparkles, Gift, Loader2, TrendingDown, RefreshCw, Settings, Check,
+  Cpu, Lock, Brain, Bell, Users, Share2, Sparkles, Gift, Loader2, RefreshCw, Settings, Check,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { CTA, GlassCard, Section } from "@/components/ui-bits";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { RequirePhoneVerified } from "@/components/RequirePhoneVerified";
 import { getMyWallet, getMyInvestments, getMyDeposits, getMyWithdrawals, updateBinanceUid } from "@/lib/wallet.functions";
@@ -52,6 +53,9 @@ const serviceIcon: Record<string, React.ReactNode> = {
   mining: <Cpu className="w-4 h-4 text-primary" />,
   staking: <Lock className="w-4 h-4 text-primary" />,
 };
+
+const fmtUsd = (n: number, frac = 2) =>
+  `$${n.toLocaleString(undefined, { minimumFractionDigits: frac, maximumFractionDigits: frac })}`;
 
 function Dashboard() {
   const [loading, setLoading] = useState(true);
@@ -145,9 +149,7 @@ function Dashboard() {
   const balance = cust?.balance ?? 0;
   const activeInvs = invs.filter((i) => i.status === "active");
   const investedActive = activeInvs.reduce((s, i) => s + Number(i.amount), 0);
-  // Per-package daily ROI — sourced from active investment_plans rows so admin edits flow through.
   const dailyRateFor = (planName: string): number => planRates[planName] ?? 0.01;
-  // Live profit accrual using each package's own daily ROI, ticking every second
   const computeAccrual = (i: Inv): number => {
     const start = i.started_at ? new Date(i.started_at).getTime() : new Date(i.created_at).getTime();
     const end = i.ends_at ? new Date(i.ends_at).getTime() : start + 30 * 86_400_000;
@@ -160,14 +162,12 @@ function Dashboard() {
   const lifetimeEarnings = txns
     .filter((t) => t.kind === "earning")
     .reduce((s, t) => s + Number(t.amount), 0);
-  // Portfolio Equity = cash balance + active invested principal + live accrued profit
   const portfolioEquity = balance + investedActive + liveAccrual;
   const earningsPlusInvested = lifetimeEarnings + liveAccrual + investedActive;
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const earningsToday = txns
     .filter((t) => t.kind === "earning" && new Date(t.created_at) >= today)
     .reduce((s, t) => s + Number(t.amount), 0) + liveAccrual;
-  // Featured (most recent) active package for the highlighted countdown card
   const featured = activeInvs
     .slice()
     .sort((a, b) => {
@@ -179,150 +179,158 @@ function Dashboard() {
   const pendingWdCount = wds.filter((w) => w.status === "pending").length;
   const pendingDepCount = deps.filter((d) => d.status === "pending").length;
 
+  const initials = (cust?.full_name ?? "Investor")
+    .split(/\s+/).slice(0, 2).map((s) => s[0]?.toUpperCase() ?? "").join("") || "IN";
+  const isDemo = demoType === "demo";
+
+  const hasDeposit = Number(cust?.total_deposited ?? 0) > 0 || deps.some((d) => d.status === "approved");
+  const hasInvestment = activeInvs.length > 0;
+  const onboardSteps = [
+    { done: hasDeposit, label: "Make first deposit", to: "/deposit", icon: <ArrowDownLeft className="w-3.5 h-3.5" /> },
+    { done: hasInvestment, label: "Choose an investment", to: "#investments-tab", icon: <Cpu className="w-3.5 h-3.5" /> },
+  ];
+  const onboardDone = onboardSteps.every((s) => s.done);
+
   return (
     <Section className="!py-10">
-      {userId && <WelcomeBonusBanner userId={userId} />}
-      <OffersBanner />
-      {demoType === "demo" && (
-        <div className="mb-6 rounded-2xl border border-success/30 bg-success/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-lg bg-success/20 text-success flex items-center justify-center shrink-0">
-              <Sparkles className="w-4 h-4" />
+      {/* ── HERO ────────────────────────────────────────────────── */}
+      <div className="relative rounded-3xl p-[1.5px] bg-[image:var(--gradient-aurora)] glow-primary animate-fade-in mb-6">
+        <div className="rounded-3xl bg-background/85 backdrop-blur-xl p-5 sm:p-7">
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="w-14 h-14 rounded-2xl bg-[image:var(--gradient-primary)] text-primary-foreground flex items-center justify-center text-lg font-extrabold shadow-[var(--shadow-glow)] shrink-0">
+                {initials}
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">Welcome back</p>
+                <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight truncate">
+                  {cust?.full_name ?? "Investor"}
+                </h1>
+                <div className="mt-1 flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded-full glass text-primary">
+                    #{accountId || "—"}
+                  </span>
+                  <span className={`text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full font-bold ${
+                    isDemo ? "bg-success/15 text-success border border-success/30" : "bg-primary/15 text-primary border border-primary/30"
+                  }`}>
+                    {isDemo ? "Demo" : "Live"}
+                  </span>
+                  <span className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-[image:var(--gradient-gold)] text-gold-foreground font-bold inline-flex items-center gap-1">
+                    <Gift className="w-3 h-3" /> 25% Bonus
+                  </span>
+                </div>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-semibold">You're on a free demo account</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Make your first deposit to unlock real trading, mining and staking — your account upgrades automatically.</p>
+
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <button onClick={() => load(false)} disabled={refreshing} className="glass rounded-xl p-2 hover:bg-primary/10 transition" title="Refresh">
+                {refreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+              </button>
+              <button className="glass rounded-xl p-2 relative" title="Notifications">
+                <Bell className="w-4 h-4" />
+                {(pendingDepCount + pendingWdCount) > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-gold text-gold-foreground text-[10px] font-bold flex items-center justify-center">
+                    {pendingDepCount + pendingWdCount}
+                  </span>
+                )}
+              </button>
+              <Link to="/settings" className="glass rounded-xl p-2 hover:bg-primary/10 transition" title="Settings">
+                <Settings className="w-4 h-4" />
+              </Link>
             </div>
           </div>
-          <Link to="/deposit" className="rounded-xl px-4 py-2 text-sm bg-primary text-primary-foreground glow-primary inline-flex items-center gap-2 shrink-0">
-            <ArrowDownLeft className="w-4 h-4" /> Deposit & go live
+
+          {/* Portfolio Equity headline */}
+          <div className="mt-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-muted-foreground">
+                <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                Portfolio Equity · Live
+              </div>
+              <p className="font-extrabold gradient-text text-4xl sm:text-5xl mt-1 leading-none tabular-nums">
+                {fmtUsd(portfolioEquity, 2)}
+              </p>
+              <p className="text-xs text-success font-semibold mt-2 tabular-nums">
+                +{fmtUsd(earningsToday, 6)} today
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link to="/deposit" className="rounded-xl px-4 py-2.5 text-sm font-semibold inline-flex items-center gap-2 bg-[image:var(--gradient-gold)] text-gold-foreground glow-gold hover:opacity-90 transition">
+                <ArrowDownLeft className="w-4 h-4" /> Deposit
+              </Link>
+              <Link to="/withdraw" className="rounded-xl px-4 py-2.5 text-sm font-semibold inline-flex items-center gap-2 glass hover:bg-primary/10 transition">
+                <ArrowUpRight className="w-4 h-4 text-gold" /> Withdraw
+              </Link>
+              <Link to="/referrals" className="rounded-xl px-4 py-2.5 text-sm font-semibold inline-flex items-center gap-2 bg-primary text-primary-foreground glow-primary">
+                <Share2 className="w-4 h-4" /> Refer
+              </Link>
+            </div>
+          </div>
+
+          {/* Mini KPIs */}
+          <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <MiniKpi icon={<Wallet className="w-3.5 h-3.5" />} label="Balance" value={fmtUsd(balance)} />
+            <MiniKpi icon={<TrendingUp className="w-3.5 h-3.5" />} label="Invested" value={fmtUsd(investedActive)} positive />
+            <MiniKpi icon={<Activity className="w-3.5 h-3.5" />} label="Lifetime" value={fmtUsd(earningsPlusInvested)} positive />
+            <MiniKpi icon={<Clock className="w-3.5 h-3.5" />} label="Pending withdrawals" value={fmtUsd(pendingWdAmount)} sub={`${pendingWdCount} req`} />
+          </div>
+        </div>
+      </div>
+
+      {userId && <div className="mb-4"><WelcomeBonusBanner userId={userId} /></div>}
+
+      {/* Demo strip */}
+      {isDemo && (
+        <div className="mb-4 rounded-2xl border border-success/30 bg-success/5 px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <Sparkles className="w-4 h-4 text-success shrink-0" />
+            <p className="text-sm">
+              <span className="font-semibold">You're on a free demo.</span>{" "}
+              <span className="text-muted-foreground">Deposit to unlock real trading, mining and staking.</span>
+            </p>
+          </div>
+          <Link to="/deposit" className="rounded-lg px-3 py-1.5 text-xs font-semibold bg-success text-success-foreground inline-flex items-center gap-1.5 shrink-0">
+            <ArrowDownLeft className="w-3.5 h-3.5" /> Go live
           </Link>
         </div>
       )}
 
-      <div className="mb-6 rounded-2xl border border-gold/40 bg-gold/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 relative overflow-hidden">
-        <div className="relative flex items-start gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[image:var(--gradient-gold)] text-gold-foreground flex items-center justify-center shrink-0 shadow-[var(--shadow-gold)]">
-            <Gift className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-sm font-bold"><span className="gradient-text">25% Deposit Bonus</span> — Limited time offer</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Top up your account now and receive an extra 25% credited after admin approval.</p>
-          </div>
-        </div>
-        <Link to="/deposit" className="relative shrink-0 rounded-xl px-4 py-2 text-sm font-semibold bg-[image:var(--gradient-gold)] text-gold-foreground glow-gold inline-flex items-center gap-2 hover:opacity-90 transition">
-          <ArrowDownLeft className="w-4 h-4" /> Deposit & Claim 25%
-        </Link>
-      </div>
-
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-        <div>
-          <p className="text-sm text-muted-foreground">Welcome back,</p>
-          <h1 className="text-2xl md:text-3xl font-bold">
-            {cust?.full_name ?? "Investor"} <span className="gradient-text">#{accountId || "—"}</span>
-          </h1>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Link to="/deposit" className="rounded-xl px-4 py-2 text-sm font-semibold inline-flex items-center gap-2 bg-[image:var(--gradient-gold)] text-gold-foreground glow-gold hover:opacity-90 transition">
-            <ArrowDownLeft className="w-4 h-4" /> Deposit
-          </Link>
-          <Link to="/withdraw" className="glass rounded-xl px-4 py-2 text-sm flex items-center gap-2 hover:bg-primary/10 transition">
-            <ArrowUpRight className="w-4 h-4 text-gold" /> Withdraw
-          </Link>
-          <Link to="/transactions" className="glass rounded-xl px-4 py-2 text-sm flex items-center gap-2 hover:bg-primary/10 transition">
-            <Activity className="w-4 h-4 text-primary" /> Transactions
-          </Link>
-          <Link to="/wallet" className="glass rounded-xl px-4 py-2 text-sm flex items-center gap-2 hover:bg-primary/10 transition">
-            <Wallet className="w-4 h-4" /> Wallet
-          </Link>
-          <Link to="/referrals" className="rounded-xl px-4 py-2 text-sm flex items-center gap-2 bg-primary text-primary-foreground glow-primary">
-            <Share2 className="w-4 h-4" /> Referrals
-          </Link>
-          <button onClick={() => load(false)} disabled={refreshing} className="glass rounded-xl p-2 hover:bg-primary/10 transition" title="Refresh">
-            {refreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-          </button>
-          <button className="glass rounded-xl p-2 relative" title="Notifications">
-            <Bell className="w-4 h-4" />
-            {(pendingDepCount + pendingWdCount) > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-gold text-gold-foreground text-[10px] font-bold flex items-center justify-center">
-                {pendingDepCount + pendingWdCount}
-              </span>
-            )}
-          </button>
-          <Link to="/settings" className="glass rounded-xl p-2 hover:bg-primary/10 transition" title="Account Settings">
-            <Settings className="w-4 h-4" />
-          </Link>
-        </div>
-      </div>
-
-      {(() => {
-        const hasDeposit = Number(cust?.total_deposited ?? 0) > 0 || deps.some((d) => d.status === "approved");
-        const hasInvestment = activeInvs.length > 0;
-        const steps = [
-          { done: hasDeposit, label: "Make first deposit", to: "/deposit", icon: <ArrowDownLeft className="w-3.5 h-3.5" /> },
-          { done: hasInvestment, label: "Choose an investment package", to: "#active-investments", icon: <Cpu className="w-3.5 h-3.5" /> },
-        ];
-        const completed = steps.filter((s) => s.done).length;
-        if (completed === steps.length) return null;
-        const pct = Math.round((completed / steps.length) * 100);
-        return (
-          <div className="mb-6 rounded-2xl border border-primary/20 bg-card/40 backdrop-blur p-4">
-            <div className="flex items-center justify-between gap-3 mb-3">
-              <div>
-                <p className="text-sm font-semibold">2 steps to get started</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{completed} of {steps.length} complete</p>
-              </div>
-              <span className="text-xs font-bold text-primary">{pct}%</span>
-            </div>
-            <div className="h-1.5 rounded-full bg-muted overflow-hidden mb-4">
-              <div className="h-full bg-[image:var(--gradient-primary)] transition-all" style={{ width: `${pct}%` }} />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {steps.map((s) => {
-                const isAnchor = s.to.startsWith("#");
-                const className = `rounded-xl border px-3 py-2.5 flex items-center gap-2 text-xs transition ${
-                  s.done
-                    ? "border-success/30 bg-success/10 text-success"
-                    : "border-border bg-background/40 hover:bg-primary/10 hover:border-primary/30"
-                }`;
-                const inner = (
-                  <>
-                    <span className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
-                      s.done ? "bg-success text-success-foreground" : "border border-border text-muted-foreground"
-                    }`}>
-                      {s.done ? <Check className="w-3 h-3" /> : s.icon}
-                    </span>
-                    <span className={`font-medium truncate ${s.done ? "line-through opacity-80" : ""}`}>{s.label}</span>
-                  </>
-                );
-                if (isAnchor) {
-                  return (
-                    <a
-                      key={s.label}
-                      href={s.to}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        const el = document.getElementById(s.to.slice(1));
-                        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-                      }}
-                      className={className}
-                    >
-                      {inner}
-                    </a>
-                  );
-                }
+      {/* Onboarding pill */}
+      {!onboardDone && (
+        <div className="mb-4 rounded-2xl border border-primary/20 bg-card/40 backdrop-blur px-4 py-3 flex items-center gap-3 flex-wrap">
+          <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground shrink-0">Get started</p>
+          <div className="flex items-center gap-2 flex-wrap flex-1">
+            {onboardSteps.map((s) => {
+              const isAnchor = s.to.startsWith("#");
+              const cls = `inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition ${
+                s.done
+                  ? "border-success/30 bg-success/10 text-success"
+                  : "border-border bg-background/40 hover:bg-primary/10 hover:border-primary/30"
+              }`;
+              const inner = (
+                <>
+                  <span className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${s.done ? "bg-success text-success-foreground" : "border border-border text-muted-foreground"}`}>
+                    {s.done ? <Check className="w-2.5 h-2.5" /> : s.icon}
+                  </span>
+                  <span className={`font-medium ${s.done ? "line-through opacity-80" : ""}`}>{s.label}</span>
+                </>
+              );
+              if (isAnchor) {
                 return (
-                  <Link key={s.label} to={s.to} className={className}>
-                    {inner}
-                  </Link>
+                  <a key={s.label} href={s.to} onClick={(e) => {
+                    e.preventDefault();
+                    const el = document.getElementById(s.to.slice(1));
+                    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }} className={cls}>{inner}</a>
                 );
-              })}
-            </div>
+              }
+              return <Link key={s.label} to={s.to} className={cls}>{inner}</Link>;
+            })}
           </div>
-        );
-      })()}
+        </div>
+      )}
 
-      {/* Featured active package — highlighted countdown right under user name/ID */}
+      {/* Featured active package countdown */}
       {featured && (() => {
         const start = featured.started_at ? new Date(featured.started_at).getTime() : new Date(featured.created_at).getTime();
         const end = featured.ends_at ? new Date(featured.ends_at).getTime() : start + 30 * 86_400_000;
@@ -337,7 +345,7 @@ function Dashboard() {
         const accrued = computeAccrual(featured);
         const dailyPct = dailyRateFor(featured.plan_name) * 100;
         return (
-          <div className="mb-6 rounded-2xl p-[1.5px] bg-[image:var(--gradient-aurora)] glow-primary animate-fade-in">
+          <div className="mb-4 rounded-2xl p-[1.5px] bg-[image:var(--gradient-aurora)] animate-fade-in">
             <div className="rounded-2xl bg-background/85 backdrop-blur-xl p-4 sm:p-5">
               <div className="flex items-center justify-between gap-4 flex-wrap">
                 <div className="flex items-center gap-3 min-w-0">
@@ -346,18 +354,14 @@ function Dashboard() {
                   </div>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-[image:var(--gradient-gold)] text-gold-foreground font-bold">Active Package</span>
+                      <span className="text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded-full bg-[image:var(--gradient-gold)] text-gold-foreground font-bold">Active</span>
                       {matured && <span className="text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded bg-success/20 text-success font-bold">Matured</span>}
                     </div>
                     <p className="font-extrabold text-base sm:text-lg mt-0.5 truncate">{featured.plan_name}</p>
                     <div className="text-xs mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-                      <span className="capitalize"><span className="text-muted-foreground">Plan:</span> <span className="text-foreground font-semibold">{featured.service.replace("_", " ")}</span></span>
+                      <span><span className="text-muted-foreground">Invested:</span> <span className="font-semibold">${Number(featured.amount).toLocaleString()}</span></span>
                       <span className="text-muted-foreground">•</span>
-                      <span><span className="text-muted-foreground">Invested:</span> <span className="text-foreground font-semibold">${Number(featured.amount).toLocaleString()}</span></span>
-                      <span className="text-muted-foreground">•</span>
-                      <span><span className="text-muted-foreground">Daily profit:</span> <span className="text-success font-semibold">{dailyPct.toFixed(3)}%</span></span>
-                      <span className="text-muted-foreground">•</span>
-                      <span><span className="text-muted-foreground">Duration:</span> <span className="text-foreground font-semibold">{Math.max(1, Math.round((end - start) / 86_400_000))} days</span></span>
+                      <span><span className="text-muted-foreground">Daily:</span> <span className="text-success font-semibold">{dailyPct.toFixed(3)}%</span></span>
                     </div>
                   </div>
                 </div>
@@ -380,42 +384,45 @@ function Dashboard() {
                 <div className="h-full bg-[image:var(--gradient-primary)] transition-all duration-700" style={{ width: `${pct}%` }} />
               </div>
               {activeInvs.length > 1 && (
-                <p className="text-[11px] text-muted-foreground mt-2">+{activeInvs.length - 1} more active package{activeInvs.length - 1 === 1 ? "" : "s"} below</p>
+                <p className="text-[11px] text-muted-foreground mt-2">+{activeInvs.length - 1} more active package{activeInvs.length - 1 === 1 ? "" : "s"} — see Investments tab</p>
               )}
             </div>
           </div>
         );
       })()}
 
-      <div className={`mb-6 rounded-2xl border p-4 flex flex-col gap-3 ${cust?.binance_uid ? "border-primary/30 bg-primary/5" : "border-destructive/40 bg-destructive/5"}`}>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="flex items-start gap-3">
-            <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${cust?.binance_uid ? "bg-[image:var(--gradient-gold)] text-gold-foreground" : "bg-destructive/20 text-destructive"}`}>
-              <ArrowUpRight className="w-4 h-4" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold">
-                {cust?.binance_uid
-                  ? "Withdrawals are sent manually to your Binance wallet."
-                  : "Set your Binance UID to enable withdrawals."}
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {cust?.binance_uid
-                  ? "Payouts are processed within 24 hours. Tap your UID to update it."
-                  : "Without a UID on file we can't send your payouts. Add it here in seconds."}
-              </p>
-            </div>
+      {/* Binance UID — compact when set, expanded when missing */}
+      {cust?.binance_uid && !uidEditing ? (
+        <div className="mb-6 rounded-xl border border-primary/20 bg-primary/5 px-4 py-2.5 flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2 text-xs">
+            <ArrowUpRight className="w-3.5 h-3.5 text-gold" />
+            <span className="text-muted-foreground">Withdrawals →</span>
+            <span className="font-mono font-semibold text-primary">Binance UID · {cust.binance_uid}</span>
           </div>
-          {!uidEditing ? (
-            <button
-              type="button"
-              onClick={() => { setUidInput(cust?.binance_uid ?? ""); setUidMsg(null); setUidEditing(true); }}
-              className="text-xs font-mono px-3 py-1.5 rounded-lg glass hover:bg-primary/10 transition inline-flex items-center gap-2"
-            >
-              <span className="text-primary">UID · {cust?.binance_uid ?? "not set"}</span>
-              <span className="text-[10px] uppercase tracking-widest text-muted-foreground">{cust?.binance_uid ? "Edit" : "Add"}</span>
-            </button>
-          ) : (
+          <button
+            type="button"
+            onClick={() => { setUidInput(cust?.binance_uid ?? ""); setUidMsg(null); setUidEditing(true); }}
+            className="text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground"
+          >
+            Edit
+          </button>
+        </div>
+      ) : (
+        <div className={`mb-6 rounded-2xl border p-4 ${cust?.binance_uid ? "border-primary/30 bg-primary/5" : "border-destructive/40 bg-destructive/5"}`}>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${cust?.binance_uid ? "bg-[image:var(--gradient-gold)] text-gold-foreground" : "bg-destructive/20 text-destructive"}`}>
+                <ArrowUpRight className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold">
+                  {cust?.binance_uid ? "Update your Binance UID" : "Set your Binance UID to enable withdrawals."}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {cust?.binance_uid ? "Payouts go to this UID within 24 hours." : "Without a UID on file we can't send your payouts."}
+                </p>
+              </div>
+            </div>
             <form
               onSubmit={async (e) => {
                 e.preventDefault();
@@ -431,7 +438,7 @@ function Dashboard() {
               className="flex items-center gap-2 w-full sm:w-auto"
             >
               <input
-                autoFocus
+                autoFocus={uidEditing}
                 value={uidInput}
                 onChange={(e) => setUidInput(e.target.value)}
                 placeholder="284910321"
@@ -440,79 +447,189 @@ function Dashboard() {
               <button type="submit" disabled={uidSaving || uidInput.trim().length < 3} className="rounded-lg px-3 py-1.5 text-xs font-semibold bg-primary text-primary-foreground glow-primary disabled:opacity-60 inline-flex items-center gap-1">
                 {uidSaving && <Loader2 className="w-3 h-3 animate-spin" />} Save
               </button>
-              <button type="button" onClick={() => { setUidEditing(false); setUidMsg(null); }} className="text-xs text-muted-foreground hover:text-foreground px-2">Cancel</button>
+              {cust?.binance_uid && (
+                <button type="button" onClick={() => { setUidEditing(false); setUidMsg(null); }} className="text-xs text-muted-foreground hover:text-foreground px-2">Cancel</button>
+              )}
             </form>
-          )}
+          </div>
+          {uidMsg && <p className="text-xs text-destructive mt-2">{uidMsg}</p>}
         </div>
-        {uidMsg && <p className="text-xs text-destructive">{uidMsg}</p>}
-      </div>
+      )}
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Stat icon={<Wallet />} label="Total Balance" value={`$${balance.toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 })}`} trend={demoType === "demo" ? "Demo" : "Live"} highlight />
-        <Stat icon={<TrendingUp />} label="Portfolio Equity" value={`$${portfolioEquity.toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 })}`} trend="Live" positive highlight />
-        <Stat icon={<Activity />} label="Earnings Today" value={`$${earningsToday.toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 })}`} trend="Today" positive />
-        <Stat icon={<Sparkles />} label="Earnings + Invested" value={`$${earningsPlusInvested.toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 })}`} trend="Lifetime" positive />
-        <Stat icon={<Clock />} label="Pending Withdrawals" value={`$${pendingWdAmount.toLocaleString(undefined, { minimumFractionDigits: 6, maximumFractionDigits: 6 })}`} trend={`${pendingWdCount} request${pendingWdCount === 1 ? "" : "s"}`} />
-      </div>
+      {/* ── TABS ────────────────────────────────────────────────── */}
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid grid-cols-4 w-full max-w-2xl">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="investments" id="investments-tab">Investments</TabsTrigger>
+          <TabsTrigger value="activity">Activity</TabsTrigger>
+          <TabsTrigger value="promos">Promotions</TabsTrigger>
+        </TabsList>
 
-      <div id="active-investments" className="grid lg:grid-cols-3 gap-5 mt-5 scroll-mt-24">
-        <div className="lg:col-span-2 relative rounded-2xl p-[1.5px] bg-[image:var(--gradient-aurora)] glow-primary animate-fade-in">
-          <div className="absolute -inset-8 bg-[image:var(--gradient-aurora)] opacity-30 blur-3xl -z-10 rounded-full pointer-events-none" />
-          <div className="rounded-2xl bg-background/80 backdrop-blur-xl p-5">
-            <div className="flex items-center justify-between mb-5 flex-wrap gap-3">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[image:var(--gradient-primary)] text-primary-foreground flex items-center justify-center shadow-[var(--shadow-glow)] animate-pulse">
-                  <Sparkles className="w-5 h-5" />
+        {/* OVERVIEW */}
+        <TabsContent value="overview" className="mt-5">
+          <div className="grid lg:grid-cols-3 gap-5">
+            <div className="lg:col-span-2 relative rounded-2xl p-[1.5px] bg-[image:var(--gradient-aurora)] animate-fade-in">
+              <div className="rounded-2xl bg-background/80 backdrop-blur-xl p-5">
+                <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[image:var(--gradient-primary)] text-primary-foreground flex items-center justify-center shadow-[var(--shadow-glow)]">
+                      <Sparkles className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-extrabold tracking-tight">Quick Invest</h3>
+                      <p className="text-xs text-muted-foreground">Start a new package in seconds</p>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-extrabold tracking-tight">Active Investments</h3>
-                  <p className="text-xs text-muted-foreground">{activeInvs.length} running · live updates</p>
+                <div className="rounded-xl border border-primary/20 bg-background/60 p-4">
+                  <QuickInvestForm />
                 </div>
               </div>
-              <span className="text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-full bg-[image:var(--gradient-gold)] text-gold-foreground font-bold shadow inline-flex items-center gap-1">
-                <Sparkles className="w-3 h-3" /> Quick Invest
-              </span>
             </div>
 
-            {/* Inline Quick Invest — all features embedded */}
-            <div className="mb-5 rounded-xl border border-primary/30 bg-background/60 p-4">
-              <QuickInvestForm />
-            </div>
+            <GlassCard>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold">Recent Activity</h3>
+                <Link to="/wallet" className="text-xs text-primary">View all →</Link>
+              </div>
+              {txns.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-6 text-center">No activity yet.</p>
+              ) : (
+                <ul className="space-y-3 text-sm">
+                  {txns.slice(0, 6).map((e) => {
+                    const amt = Number(e.amount);
+                    return (
+                      <li key={e.id} className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="capitalize truncate">{e.notes ?? e.kind.replace("_", " ")}</p>
+                          <p className="text-xs text-muted-foreground">{new Date(e.created_at).toLocaleString()}</p>
+                        </div>
+                        <span className={`shrink-0 font-medium ${amt >= 0 ? "text-success" : "text-gold"}`}>
+                          {amt >= 0 ? "+" : ""}{amt.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </GlassCard>
+          </div>
+        </TabsContent>
 
-            {activeInvs.length === 0 && (
-              <p className="text-xs text-muted-foreground text-center py-2">No active investments yet — pick a package above to start earning.</p>
+        {/* INVESTMENTS */}
+        <TabsContent value="investments" className="mt-5">
+          <GlassCard>
+            <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+              <div>
+                <h3 className="font-semibold">Active Investments</h3>
+                <p className="text-xs text-muted-foreground">{activeInvs.length} running · live updates</p>
+              </div>
+              <Link to="/mining" className="text-xs text-primary">Browse plans →</Link>
+            </div>
+            {activeInvs.length === 0 ? (
+              <div className="text-center py-10">
+                <Sparkles className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                <p className="text-sm text-muted-foreground mb-4">No active investments yet.</p>
+                <CTA to="/mining" variant="primary">Explore packages</CTA>
+              </div>
+            ) : (
+              <ul className="grid sm:grid-cols-2 gap-3">
+                {activeInvs.map((i) => {
+                  const accrued = computeAccrual(i);
+                  const start = i.started_at ? new Date(i.started_at).getTime() : new Date(i.created_at).getTime();
+                  const end = i.ends_at ? new Date(i.ends_at).getTime() : start + 30 * 86_400_000;
+                  const pct = Math.max(0, Math.min(100, Math.round(((now - start) / Math.max(1, end - start)) * 100)));
+                  return (
+                    <li key={i.id} className="rounded-xl border border-border/60 bg-background/40 p-4">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          {serviceIcon[i.service] ?? <Sparkles className="w-4 h-4 text-primary" />}
+                          <p className="font-semibold truncate">{i.plan_name}</p>
+                        </div>
+                        <span className="text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded bg-success/15 text-success font-bold">Active</span>
+                      </div>
+                      <div className="mt-2 text-xs text-muted-foreground capitalize">{i.service.replace("_", " ")}</div>
+                      <div className="mt-3 flex items-end justify-between">
+                        <div>
+                          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Invested</p>
+                          <p className="font-semibold">${Number(i.amount).toLocaleString()}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Earned</p>
+                          <p className="font-mono text-success font-semibold">+${accrued.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 })}</p>
+                        </div>
+                      </div>
+                      <div className="mt-3 h-1.5 rounded-full bg-white/5 overflow-hidden">
+                        <div className="h-full bg-[image:var(--gradient-primary)] transition-all" style={{ width: `${pct}%` }} />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground text-right mt-1">{pct}%</p>
+                    </li>
+                  );
+                })}
+              </ul>
             )}
-          </div>
-        </div>
+          </GlassCard>
+        </TabsContent>
 
-        <GlassCard>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold">Recent Activity</h3>
-            <Link to="/wallet" className="text-xs text-primary">View all →</Link>
-          </div>
-          {txns.length === 0 ? (
-            <p className="text-sm text-muted-foreground py-6 text-center">No activity yet.</p>
-          ) : (
-            <ul className="space-y-3 text-sm">
-              {txns.slice(0, 6).map((e) => {
-                const amt = Number(e.amount);
-                return (
-                  <li key={e.id} className="flex items-center justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="capitalize truncate">{e.notes ?? e.kind.replace("_", " ")}</p>
-                      <p className="text-xs text-muted-foreground">{new Date(e.created_at).toLocaleString()}</p>
-                    </div>
-                    <span className={`shrink-0 font-medium ${amt >= 0 ? "text-success" : "text-gold"}`}>
-                      {amt >= 0 ? "+" : ""}{amt.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </GlassCard>
-      </div>
+        {/* ACTIVITY */}
+        <TabsContent value="activity" className="mt-5">
+          <GlassCard>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold">All Transactions</h3>
+              <Link to="/transactions" className="text-xs text-primary">Full history →</Link>
+            </div>
+            {txns.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">No transactions yet.</p>
+            ) : (
+              <ul className="divide-y divide-border/40">
+                {txns.slice(0, 25).map((e) => {
+                  const amt = Number(e.amount);
+                  return (
+                    <li key={e.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                      <div className="min-w-0">
+                        <p className="capitalize truncate">{e.notes ?? e.kind.replace("_", " ")}</p>
+                        <p className="text-xs text-muted-foreground">{new Date(e.created_at).toLocaleString()}</p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className={`text-[10px] uppercase tracking-widest px-1.5 py-0.5 rounded border ${
+                          e.status === "approved" || e.status === "completed" ? "border-success/30 text-success" :
+                          e.status === "pending" ? "border-gold/30 text-gold" :
+                          "border-border text-muted-foreground"
+                        }`}>{e.status}</span>
+                        <span className={`font-medium ${amt >= 0 ? "text-success" : "text-gold"}`}>
+                          {amt >= 0 ? "+" : ""}{amt.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </span>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </GlassCard>
+        </TabsContent>
 
+        {/* PROMOTIONS */}
+        <TabsContent value="promos" className="mt-5 space-y-4">
+          <OffersBanner />
+          <div className="rounded-2xl border border-gold/40 bg-gold/5 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 relative overflow-hidden">
+            <div className="relative flex items-start gap-3">
+              <div className="w-11 h-11 rounded-xl bg-[image:var(--gradient-gold)] text-gold-foreground flex items-center justify-center shrink-0 shadow-[var(--shadow-gold)]">
+                <Gift className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-sm font-bold"><span className="gradient-text">25% Deposit Bonus</span> — Limited time</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Top up your account now and receive an extra 25% credited after admin approval.</p>
+              </div>
+            </div>
+            <Link to="/deposit" className="relative shrink-0 rounded-xl px-4 py-2 text-sm font-semibold bg-[image:var(--gradient-gold)] text-gold-foreground glow-gold inline-flex items-center gap-2 hover:opacity-90 transition">
+              <ArrowDownLeft className="w-4 h-4" /> Deposit & Claim 25%
+            </Link>
+          </div>
+          {userId && <WelcomeBonusBanner userId={userId} />}
+        </TabsContent>
+      </Tabs>
+
+      {/* Footer CTAs */}
       <Link to="/referrals" className="mt-8 block rounded-2xl glass-strong p-5 hover:border-primary/40 transition group">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-3">
@@ -529,20 +646,21 @@ function Dashboard() {
       <div className="mt-8">
         <CTA to="/mining" variant="gold">Discover new plans</CTA>
       </div>
-      
     </Section>
   );
 }
 
-function Stat({ icon, label, value, trend, highlight = false, positive }: { icon: React.ReactNode; label: string; value: string; trend: string; highlight?: boolean; positive?: boolean }) {
+function MiniKpi({ icon, label, value, sub, positive }: { icon: React.ReactNode; label: string; value: string; sub?: string; positive?: boolean }) {
   return (
-    <GlassCard glow={highlight}>
-      <div className="flex items-center justify-between">
-        <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${highlight ? "bg-[image:var(--gradient-gold)] text-gold-foreground" : "bg-primary/15 text-primary"}`}>{icon}</div>
-        <span className={`text-xs font-semibold ${positive === false ? "text-destructive" : positive === true ? "text-success" : "text-muted-foreground"}`}>{trend}</span>
+    <div className="rounded-xl border border-border/40 bg-background/40 px-3 py-2.5">
+      <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-muted-foreground">
+        <span className="text-primary">{icon}</span>
+        <span className="truncate">{label}</span>
       </div>
-      <p className="text-xs uppercase tracking-widest text-muted-foreground mt-4">{label}</p>
-      <p className={`font-extrabold mt-1 ${highlight ? "text-3xl md:text-4xl gradient-text" : "text-2xl"}`}>{value}</p>
-    </GlassCard>
+      <p className={`mt-1 font-extrabold tabular-nums ${positive ? "text-success" : "text-foreground"} text-base sm:text-lg`}>
+        {value}
+      </p>
+      {sub && <p className="text-[10px] text-muted-foreground">{sub}</p>}
+    </div>
   );
 }

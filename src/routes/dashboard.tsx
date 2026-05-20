@@ -76,6 +76,7 @@ function Dashboard() {
   const [uidSaving, setUidSaving] = useState(false);
   const [uidMsg, setUidMsg] = useState<string | null>(null);
   const [notifOpen, setNotifOpen] = useState(false);
+  const { offers: allOffers, claimsBySlug } = useOffersData();
   useEffect(() => { setMounted(true); }, []);
   useEffect(() => {
     if (!mounted) return;
@@ -176,7 +177,6 @@ function Dashboard() {
       const tb = b.started_at ? new Date(b.started_at).getTime() : new Date(b.created_at).getTime();
       return tb - ta;
     })[0];
-  const { offers: allOffers, claimsBySlug } = useOffersData();
   const activeOffers = allOffers
     .map((o) => ({ o, c: claimsBySlug.get(o.slug) }))
     .filter((x) => x.c && (x.c.status === "active" || x.c.status === "used") &&

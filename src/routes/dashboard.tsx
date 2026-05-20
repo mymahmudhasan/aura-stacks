@@ -75,6 +75,7 @@ function Dashboard() {
   const [uidInput, setUidInput] = useState("");
   const [uidSaving, setUidSaving] = useState(false);
   const [uidMsg, setUidMsg] = useState<string | null>(null);
+  const [notifOpen, setNotifOpen] = useState(false);
   useEffect(() => { setMounted(true); }, []);
   useEffect(() => {
     if (!mounted) return;
@@ -226,14 +227,106 @@ function Dashboard() {
               <button onClick={() => load(false)} disabled={refreshing} className="glass rounded-xl p-2 hover:bg-primary/10 transition" title="Refresh">
                 {refreshing ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
               </button>
-              <button className="glass rounded-xl p-2 relative" title="Notifications">
-                <Bell className="w-4 h-4" />
-                {(pendingDepCount + pendingWdCount) > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-gold text-gold-foreground text-[10px] font-bold flex items-center justify-center">
-                    {pendingDepCount + pendingWdCount}
-                  </span>
+              <div className="relative">
+                <button
+                  onClick={() => setNotifOpen((v) => !v)}
+                  className="glass rounded-xl p-2 relative hover:bg-primary/10 transition"
+                  title="Notifications"
+                  aria-label="Notifications"
+                >
+                  <Bell className="w-4 h-4" />
+                  {(pendingDepCount + pendingWdCount) > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-gold text-gold-foreground text-[10px] font-bold flex items-center justify-center animate-pulse">
+                      {pendingDepCount + pendingWdCount}
+                    </span>
+                  )}
+                </button>
+                {notifOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setNotifOpen(false)} />
+                    <div className="absolute right-0 mt-2 w-80 max-w-[calc(100vw-2rem)] glass-strong rounded-2xl border border-primary/30 shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-primary/5">
+                        <p className="text-sm font-semibold">Notifications</p>
+                        <span className="text-[10px] text-muted-foreground">
+                          {pendingDepCount + pendingWdCount} pending
+                        </span>
+                      </div>
+                      <div className="max-h-80 overflow-y-auto divide-y divide-border">
+                        {pendingDepCount === 0 && pendingWdCount === 0 && txns.slice(0, 5).length === 0 ? (
+                          <div className="px-4 py-8 text-center text-xs text-muted-foreground">
+                            <Bell className="w-6 h-6 mx-auto mb-2 opacity-40" />
+                            You're all caught up.
+                          </div>
+                        ) : (
+                          <>
+                            {pendingDepCount > 0 && (
+                              <Link
+                                to="/deposit"
+                                onClick={() => setNotifOpen(false)}
+                                className="flex items-start gap-3 px-4 py-3 hover:bg-primary/5 transition"
+                              >
+                                <div className="w-8 h-8 rounded-lg bg-gold/15 text-gold flex items-center justify-center shrink-0">
+                                  <ArrowDownLeft className="w-4 h-4" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-xs font-semibold">Deposit awaiting review</p>
+                                  <p className="text-[11px] text-muted-foreground">
+                                    {pendingDepCount} deposit{pendingDepCount > 1 ? "s" : ""} pending admin approval.
+                                  </p>
+                                </div>
+                              </Link>
+                            )}
+                            {pendingWdCount > 0 && (
+                              <Link
+                                to="/withdraw"
+                                onClick={() => setNotifOpen(false)}
+                                className="flex items-start gap-3 px-4 py-3 hover:bg-primary/5 transition"
+                              >
+                                <div className="w-8 h-8 rounded-lg bg-primary/15 text-primary flex items-center justify-center shrink-0">
+                                  <ArrowUpRight className="w-4 h-4" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-xs font-semibold">Withdrawal in progress</p>
+                                  <p className="text-[11px] text-muted-foreground">
+                                    {pendingWdCount} request · {fmtUsd(pendingWdAmount)}
+                                  </p>
+                                </div>
+                              </Link>
+                            )}
+                            {txns.slice(0, 5).map((t) => (
+                              <div key={t.id} className="flex items-start gap-3 px-4 py-3">
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                                  Number(t.amount) >= 0 ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"
+                                }`}>
+                                  {Number(t.amount) >= 0 ? <ArrowDownLeft className="w-4 h-4" /> : <ArrowUpRight className="w-4 h-4" />}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-xs font-semibold capitalize">
+                                    {t.kind} · <span className="tabular-nums">{fmtUsd(Math.abs(Number(t.amount)))}</span>
+                                  </p>
+                                  <p className="text-[11px] text-muted-foreground truncate">
+                                    {t.notes ?? t.status}
+                                  </p>
+                                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                                    {new Date(t.created_at).toLocaleString()}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </>
+                        )}
+                      </div>
+                      <Link
+                        to="/transactions"
+                        onClick={() => setNotifOpen(false)}
+                        className="block text-center text-xs font-semibold py-2.5 border-t border-border bg-primary/5 hover:bg-primary/10 text-primary transition"
+                      >
+                        View all activity →
+                      </Link>
+                    </div>
+                  </>
                 )}
-              </button>
+              </div>
               <Link to="/settings" className="glass rounded-xl p-2 hover:bg-primary/10 transition" title="Settings">
                 <Settings className="w-4 h-4" />
               </Link>

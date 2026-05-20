@@ -129,6 +129,13 @@ export const createDeposit = createServerFn({ method: "POST" })
         : { last_sender_address: data.from_address, last_sender_network: data.network };
     await supabaseAdmin.from("customers").update(patch as never).eq("user_id", userId);
 
+    // Kick off an on-chain verification attempt for crypto networks.
+    // Cron will retry until enough confirmations are reached.
+    if (data.network !== "BINANCE_PAY") {
+      const { verifyAllPendingDeposits } = await import("@/lib/web3/onchain.functions");
+      verifyAllPendingDeposits().catch(() => {});
+    }
+
     return row;
   });
 

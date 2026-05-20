@@ -36,6 +36,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminSmsTestRouteImport } from './routes/admin.sms-test'
 import { Route as AdminResetPasswordRouteImport } from './routes/admin.reset-password'
 import { Route as AdminOperationsRouteImport } from './routes/admin.operations'
+import { Route as ApiPublicHooksVerifyDepositsRouteImport } from './routes/api/public/hooks/verify-deposits'
 import { Route as ApiPublicHooksMatureInvestmentsRouteImport } from './routes/api/public/hooks/mature-investments'
 
 const WithdrawRoute = WithdrawRouteImport.update({
@@ -173,6 +174,12 @@ const AdminOperationsRoute = AdminOperationsRouteImport.update({
   path: '/operations',
   getParentRoute: () => AdminRoute,
 } as any)
+const ApiPublicHooksVerifyDepositsRoute =
+  ApiPublicHooksVerifyDepositsRouteImport.update({
+    id: '/api/public/hooks/verify-deposits',
+    path: '/api/public/hooks/verify-deposits',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicHooksMatureInvestmentsRoute =
   ApiPublicHooksMatureInvestmentsRouteImport.update({
     id: '/api/public/hooks/mature-investments',
@@ -209,6 +216,7 @@ export interface FileRoutesByFullPath {
   '/admin/reset-password': typeof AdminResetPasswordRoute
   '/admin/sms-test': typeof AdminSmsTestRoute
   '/api/public/hooks/mature-investments': typeof ApiPublicHooksMatureInvestmentsRoute
+  '/api/public/hooks/verify-deposits': typeof ApiPublicHooksVerifyDepositsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -239,6 +247,7 @@ export interface FileRoutesByTo {
   '/admin/reset-password': typeof AdminResetPasswordRoute
   '/admin/sms-test': typeof AdminSmsTestRoute
   '/api/public/hooks/mature-investments': typeof ApiPublicHooksMatureInvestmentsRoute
+  '/api/public/hooks/verify-deposits': typeof ApiPublicHooksVerifyDepositsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -270,6 +279,7 @@ export interface FileRoutesById {
   '/admin/reset-password': typeof AdminResetPasswordRoute
   '/admin/sms-test': typeof AdminSmsTestRoute
   '/api/public/hooks/mature-investments': typeof ApiPublicHooksMatureInvestmentsRoute
+  '/api/public/hooks/verify-deposits': typeof ApiPublicHooksVerifyDepositsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -302,6 +312,7 @@ export interface FileRouteTypes {
     | '/admin/reset-password'
     | '/admin/sms-test'
     | '/api/public/hooks/mature-investments'
+    | '/api/public/hooks/verify-deposits'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -332,6 +343,7 @@ export interface FileRouteTypes {
     | '/admin/reset-password'
     | '/admin/sms-test'
     | '/api/public/hooks/mature-investments'
+    | '/api/public/hooks/verify-deposits'
   id:
     | '__root__'
     | '/'
@@ -362,6 +374,7 @@ export interface FileRouteTypes {
     | '/admin/reset-password'
     | '/admin/sms-test'
     | '/api/public/hooks/mature-investments'
+    | '/api/public/hooks/verify-deposits'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -390,6 +403,7 @@ export interface RootRouteChildren {
   WalletRoute: typeof WalletRoute
   WithdrawRoute: typeof WithdrawRoute
   ApiPublicHooksMatureInvestmentsRoute: typeof ApiPublicHooksMatureInvestmentsRoute
+  ApiPublicHooksVerifyDepositsRoute: typeof ApiPublicHooksVerifyDepositsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -583,6 +597,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminOperationsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/api/public/hooks/verify-deposits': {
+      id: '/api/public/hooks/verify-deposits'
+      path: '/api/public/hooks/verify-deposits'
+      fullPath: '/api/public/hooks/verify-deposits'
+      preLoaderRoute: typeof ApiPublicHooksVerifyDepositsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/hooks/mature-investments': {
       id: '/api/public/hooks/mature-investments'
       path: '/api/public/hooks/mature-investments'
@@ -633,6 +654,7 @@ const rootRouteChildren: RootRouteChildren = {
   WalletRoute: WalletRoute,
   WithdrawRoute: WithdrawRoute,
   ApiPublicHooksMatureInvestmentsRoute: ApiPublicHooksMatureInvestmentsRoute,
+  ApiPublicHooksVerifyDepositsRoute: ApiPublicHooksVerifyDepositsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

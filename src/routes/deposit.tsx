@@ -1,6 +1,6 @@
 import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Copy, Check, Loader2, ArrowLeft, Wallet, Zap } from "lucide-react";
+import { Copy, Check, Loader2, ArrowLeft, Wallet, Zap, HelpCircle, ChevronDown } from "lucide-react";
 import { GlassCard, Section } from "@/components/ui-bits";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -153,6 +153,10 @@ function DepositPage() {
       <Link to="/wallet" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-primary mb-4"><ArrowLeft className="w-4 h-4" /> Back to wallet</Link>
       <h1 className="text-2xl md:text-3xl font-bold mb-2">Deposit funds</h1>
       <p className="text-muted-foreground mb-6">Send USDT to the address below and submit your transaction hash for confirmation.</p>
+
+      <HowToFindGuide network={network} />
+
+
 
       {onchainEnabled && (
         <WalletPayCard
@@ -415,4 +419,106 @@ function WalletPayCard({ settings, defaultNetwork, onDone }: { settings: Setting
     </GlassCard>
   );
 }
+
+function HowToFindGuide({ network }: { network: string }) {
+  const [open, setOpen] = useState(true);
+  const isBinance = network === "BINANCE_PAY";
+
+  return (
+    <GlassCard className="mb-5 border border-primary/20">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between gap-3 text-left"
+        aria-expanded={open}
+      >
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+            <HelpCircle className="w-4.5 h-4.5 text-primary" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-sm">
+              {isBinance
+                ? "How to find your Binance UID & Pay transaction ID"
+                : "How to find your wallet address & transaction hash"}
+            </h3>
+            <p className="text-xs text-muted-foreground">Step-by-step — takes 30 seconds</p>
+          </div>
+        </div>
+        <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="mt-4 grid md:grid-cols-2 gap-4">
+          {isBinance ? (
+            <>
+              <GuideBlock
+                title="🆔 Where is my Binance UID?"
+                steps={[
+                  "Open the Binance app and tap your profile picture (top-left).",
+                  "Your UID is shown right under your name (e.g. 123456789).",
+                  "Tap it to copy, then paste here in the Your Binance UID field.",
+                ]}
+                tip="Your UID is permanent and never changes. It's not your email or phone."
+              />
+              <GuideBlock
+                title="🔗 Where is my Pay transaction ID?"
+                steps={[
+                  "After sending USDT via Binance Pay, open Wallet → Pay → History.",
+                  "Tap the payment you just made.",
+                  "Copy the Transaction ID (a long string of letters/numbers).",
+                  "Paste it here in the Transaction hash field.",
+                ]}
+                tip="No transaction ID = no proof of payment. Always send first, then copy."
+              />
+            </>
+          ) : (
+            <>
+              <GuideBlock
+                title={`💳 Your sending ${network} wallet address`}
+                steps={[
+                  `Open your wallet app (Trust Wallet, MetaMask, TronLink, Binance app, etc.).`,
+                  `Switch to the ${network} network.`,
+                  `Copy your own USDT address (starts with ${network === "TRC20" ? "T" : "0x"}).`,
+                  "Paste it here so we know the deposit came from you.",
+                ]}
+                tip={`This must match the wallet you sent the USDT from — not the destination address above.`}
+              />
+              <GuideBlock
+                title="🔗 Where is the transaction hash?"
+                steps={[
+                  "Send the USDT first from your wallet to the address shown above.",
+                  "After sending, open the transaction in your wallet's history.",
+                  `Copy the Transaction Hash / TxID (${network === "TRC20" ? "starts with a long string" : "starts with 0x..."}).`,
+                  "Paste it here in the Transaction hash field.",
+                ]}
+                tip="You can also find it on the blockchain explorer (Tronscan / BscScan / Etherscan) under your wallet's history."
+              />
+            </>
+          )}
+        </div>
+      )}
+    </GlassCard>
+  );
+}
+
+function GuideBlock({ title, steps, tip }: { title: string; steps: string[]; tip: string }) {
+  return (
+    <div className="rounded-xl glass p-4">
+      <h4 className="font-semibold text-sm mb-3">{title}</h4>
+      <ol className="space-y-2 text-xs text-muted-foreground">
+        {steps.map((s, i) => (
+          <li key={i} className="flex gap-2.5">
+            <span className="shrink-0 w-5 h-5 rounded-full bg-primary/20 text-primary text-[10px] font-bold flex items-center justify-center">
+              {i + 1}
+            </span>
+            <span className="leading-relaxed pt-0.5">{s}</span>
+          </li>
+        ))}
+      </ol>
+      <p className="text-[11px] text-gold mt-3 pt-3 border-t border-border/40">💡 {tip}</p>
+    </div>
+  );
+}
+
 

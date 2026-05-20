@@ -613,7 +613,8 @@ function Dashboard() {
         </TabsContent>
 
         {/* INVESTMENTS */}
-        <TabsContent value="investments" className="mt-5">
+        <TabsContent value="investments" className="mt-5 space-y-4">
+          <OffersBanner />
           <GlassCard>
             <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
               <div>

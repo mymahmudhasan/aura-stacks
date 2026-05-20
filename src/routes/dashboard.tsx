@@ -176,6 +176,11 @@ function Dashboard() {
       const tb = b.started_at ? new Date(b.started_at).getTime() : new Date(b.created_at).getTime();
       return tb - ta;
     })[0];
+  const { offers: allOffers, claimsBySlug } = useOffersData();
+  const activeOffers = allOffers
+    .map((o) => ({ o, c: claimsBySlug.get(o.slug) }))
+    .filter((x) => x.c && (x.c.status === "active" || x.c.status === "used") &&
+      (!x.c.expires_at || new Date(x.c.expires_at).getTime() > Date.now()));
   const pendingWdAmount = wds.filter((w) => w.status === "pending").reduce((s, w) => s + Number(w.amount), 0);
   const pendingWdCount = wds.filter((w) => w.status === "pending").length;
   const pendingDepCount = deps.filter((d) => d.status === "pending").length;

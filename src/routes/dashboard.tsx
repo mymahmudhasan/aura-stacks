@@ -613,7 +613,8 @@ function Dashboard() {
         </TabsContent>
 
         {/* INVESTMENTS */}
-        <TabsContent value="investments" className="mt-5">
+        <TabsContent value="investments" className="mt-5 space-y-4">
+          <OffersBanner />
           <GlassCard>
             <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
               <div>
@@ -706,7 +707,6 @@ function Dashboard() {
 
         {/* PROMOTIONS */}
         <TabsContent value="promos" className="mt-5 space-y-4">
-          <OffersBanner />
           <div className="rounded-2xl border border-gold/40 bg-gold/5 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 relative overflow-hidden">
             <div className="relative flex items-start gap-3">
               <div className="w-11 h-11 rounded-xl bg-[image:var(--gradient-gold)] text-gold-foreground flex items-center justify-center shrink-0 shadow-[var(--shadow-gold)]">

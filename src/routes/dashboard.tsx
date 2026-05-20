@@ -75,6 +75,7 @@ function Dashboard() {
   const [uidInput, setUidInput] = useState("");
   const [uidSaving, setUidSaving] = useState(false);
   const [uidMsg, setUidMsg] = useState<string | null>(null);
+  const [notifOpen, setNotifOpen] = useState(false);
   useEffect(() => { setMounted(true); }, []);
   useEffect(() => {
     if (!mounted) return;

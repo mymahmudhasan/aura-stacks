@@ -154,7 +154,6 @@ function DepositPage() {
       <h1 className="text-2xl md:text-3xl font-bold mb-2">Deposit funds</h1>
       <p className="text-muted-foreground mb-6">Send USDT to the address below and submit your transaction hash for confirmation.</p>
 
-      <HowToFindGuide network={network} />
 
 
 
@@ -250,6 +249,12 @@ function DepositPage() {
           </form>
         </GlassCard>
       </div>
+
+      <div className="mt-6">
+        <HowToFindGuide network={network} />
+      </div>
+
+
 
       <GlassCard className="mt-6">
         <h3 className="font-semibold mb-3">My deposit history</h3>

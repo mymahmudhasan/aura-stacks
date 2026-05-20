@@ -1,6 +1,6 @@
 import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Copy, Check, Loader2, ArrowLeft, Wallet, Zap } from "lucide-react";
+import { Copy, Check, Loader2, ArrowLeft, Wallet, Zap, HelpCircle, ChevronDown } from "lucide-react";
 import { GlassCard, Section } from "@/components/ui-bits";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

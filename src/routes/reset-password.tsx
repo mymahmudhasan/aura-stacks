@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Hexagon, Loader2, KeyRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { PasswordField } from "@/components/PasswordField";
 
 export const Route = createFileRoute("/reset-password")({
   component: ResetPassword,
@@ -111,23 +112,19 @@ function ResetPassword() {
               <p className="text-success font-medium mb-0.5">Link verified ✓</p>
               Choose a new password below. Use at least 6 characters — a mix of letters, numbers, and symbols is best.
             </div>
-            <input
-              type="password"
+            <PasswordField
               required
               autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="New password"
-              className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none"
             />
-            <input
-              type="password"
+            <PasswordField
               required
               autoComplete="new-password"
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
               placeholder="Confirm new password"
-              className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none"
             />
             {error && <p className="text-sm text-destructive">{error}</p>}
             <button

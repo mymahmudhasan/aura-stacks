@@ -1,53 +1,23 @@
-# Wipe demo data — keep only admin `tshirtkella@gmail.com`
+# Add show/hide password toggle
 
-Goal: remove every other user and all transactional/demo data from the database, leaving a clean production-ready backend with only one admin account.
+Add an eye icon button inside every password field so users can toggle between hidden and visible text.
 
-## Users currently in the system
+## Where it applies
 
-| Email | Role | Keep? |
-|---|---|---|
-| tshirtkella@gmail.com | admin + user | KEEP (sole admin) |
-| admin@novatrad.ai | admin + user | delete |
-| protapc2@gmail.com | admin + user | delete |
-| protapc9@gmail.com | user | delete |
-| protapc17@gmail.com | user | delete |
-| anutapchandradas.2000@gmail.com | user | delete |
-| bappyd549@gmail.com | user | delete |
-| mymahmudhasan2000@gmail.com | user | delete |
+- `src/routes/login.tsx` — sign in + register password fields
+- `src/routes/reset-password.tsx` — new password + confirm
+- `src/routes/admin.reset-password.tsx` — new password + confirm
 
-After cleanup: 1 user (`tshirtkella@gmail.com`) with `admin` role only.
+## Behavior
 
-## What gets wiped (all rows, not just for deleted users)
+- Eye icon on the right edge of the input.
+- Click toggles `type` between `password` and `text`.
+- Icon switches between `Eye` and `EyeOff` (lucide-react).
+- Each field has its own independent toggle state.
+- Keeps existing styling, validation, and autocomplete.
 
-Transactional / demo content — full table truncate:
-- `wallet_transactions`, `deposits`, `withdrawals`
-- `investments`, `investment_earnings`
-- `referrals`, `referral_earnings`, `referral_bonuses`
-- `welcome_bonuses`, `user_offers`, `payout_runs`
-- `support_messages`, `support_conversations`
-- `ticket_messages`, `tickets`
-- `phone_otp_codes`
+## Technical notes
 
-Kept intact:
-- `investment_plans`, `offers`, `payment_providers`, `payout_config`, `site_settings`, `support_bot_replies` (configuration, not user data)
-- `profiles`, `customers`, `user_roles` rows for tshirtkella only
-- Admin's `customers` row reset: balance/deposited/withdrawn = 0, account_type = `real`, status = `active`
-
-## Auth users
-
-`auth.users` rows for the 7 deleted accounts will be removed via a `SECURITY DEFINER` cleanup function (the migration runner cannot delete from `auth` directly). Deleting from `auth.users` cascades to the public tables that reference `user_id`.
-
-## Steps
-
-1. Run a migration that:
-   - Truncates the transactional tables listed above.
-   - Deletes `user_roles`, `customers`, `profiles` for all non-admin users.
-   - Defines + executes a one-shot SECURITY DEFINER function that deletes the 7 unwanted rows from `auth.users`, then drops the function.
-   - Resets the admin's `customers` row to zeroed real-account state.
-2. Verify counts: 1 row each in `profiles`, `customers`, `user_roles`; 0 rows in transactional tables.
-
-## Notes
-
-- This is destructive and irreversible. All historical demo deposits/investments/tickets are gone.
-- The admin keeps their existing password and session — no re-login needed.
-- The published landing-page "live ticker" will show no active investments until real users sign up and invest.
+- Add a small `PasswordInput` helper (or inline `useState` per field) wrapping the existing `<input>` with a relative container and an absolutely-positioned toggle button.
+- Button: `type="button"`, `aria-label="Show password" / "Hide password"`, focus-visible ring, no form submit.
+- No backend or schema changes.

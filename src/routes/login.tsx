@@ -202,9 +202,9 @@ export function AuthCard({ mode }: { mode: "login" | "register" }) {
               <input value={form.country} onChange={upd("country")} placeholder="Country" className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none" />
             </>
           )}
-          <input required type="password" value={form.password} onChange={upd("password")} placeholder="Password (min 6 chars)" minLength={6} className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none" />
+          <PasswordField required value={form.password} onChange={upd("password")} placeholder="Password (min 6 chars)" minLength={6} autoComplete={isLogin ? "current-password" : "new-password"} />
           {!isLogin && (
-            <input required type="password" value={form.confirmPassword} onChange={upd("confirmPassword")} placeholder="Confirm password" minLength={6} className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none" />
+            <PasswordField required value={form.confirmPassword} onChange={upd("confirmPassword")} placeholder="Confirm password" minLength={6} autoComplete="new-password" />
           )}
           {!isLogin && (
             <input value={form.referredBy} onChange={upd("referredBy")} placeholder="Referral code (optional)" className="w-full px-4 py-3 rounded-xl bg-input/50 border border-border focus:border-primary outline-none" />

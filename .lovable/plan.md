@@ -1,23 +1,23 @@
-# Add show/hide password toggle
+# Add eye icon to show/hide password
 
-Add an eye icon button inside every password field so users can toggle between hidden and visible text.
+Add a small eye toggle inside every password input so users can reveal what they typed.
 
-## Where it applies
+## Where
 
-- `src/routes/login.tsx` — sign in + register password fields
-- `src/routes/reset-password.tsx` — new password + confirm
-- `src/routes/admin.reset-password.tsx` — new password + confirm
+- `src/routes/login.tsx` — Password + Confirm password
+- `src/routes/reset-password.tsx` — New password + Confirm
+- `src/routes/admin.reset-password.tsx` — New password + Confirm
 
-## Behavior
+## How it looks and behaves
 
-- Eye icon on the right edge of the input.
-- Click toggles `type` between `password` and `text`.
-- Icon switches between `Eye` and `EyeOff` (lucide-react).
-- Each field has its own independent toggle state.
-- Keeps existing styling, validation, and autocomplete.
+- Eye icon sits on the right side of the input (inside it).
+- Click toggles the field between hidden dots and visible text.
+- Icon switches between `Eye` and `EyeOff` from lucide-react.
+- Each field toggles independently.
+- Keeps existing styling, validation, autocomplete, and min-length rules.
 
-## Technical notes
+## Technical
 
-- Add a small `PasswordInput` helper (or inline `useState` per field) wrapping the existing `<input>` with a relative container and an absolutely-positioned toggle button.
-- Button: `type="button"`, `aria-label="Show password" / "Hide password"`, focus-visible ring, no form submit.
+- Add a small `PasswordField` wrapper component in `login.tsx` (relative container, input with `pr-11`, absolutely-positioned `<button type="button">` with `aria-label`).
+- Reuse the same pattern in the two reset-password routes.
 - No backend or schema changes.

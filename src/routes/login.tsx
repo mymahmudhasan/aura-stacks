@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Hexagon, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
+import { PasswordField } from "@/components/PasswordField";
 
 export const Route = createFileRoute("/login")({
   component: Login,

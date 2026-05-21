@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Hexagon, ShieldCheck, Loader2, KeyRound } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { PasswordField } from "@/components/PasswordField";
 
 export const Route = createFileRoute("/admin/reset-password")({
   component: AdminResetPassword,

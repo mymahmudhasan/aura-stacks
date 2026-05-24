@@ -88,10 +88,10 @@ function Ops() {
                 {rows.map((r) => (
                   <tr key={r.id} className="border-t border-border/40 align-top">
                     <td className="py-3 text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString()}</td>
-                    <td className="text-xs font-mono">{r.user_id?.slice(0, 8)}…</td>
+                    <td className="text-xs font-mono break-all">{r.user_id}</td>
                     <td className="font-medium">${Number(r.amount).toLocaleString()}</td>
                     <td className="text-xs">
-                      {tab === "deposits" && <>{r.network} · <code>{r.tx_hash?.slice(0, 16)}…</code></>}
+                      {tab === "deposits" && <>{r.network} · <code className="break-all">{r.tx_hash}</code></>}
                       {tab === "withdrawals" && <>{r.destination_type}: {r.destination}</>}
                       {tab === "investments" && <>{r.service} · {r.plan_name}{r.external_ref ? ` · ref: ${r.external_ref}` : ""}</>}
                     </td>
